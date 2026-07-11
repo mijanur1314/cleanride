@@ -28,24 +28,39 @@ const createSendToken = (user, statusCode, res) => {
     });
 };
 const registerSchema = zod_1.z.object({
-    name: zod_1.z.string().min(3),
+    name: zod_1.z.string().min(2),
     email: zod_1.z.string().email(),
-    password: zod_1.z.string().min(8),
+    password: zod_1.z.string().min(6),
     phone: zod_1.z.string().optional(),
-    role: zod_1.z.enum(['USER', 'ADMIN', 'PARTNER']).optional(),
+    role: zod_1.z.enum(['USER', 'PARTNER']).optional(),
+    referredBy: zod_1.z.string().optional(),
 });
 exports.signup = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
         return next(new AppError_1.AppError('Invalid input data', 400));
     }
-    const { name, email, password, phone, role } = parsed.data;
+    const { name, email, password, phone, role, referredBy } = parsed.data;
     // Check if user exists
     const existingUser = await prisma_1.default.user.findUnique({ where: { email } });
     if (existingUser) {
         return next(new AppError_1.AppError('Email already in use', 400));
     }
     const hashedPassword = await bcryptjs_1.default.hash(password, 12);
+    // Generate random referral code
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    let initialPoints = 0;
+    if (referredBy) {
+        const referrer = await prisma_1.default.user.findUnique({ where: { referralCode: referredBy } });
+        if (referrer) {
+            initialPoints = 50; // New user gets 50 points
+            // Give referrer 50 points
+            await prisma_1.default.user.update({
+                where: { id: referrer.id },
+                data: { loyaltyPoints: { increment: 50 } }
+            });
+        }
+    }
     const newUser = await prisma_1.default.user.create({
         data: {
             name,
@@ -53,6 +68,8 @@ exports.signup = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
             password: hashedPassword,
             phone,
             role: role || 'USER',
+            referralCode,
+            loyaltyPoints: initialPoints
         },
     });
     createSendToken(newUser, 201, res);

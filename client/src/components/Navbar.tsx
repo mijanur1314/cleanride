@@ -4,13 +4,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from './ui/button';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, Star, Sun, Moon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { io } from 'socket.io-client';
+import { toast } from 'sonner';
+import { useTheme } from 'next-themes';
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
+  const { theme, setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
 
@@ -23,6 +27,8 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    let socket: any;
+    
     if (user) {
       const fetchNotifs = async () => {
         try {
@@ -31,8 +37,26 @@ export default function Navbar() {
         } catch (error) {}
       };
       fetchNotifs();
-      const interval = setInterval(fetchNotifs, 30000); // Poll every 30s
-      return () => clearInterval(interval);
+      
+      // Initialize Socket.IO
+      socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000');
+      
+      socket.emit('join', user.id);
+      
+      socket.on('notification', (data: any) => {
+        if (data.type === 'success') toast.success(data.title, { description: data.message });
+        else if (data.type === 'info') toast.info(data.title, { description: data.message });
+        else toast(data.title, { description: data.message });
+        
+        fetchNotifs(); // Refresh list to get the new notification with its ID
+      });
+      
+      const interval = setInterval(fetchNotifs, 60000); // Poll every 60s as backup
+      
+      return () => {
+        clearInterval(interval);
+        socket.disconnect();
+      };
     }
   }, [user]);
 
@@ -64,11 +88,25 @@ export default function Navbar() {
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-10 text-sm font-semibold tracking-wide text-gray-300 uppercase">
           <Link href="/services" className="hover:text-white transition-colors">Packages</Link>
+          <Link href="/memberships" className="hover:text-white transition-colors flex items-center gap-1">
+            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /> VIP
+          </Link>
           <Link href="/about" className="hover:text-white transition-colors">About</Link>
           <Link href="/contact" className="hover:text-white transition-colors">Locations</Link>
         </div>
 
         <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="text-white hover:bg-white/10 rounded-full"
+          >
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+
           {user ? (
             <div className="flex items-center gap-4">
               <Popover>

@@ -12,17 +12,26 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trash2, Plus, MessageCircle } from "lucide-react";
+import { ChatBox } from "@/components/ChatBox";
 
 export default function UserDashboard() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const [bookings, setBookings] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [subscription, setSubscription] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [reviewData, setReviewData] = useState<{ [key: string]: { rating: number, comment: string } }>({});
   const [submittingReview, setSubmittingReview] = useState<string | null>(null);
+  const [newVehicle, setNewVehicle] = useState({ type: '', make: '', model: '', plateNumber: '' });
+  const [addingVehicle, setAddingVehicle] = useState(false);
+  const [activeChat, setActiveChat] = useState<{ bookingId: string, partnerName: string } | null>(null);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
+    
     if (!isAuthenticated) {
       router.push("/login");
       return;
@@ -30,12 +39,14 @@ export default function UserDashboard() {
 
     const fetchData = async () => {
       try {
-        const [bookingsRes, subRes] = await Promise.all([
+        const [bookingsRes, subRes, vehiclesRes] = await Promise.all([
           api.get("/bookings/my-bookings"),
-          api.get("/subscriptions/my-subscription").catch(() => ({ data: { data: { subscription: null } } }))
+          api.get("/subscriptions/my-subscription").catch(() => ({ data: { data: { subscription: null } } })),
+          api.get("/vehicles/my-vehicles")
         ]);
         setBookings(bookingsRes.data.data.bookings);
         setSubscription(subRes.data.data.subscription);
+        setVehicles(vehiclesRes.data.data.vehicles);
       } catch (error) {
         toast.error("Failed to load dashboard data");
       } finally {
@@ -69,33 +80,79 @@ export default function UserDashboard() {
     }
   };
 
+  const handleAddVehicle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newVehicle.type) {
+      toast.error("Vehicle type is required");
+      return;
+    }
+    setAddingVehicle(true);
+    try {
+      const res = await api.post("/vehicles", newVehicle);
+      setVehicles([res.data.data.vehicle, ...vehicles]);
+      setNewVehicle({ type: '', make: '', model: '', plateNumber: '' });
+      toast.success("Vehicle added to garage!");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to add vehicle");
+    } finally {
+      setAddingVehicle(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (id: string) => {
+    try {
+      await api.delete(`/vehicles/${id}`);
+      setVehicles(vehicles.filter(v => v.id !== id));
+      toast.success("Vehicle removed");
+    } catch (error) {
+      toast.error("Failed to remove vehicle");
+    }
+  };
+
   if (isLoading) {
     return <div className="flex h-[calc(100vh-4rem)] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
   }
 
   return (
-    <div className="container max-w-5xl mx-auto py-12 px-4">
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name}</p>
-        </div>
-      </div>
-
+    <div className="container mx-auto pt-28 pb-12 px-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-        <Card className="md:col-span-1 border-primary/10 bg-blue-50/50 dark:bg-blue-900/10">
-          <CardHeader>
-            <CardTitle className="text-lg">Profile Info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
+        {/* Left Column */}
+        <div className="md:col-span-1 space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-1">My Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+          </div>
+
+          <Card className="border-primary/10 bg-blue-50/50 dark:bg-blue-900/10">
+            <CardHeader>
+              <CardTitle className="text-lg">Profile Info</CardTitle>
+            </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-muted-foreground">Name:</p>
               <p className="font-semibold">{user?.name}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-muted-foreground">Email:</p>
               <p className="font-semibold">{user?.email}</p>
             </div>
+            
+            {user?.loyaltyPoints !== undefined && (
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-muted-foreground">Loyalty Points:</p>
+                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  <Zap className="w-3 h-3 mr-1" /> {user.loyaltyPoints}
+                </Badge>
+              </div>
+            )}
+            
+            {user?.referralCode && (
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-muted-foreground">Referral Code:</p>
+                <code className="bg-muted px-2 py-0.5 rounded text-sm">{user.referralCode}</code>
+              </div>
+            )}
+
             <div className="pt-2">
               <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
                 {user?.role}
@@ -105,7 +162,7 @@ export default function UserDashboard() {
         </Card>
 
         {subscription && (
-          <Card className="md:col-span-1 border-green-500/20 bg-green-50/50 dark:bg-green-900/10 mt-6">
+          <Card className="border-green-500/20 bg-green-50/50 dark:bg-green-900/10 mt-6">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Zap className="w-4 h-4 text-green-500" />
@@ -124,9 +181,17 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
         )}
+        </div>
 
-        <div className="md:col-span-3 space-y-4 md:row-span-2">
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Recent Bookings</h2>
+        {/* Right Column: Content */}
+        <div className="md:col-span-3 space-y-4">
+          <Tabs defaultValue="bookings" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
+              <TabsTrigger value="garage">My Garage</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="bookings" className="space-y-4">
           {bookings.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -175,9 +240,15 @@ export default function UserDashboard() {
                         Coupon Applied
                       </Badge>
                     )}
-                    <Badge variant="outline" className="mt-2">
+                    <Badge variant="outline" className="mt-2 mb-4">
                       {booking.payment?.status || 'PENDING'}
                     </Badge>
+                    {booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS' ? (
+                      <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
+                        <MessageCircle className="w-4 h-4" />
+                        Chat
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
 
@@ -256,8 +327,83 @@ export default function UserDashboard() {
               </Card>
             ))
           )}
+          </TabsContent>
+
+          <TabsContent value="garage" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Add New Vehicle</CardTitle>
+                <CardDescription>Save your vehicles for faster booking checkout.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Type (e.g., Sedan, SUV) *</label>
+                    <Input value={newVehicle.type} onChange={(e) => setNewVehicle({...newVehicle, type: e.target.value})} placeholder="SUV" required />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Make (e.g., Toyota)</label>
+                    <Input value={newVehicle.make} onChange={(e) => setNewVehicle({...newVehicle, make: e.target.value})} placeholder="Toyota" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Model (e.g., RAV4)</label>
+                    <Input value={newVehicle.model} onChange={(e) => setNewVehicle({...newVehicle, model: e.target.value})} placeholder="RAV4" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">License Plate</label>
+                    <Input value={newVehicle.plateNumber} onChange={(e) => setNewVehicle({...newVehicle, plateNumber: e.target.value})} placeholder="ABC-1234" />
+                  </div>
+                  <div className="md:col-span-2 pt-2">
+                    <Button type="submit" disabled={addingVehicle}>
+                      {addingVehicle ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                      Add Vehicle
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {vehicles.map((v) => (
+                <Card key={v.id} className="relative overflow-hidden group">
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20" onClick={() => handleDeleteVehicle(v.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Car className="w-5 h-5 text-primary" />
+                      {v.type}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      {v.make && <p><span className="font-medium text-foreground">Make:</span> {v.make}</p>}
+                      {v.model && <p><span className="font-medium text-foreground">Model:</span> {v.model}</p>}
+                      {v.plateNumber && <p><span className="font-medium text-foreground">Plate:</span> {v.plateNumber}</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {vehicles.length === 0 && (
+                <div className="sm:col-span-2 text-center p-8 border border-dashed rounded-lg text-muted-foreground">
+                  No vehicles in your garage yet. Add one above!
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          </Tabs>
         </div>
       </div>
+      
+      {activeChat && (
+        <ChatBox 
+          bookingId={activeChat.bookingId} 
+          partnerName={activeChat.partnerName}
+          onClose={() => setActiveChat(null)}
+        />
+      )}
     </div>
   );
 }

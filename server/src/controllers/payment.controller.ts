@@ -4,6 +4,7 @@ import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { sendEmail } from '../utils/email';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
@@ -81,6 +82,27 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
     where: { id: payment.id },
     data: { status: 'COMPLETED' },
   });
+
+  // Get user details to send email
+  const booking = await prisma.booking.findUnique({
+    where: { id: payment.bookingId },
+    include: { user: true, service: true }
+  });
+
+  if (booking && booking.user) {
+    await sendEmail({
+      to: booking.user.email,
+      subject: 'CleanRide - Payment Received & Booking Confirmed',
+      html: `
+        <h2>Payment Successful!</h2>
+        <p>Hi ${booking.user.name},</p>
+        <p>We have successfully received your payment of <strong>$${payment.amount}</strong> for the <strong>${booking.service.name}</strong> service.</p>
+        <p>Your booking (ID: ${booking.id}) is now confirmed. We will assign a service partner shortly.</p>
+        <br/>
+        <p>Thank you for choosing CleanRide!</p>
+      `
+    });
+  }
 
   res.status(200).json({
     success: true,

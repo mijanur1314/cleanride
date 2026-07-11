@@ -11,5 +11,9 @@ router.get('/partner-bookings', (0, auth_middleware_1.restrictTo)('PARTNER'), bo
 router.patch('/:id/status', (0, auth_middleware_1.restrictTo)('ADMIN', 'PARTNER'), booking_controller_1.updateBookingStatus);
 router.get('/', (0, auth_middleware_1.restrictTo)('ADMIN'), booking_controller_1.getAllBookings);
 router.patch('/:id/assign', (0, auth_middleware_1.restrictTo)('ADMIN'), booking_controller_1.assignPartner);
-router.patch('/:id/images', (0, auth_middleware_1.restrictTo)('PARTNER'), booking_controller_1.updateImages);
+const upload_middleware_1 = require("../middlewares/upload.middleware");
+router.patch('/:id/images', (0, auth_middleware_1.restrictTo)('PARTNER'), upload_middleware_1.upload.fields([
+    { name: 'beforeImage', maxCount: 1 },
+    { name: 'afterImage', maxCount: 1 }
+]), booking_controller_1.updateImages);
 exports.default = router;

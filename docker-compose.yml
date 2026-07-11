@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: ./server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: always
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./client/.env.local
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - server
+    restart: always
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  redis_data:

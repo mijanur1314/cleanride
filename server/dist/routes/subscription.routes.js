@@ -5,6 +5,7 @@ const subscription_controller_1 = require("../controllers/subscription.controlle
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const router = (0, express_1.Router)();
 router.get('/plans', subscription_controller_1.getPlans);
-router.post('/subscribe', auth_middleware_1.protect, subscription_controller_1.subscribe);
+router.post('/create-order', auth_middleware_1.protect, subscription_controller_1.createSubscriptionOrder);
+router.post('/verify', auth_middleware_1.protect, subscription_controller_1.verifySubscription);
 router.get('/my-subscription', auth_middleware_1.protect, subscription_controller_1.getMySubscription);
 exports.default = router;

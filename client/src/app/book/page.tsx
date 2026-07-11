@@ -17,30 +17,39 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function BookingPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleType, resetBooking } = useBookingStore();
+  const { user, _hasHydrated } = useAuthStore();
+  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleType, vehicleNumber, resetBooking } = useBookingStore();
   
   const [services, setServices] = useState<any[]>([]);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [addons, setAddons] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!_hasHydrated) return;
     if (!user) {
       toast.error("Please login to book a service");
       router.push("/login");
       return;
     }
 
-    const fetchServices = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get("/services");
-        setServices(res.data.data.services);
+        const [servRes, vehRes, addonRes] = await Promise.all([
+          api.get("/services"),
+          api.get("/vehicles/my-vehicles").catch(() => ({ data: { data: { vehicles: [] } } })),
+          api.get("/addons").catch(() => ({ data: { data: { addons: [] } } }))
+        ]);
+        setServices(servRes.data.data.services);
+        setVehicles(vehRes.data.data.vehicles);
+        setAddons(addonRes.data.data.addons);
       } catch (error) {
-        toast.error("Failed to load services");
+        toast.error("Failed to load data");
       } finally {
         setIsLoading(false);
       }
     };
-    fetchServices();
+    fetchData();
   }, [user, router]);
 
   if (isLoading) {
@@ -48,7 +57,8 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="container max-w-3xl mx-auto py-12 px-4">
+    <div className="container max-w-3xl mx-auto pt-28 pb-12 px-4">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Book a Service</h1>
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
@@ -81,6 +91,35 @@ export default function BookingPage() {
                   </Card>
                 ))}
               </div>
+
+              {service && addons.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold mb-4">Enhance Your Wash (Add-ons)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {addons.map(addon => {
+                      const isSelected = useBookingStore.getState().addonIds.includes(addon.id);
+                      return (
+                        <Card 
+                          key={addon.id} 
+                          className={`cursor-pointer transition-all hover:border-blue-500 ${isSelected ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                          onClick={() => useBookingStore.getState().toggleAddon(addon.id)}
+                        >
+                          <CardHeader className="py-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <CardTitle className="text-lg">{addon.name}</CardTitle>
+                                {addon.description && <CardDescription>{addon.description}</CardDescription>}
+                              </div>
+                              <span className="font-bold text-green-600">+${addon.price}</span>
+                            </div>
+                          </CardHeader>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-8 flex justify-end">
                 <Button onClick={nextStep} disabled={!service} className="bg-blue-600 hover:bg-blue-700">Continue to Vehicle Details</Button>
               </div>
@@ -95,6 +134,31 @@ export default function BookingPage() {
                   <CardDescription>Tell us about the vehicle you want to wash</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {vehicles.length > 0 && (
+                    <div className="space-y-2 mb-6">
+                      <Label>Select Saved Vehicle</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {vehicles.map(v => (
+                          <div 
+                            key={v.id} 
+                            onClick={() => setVehicleDetails(v.type, v.plateNumber || '')}
+                            className={`p-3 border rounded-md cursor-pointer flex items-center gap-3 transition-colors ${vehicleType === v.type && vehicleNumber === (v.plateNumber || '') ? 'border-blue-500 bg-blue-50/50' : 'hover:border-gray-400'}`}
+                          >
+                            <Car className="w-5 h-5" />
+                            <div>
+                              <p className="font-medium text-sm">{v.make} {v.model} ({v.type})</p>
+                              {v.plateNumber && <p className="text-xs text-muted-foreground">{v.plateNumber}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="relative py-4">
+                        <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or Enter Manually</span></div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label>Vehicle Type</Label>
                     <Select onValueChange={(v) => setVehicleDetails(v)} value={vehicleType || ""}>
@@ -109,7 +173,7 @@ export default function BookingPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Vehicle License Plate (Optional)</Label>
-                    <Input placeholder="ABC 1234" onChange={(e) => setVehicleDetails(vehicleType!, e.target.value)} />
+                    <Input placeholder="ABC 1234" value={useBookingStore.getState().vehicleNumber || ''} onChange={(e) => setVehicleDetails(vehicleType!, e.target.value)} />
                   </div>
                 </CardContent>
               </Card>
@@ -147,7 +211,7 @@ export default function BookingPage() {
 
           {step === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-               <PaymentStep />
+               <PaymentStep availableAddons={addons} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -156,12 +220,14 @@ export default function BookingPage() {
   );
 }
 
-function PaymentStep() {
-  const { service, vehicleType, bookingDate, address, prevStep, resetBooking } = useBookingStore();
+function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
+  const { user } = useAuthStore();
+  const { service, vehicleType, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [redeemPoints, setRedeemPoints] = useState<number>(0);
   const router = useRouter();
 
   const handleApplyCoupon = async () => {
@@ -178,12 +244,25 @@ function PaymentStep() {
 
   const calculateFinalPrice = () => {
     if (!service) return 0;
+    
     let finalAmount = service.price;
+    
+    // Add addon prices
+    const selectedAddons = availableAddons.filter(a => addonIds.includes(a.id));
+    for (const addon of selectedAddons) {
+      finalAmount += addon.price;
+    }
+
     if (appliedCoupon) {
       const discount = (service.price * appliedCoupon.discountPercentage) / 100;
       finalAmount -= appliedCoupon.maxDiscount ? Math.min(discount, appliedCoupon.maxDiscount) : discount;
     }
-    return finalAmount;
+
+    if (redeemPoints > 0) {
+      finalAmount -= (redeemPoints * 0.1);
+    }
+    
+    return Math.max(finalAmount, 0);
   };
 
   const handlePayment = async () => {
@@ -195,18 +274,20 @@ function PaymentStep() {
         vehicleType,
         bookingDate: bookingDate?.toISOString(),
         address,
-        couponId: appliedCoupon?.id
+        couponId: appliedCoupon?.id,
+        addonIds,
+        redeemPoints: redeemPoints > 0 ? redeemPoints : undefined
       });
-
+      
       const bookingId = bookingRes.data.data.booking.id;
 
       // 2. Create Razorpay order
       const orderRes = await api.post("/payments/create-order", { bookingId });
       const order = orderRes.data.data.order;
 
-      // 3. Initialize Razorpay checkout
+      // 3. Initialize Razorpay Checkout
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder', // Fallback for dev
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
         amount: order.amount,
         currency: order.currency,
         name: "CleanRide",
@@ -215,26 +296,29 @@ function PaymentStep() {
         handler: async function (response: any) {
           try {
             await api.post("/payments/verify", {
-              razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              bookingId,
+              bookingId
             });
             toast.success("Payment successful! Booking confirmed.");
             resetBooking();
             router.push("/dashboard");
-          } catch (err) {
-            toast.error("Payment verification failed");
+          } catch (err: any) {
+            toast.error(err.response?.data?.message || "Payment verification failed");
           }
         },
-        theme: {
-          color: "#0A0A0A"
-        }
+        prefill: {
+          name: user?.name,
+          email: user?.email,
+          contact: user?.phone || ""
+        },
+        theme: { color: "#2563eb" }
       };
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-        toast.error("Payment failed. Please try again.");
+        toast.error(response.error.description || "Payment failed");
       });
       rzp.open();
 
@@ -247,7 +331,6 @@ function PaymentStep() {
 
   return (
     <>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <Card>
         <CardHeader>
           <CardTitle>Review & Payment</CardTitle>
@@ -260,8 +343,19 @@ function PaymentStep() {
               <p className="text-sm text-muted-foreground">{vehicleType}</p>
               <p className="text-sm text-muted-foreground">{bookingDate?.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground line-clamp-1">{address}</p>
+              {addonIds.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Add-ons</p>
+                  {availableAddons.filter(a => addonIds.includes(a.id)).map(a => (
+                    <p key={a.id} className="text-sm text-muted-foreground flex justify-between">
+                      <span>{a.name}</span>
+                      <span>+${a.price}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
               {appliedCoupon ? (
                 <>
                   <div className="text-lg font-bold line-through text-muted-foreground">${service?.price}</div>
@@ -272,6 +366,7 @@ function PaymentStep() {
               )}
             </div>
           </div>
+          
           <div className="pt-4 border-t">
             <Label>Coupon Code</Label>
             <div className="flex gap-2 mt-1">
@@ -287,13 +382,33 @@ function PaymentStep() {
             </div>
             {couponError && <p className="text-sm text-red-500 mt-1">{couponError}</p>}
           </div>
+
+          {user && (user.loyaltyPoints || 0) > 0 && (
+            <div className="pt-4 border-t">
+              <Label>Redeem Loyalty Points</Label>
+              <p className="text-xs text-muted-foreground mb-2">You have {user.loyaltyPoints} points available (10 points = $1)</p>
+              <div className="flex items-center gap-4">
+                <Input 
+                  type="number"
+                  min={0}
+                  max={user.loyaltyPoints}
+                  value={redeemPoints}
+                  onChange={(e) => setRedeemPoints(Math.min(parseInt(e.target.value) || 0, user.loyaltyPoints || 0))}
+                />
+                <span className="text-sm text-green-500 whitespace-nowrap">
+                  -${(redeemPoints * 0.1).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+      
       <div className="mt-8 flex justify-between">
         <Button variant="outline" onClick={prevStep} disabled={isProcessing}>Back</Button>
         <Button onClick={handlePayment} disabled={isProcessing} className="bg-orange-500 hover:bg-orange-600 text-white">
           {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Pay ${calculateFinalPrice()}
+          Pay ${calculateFinalPrice().toFixed(2)}
         </Button>
       </div>
     </>

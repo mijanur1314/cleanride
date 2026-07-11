@@ -84,6 +84,43 @@ async function main() {
   }
   console.log('Services created or updated.');
 
+  // Create Subscription Plans
+  const plansData = [
+    {
+      name: 'Express Membership',
+      benefits: ['2 Express Washes per month', 'Keep it clean on the go'],
+      price: 49,
+      durationDays: 30,
+    },
+    {
+      name: 'Premium Member',
+      benefits: ['1 Signature Detail per month', '1 Express Wash per month'],
+      price: 99,
+      durationDays: 30,
+    },
+    {
+      name: 'Unlimited VIP',
+      benefits: ['Unlimited Signature Details', 'Showroom ready, always'],
+      price: 199,
+      durationDays: 30,
+    },
+  ];
+
+  for (const plan of plansData) {
+    const existing = await prisma.subscriptionPlan.findFirst({ where: { name: plan.name } });
+    if (existing) {
+      await prisma.subscriptionPlan.update({
+        where: { id: existing.id },
+        data: plan,
+      });
+    } else {
+      await prisma.subscriptionPlan.create({
+        data: plan,
+      });
+    }
+  }
+  console.log('Subscription Plans created or updated.');
+
   console.log('Database seeding complete!');
 }
 

@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/useAuthStore";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 
 const loginSchema = z.object({
@@ -26,6 +26,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -101,13 +102,22 @@ export default function LoginPage() {
                   Forgot password?
                 </Link>
               </div>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="••••••••"
-                {...register("password")} 
-                className="bg-black/50 border-white/10 text-white placeholder:text-gray-600 h-14 rounded-xl focus-visible:ring-1 focus-visible:ring-white/30 text-lg"
-              />
+              <div className="relative">
+                <Input 
+                  id="password" 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••"
+                  {...register("password")} 
+                  className="bg-black/50 border-white/10 text-white placeholder:text-gray-600 h-14 rounded-xl focus-visible:ring-1 focus-visible:ring-white/30 text-lg pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               {errors.password && <p className="text-xs text-red-400 ml-1 mt-1">{errors.password.message}</p>}
             </div>
 

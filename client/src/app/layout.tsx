@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SocketProvider } from "@/components/SocketProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
@@ -40,10 +41,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <Toaster theme="dark" position="top-center" />
+          <SocketProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <Toaster theme="dark" position="top-center" />
+          </SocketProvider>
         </ThemeProvider>
       </body>
     </html>

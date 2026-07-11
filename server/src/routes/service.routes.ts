@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { getServices, getServiceById, createService, updateService, deleteService } from '../controllers/service.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
+import { cacheRoute } from '../utils/redis';
 
 const router = Router();
 
 // Public routes or accessible by any authenticated user for booking
-router.get('/', getServices);
+router.get('/', cacheRoute(3600), getServices);
 router.get('/:id', getServiceById);
 
 // Admin only routes

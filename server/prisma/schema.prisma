@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -43,6 +44,15 @@ model User {
   reviews          Review[]
   subscriptions    UserSubscription[]
   notifications    Notification[]
+  vehicles         Vehicle[]
+  messagesSent     Message[]
+  
+  // Referrals and Loyalty
+  loyaltyPoints    Int      @default(0)
+  referralCode     String?  @unique
+  referredById     String?
+  referredBy       User?    @relation("Referrals", fields: [referredById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  referrals        User[]   @relation("Referrals")
 }
 
 model Service {
@@ -101,6 +111,8 @@ model Booking {
   payment Payment?
   review  Review?
   coupon  Coupon?  @relation(fields: [couponId], references: [id])
+  messages      Message[]
+  bookingAddons BookingAddon[]
 }
 
 model Payment {
@@ -179,3 +191,52 @@ model Notification {
   user User @relation(fields: [userId], references: [id])
 }
 
+model Vehicle {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // SUV, Sedan, Hatchback
+  make        String?  // e.g., Toyota
+  model       String?  // e.g., Camry
+  plateNumber String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Addon {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookingAddons BookingAddon[]
+}
+
+model BookingAddon {
+  id        String   @id @default(uuid())
+  bookingId String
+  addonId   String
+  price     Float    // Store price at time of booking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  addon   Addon   @relation(fields: [addonId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  bookingId String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+  sender  User    @relation(fields: [senderId], references: [id])
+}

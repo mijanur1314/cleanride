@@ -1,0 +1,59 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 18
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+        
+    - name: Install dependencies (Server)
+      working-directory: ./server
+      run: npm ci
+      
+    - name: Build Server
+      working-directory: ./server
+      run: npm run build
+      
+    - name: Install dependencies (Client)
+      working-directory: ./client
+      run: npm ci
+      
+    - name: Build Client
+      working-directory: ./client
+      run: npm run build
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    # Example deployment step to a VPS via SSH
+    # You would need to add secrets in your GitHub repository
+    - name: Deploy via Docker Compose
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /opt/cleanride
+          git pull origin main
+          docker-compose down
+          docker-compose up -d --build

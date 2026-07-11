@@ -9,6 +9,7 @@ const AppError_1 = require("../utils/AppError");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
+const email_1 = require("../utils/email");
 const razorpay = new razorpay_1.default({
     key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
     key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
@@ -75,6 +76,25 @@ exports.verifyPayment = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
         where: { id: payment.id },
         data: { status: 'COMPLETED' },
     });
+    // Get user details to send email
+    const booking = await prisma_1.default.booking.findUnique({
+        where: { id: payment.bookingId },
+        include: { user: true, service: true }
+    });
+    if (booking && booking.user) {
+        await (0, email_1.sendEmail)({
+            to: booking.user.email,
+            subject: 'CleanRide - Payment Received & Booking Confirmed',
+            html: `
+        <h2>Payment Successful!</h2>
+        <p>Hi ${booking.user.name},</p>
+        <p>We have successfully received your payment of <strong>$${payment.amount}</strong> for the <strong>${booking.service.name}</strong> service.</p>
+        <p>Your booking (ID: ${booking.id}) is now confirmed. We will assign a service partner shortly.</p>
+        <br/>
+        <p>Thank you for choosing CleanRide!</p>
+      `
+        });
+    }
     res.status(200).json({
         success: true,
         message: 'Payment verified successfully',

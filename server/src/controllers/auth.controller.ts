@@ -28,11 +28,12 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
 };
 
 const registerSchema = z.object({
-  name: z.string().min(3),
+  name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(6),
   phone: z.string().optional(),
-  role: z.enum(['USER', 'ADMIN', 'PARTNER']).optional(),
+  role: z.enum(['USER', 'PARTNER']).optional(),
+  referredBy: z.string().optional(),
 });
 
 export const signup = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -42,7 +43,7 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
     return next(new AppError('Invalid input data', 400));
   }
 
-  const { name, email, password, phone, role } = parsed.data;
+  const { name, email, password, phone, role, referredBy } = parsed.data;
 
   // Check if user exists
   const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -51,6 +52,24 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
+  
+  // Generate random referral code
+  const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  let initialPoints = 0;
+  
+  if (referredBy) {
+    const referrer = await prisma.user.findUnique({ where: { referralCode: referredBy } });
+    if (referrer) {
+      initialPoints = 50; // New user gets 50 points
+      
+      // Give referrer 50 points
+      await prisma.user.update({
+        where: { id: referrer.id },
+        data: { loyaltyPoints: { increment: 50 } }
+      });
+    }
+  }
 
   const newUser = await prisma.user.create({
     data: {
@@ -58,7 +77,9 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
       email,
       password: hashedPassword,
       phone,
-      role: role as any || 'USER',
+      role: role || 'USER',
+      referralCode,
+      loyaltyPoints: initialPoints
     },
   });
 
