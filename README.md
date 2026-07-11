@@ -9,12 +9,10 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge&logo=react&logoColor=white)
 ![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
-![Razorpay](https://img.shields.io/badge/Razorpay-02042B?style=for-the-badge&logo=razorpay&logoColor=white)
-![Vercel](https://img.shields.io/badge/Deployed_on_Vercel-000?style=for-the-badge&logo=vercel&logoColor=white)
 
-**A production-grade vehicle washing platform built with Next.js 15 App Router, Express, Prisma ORM, Razorpay payments, and a complete multi-role dashboard for Customers, Partners, and Admins.**
+**A production-grade vehicle washing platform built with Next.js 15 App Router, Express, Prisma ORM, and a complete multi-role dashboard for Customers, Partners, and Admins.**
 
-[Features](#-features) · [Tech Stack](#-tech-stack) · [Architecture](#-architecture) · [Getting Started](#-getting-started) · [Deployment](#-deployment) · [API Reference](#-api-reference)
+[Features](#-features) · [Tech Stack](#-tech-stack) · [Architecture](#-architecture) · [Getting Started](#-getting-started) · [API Reference](#-api-reference)
 
 </div>
 
@@ -25,9 +23,9 @@
 CleanRide is a **full-stack, premium vehicle washing and detailing platform** that allows customers to effortlessly book car and bike wash services. The platform supports both doorstep services (where washing partners visit customer locations) and offline store appointments. It is built for scalability and elegance, utilizing a modern decoupled architecture with a highly responsive frontend and a robust Node.js backend.
 
 The platform serves **three distinct user roles**:
-- 👤 **Users** — book wash services, track status, leave reviews, and pay online
+- 👤 **Users** — book wash services, track status, and leave reviews
 - 🧽 **Partners (Washers)** — view assigned bookings, update status, and upload before/after service proof images
-- 🛡️ **Admins** — oversee the platform, assign bookings to partners, and monitor total revenue
+- 🛡️ **Admins** — oversee the platform, assign bookings to partners, and monitor operations
 
 ---
 
@@ -36,8 +34,7 @@ The platform serves **three distinct user roles**:
 ### 👤 Users
 | Feature | Description |
 |---|---|
-| 📅 **Dynamic Multi-Step Booking** | Seamless 4-step flow: Select Service → Vehicle Details → Schedule → Payment |
-| 💳 **Razorpay Payments** | Secure in-app payment processing with instant signature verification |
+| 📅 **Dynamic Multi-Step Booking** | Seamless 4-step flow: Select Service → Vehicle Details → Schedule → Confirmation |
 | 📸 **Service Verification** | View before and after images uploaded by the assigned washing partner |
 | ⭐ **Review System** | Leave 5-star ratings and written reviews for completed washes |
 | 📊 **User Dashboard** | Manage profile, view active subscriptions, and track booking history |
@@ -54,7 +51,7 @@ The platform serves **three distinct user roles**:
 | Feature | Description |
 |---|---|
 | 👥 **Manual Dispatching** | Assign unassigned bookings to specific available washing partners |
-| 📈 **Revenue Analytics** | High-level dashboard showing total bookings, users, partners, and revenue |
+| 📈 **Platform Analytics** | High-level dashboard showing total bookings, users, and partners |
 | 🚘 **Global Management** | Full overview of every customer, partner, and service happening on the platform |
 
 ---
@@ -72,7 +69,6 @@ The platform serves **three distinct user roles**:
 | **Database** | PostgreSQL (Supabase / Neon) |
 | **ORM** | Prisma |
 | **Authentication** | Custom JWT + bcryptjs |
-| **Payments** | Razorpay Node SDK |
 | **Form Validation** | React Hook Form + Zod |
 | **HTTP Client** | Axios |
 
@@ -80,7 +76,7 @@ The platform serves **three distinct user roles**:
 
 ## 🏗 Architecture
 
-CleanRide uses a **decoupled monorepo** approach — separating the Next.js client application and the Express.js API server to allow independent scaling, hosting, and maintenance.
+CleanRide uses a **decoupled monorepo** approach — separating the Next.js client application and the Express.js API server to allow independent development and execution.
 
 ```mermaid
 graph TD
@@ -98,9 +94,8 @@ graph TD
     PrismaORM[Prisma Client]
     end
 
-    subgraph "Core Data & Integrations"
+    subgraph "Core Data"
     PostgreSQL[(PostgreSQL DB)]
-    Razorpay[💳 Razorpay]
     end
 
     UserClient <-->|HTTPS / REST| NextJS
@@ -112,8 +107,6 @@ graph TD
     Controllers --> Middlewares
     Middlewares --> PrismaORM
     PrismaORM <--> PostgreSQL
-
-    Controllers -->|Create Order & Verify| Razorpay
 ```
 
 ### Design Principles
@@ -129,7 +122,6 @@ graph TD
 ### Prerequisites
 - Node.js ≥ 18 · npm ≥ 9
 - PostgreSQL Database (Supabase, Neon, or Local)
-- Razorpay Account (Test credentials)
 
 ---
 
@@ -162,10 +154,6 @@ DIRECT_URL="postgresql://user:pass@host:5432/postgres"
 # Authentication
 JWT_SECRET="your_super_secret_jwt_key_here"
 JWT_EXPIRES_IN="7d"
-
-# Razorpay
-RAZORPAY_KEY_ID="rzp_test_xxxxxxxxxxxx"
-RAZORPAY_KEY_SECRET="your_razorpay_secret"
 ```
 
 Sync your database and start the server:
@@ -198,41 +186,6 @@ npm run dev     # → http://localhost:3000
 
 ---
 
-## ☁️ Deployment
-
-CleanRide is designed to be deployed across two distinct services.
-
-| Service | Platform | Why |
-|---|---|---|
-| **Next.js App** | [Vercel](https://vercel.com) | Zero-config, built for Next.js, Edge caching |
-| **Express API** | [Render](https://render.com) | Persistent Node.js process, easy environment management |
-| **Database** | [Supabase](https://supabase.com) | Managed PostgreSQL with connection pooling |
-
----
-
-### 🔵 Deploy the Next.js App on Vercel
-
-1. Go to [vercel.com](https://vercel.com) → **Add New Project**
-2. Import your GitHub repo
-3. Set **Root Directory** to `client`
-4. Add Environment Variable:
-   ```
-   NEXT_PUBLIC_API_URL = https://your-backend-url.onrender.com/api/v1
-   ```
-5. Click **Deploy**
-
-### 🟣 Deploy the Express API on Render
-
-1. Go to [Render.com](https://render.com) → **New Web Service → Build and deploy from a Git repository**
-2. Select your repo
-3. Set **Root Directory** to `server`
-4. Build Command: `npm install && npx prisma generate && npm run build`
-5. Start Command: `npm start`
-6. Add all environment variables (`DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, etc.)
-7. Click **Deploy**
-
----
-
 ## 📡 API Reference
 
 ### Authentication
@@ -253,12 +206,6 @@ CleanRide is designed to be deployed across two distinct services.
 | `PATCH` | `/api/v1/bookings/:id/assign` | (Admin) Assign booking to partner |
 | `PATCH` | `/api/v1/bookings/:id/images` | (Partner) Upload before/after images |
 
-### Payments
-| Method | Route | Description |
-|---|---|---|
-| `POST` | `/api/v1/payments/create-order` | Generate Razorpay order ID |
-| `POST` | `/api/v1/payments/verify` | Verify Razorpay payment signature |
-
 ### Services & Reviews
 | Method | Route | Description |
 |---|---|---|
@@ -270,7 +217,6 @@ CleanRide is designed to be deployed across two distinct services.
 ## 🔐 Security
 
 - **Role-Based Access Control (RBAC)** — API routes are strictly guarded by middleware ensuring only Partners can update statuses and only Admins can assign bookings.
-- **Payment Integrity** — Razorpay webhooks and server-side HMAC SHA-256 signature verification prevent client-side payment spoofing.
 - **Password Security** — All passwords are cryptographically hashed using `bcryptjs` with 12 salt rounds before hitting the database.
 - **JWT Sessions** — Stateless authentication using HTTP-only standard JSON Web Tokens.
 
@@ -286,7 +232,7 @@ CleanRide is designed to be deployed across two distinct services.
 
 <div align="center">
 
-**Built with Next.js 15 · TypeScript · PostgreSQL · Prisma · Express · Razorpay**
+**Built with Next.js 15 · TypeScript · PostgreSQL · Prisma · Express**
 
 ⭐ Star this repository if you found it useful!
 
