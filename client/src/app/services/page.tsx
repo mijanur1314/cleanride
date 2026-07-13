@@ -28,7 +28,7 @@ export default function ServicesPage() {
     fetchServices();
   }, []);
 
-  const handleBook = (service: any) => {
+  const handleBook = (service: { id: string }) => {
     setService(service);
     router.push("/book");
   };

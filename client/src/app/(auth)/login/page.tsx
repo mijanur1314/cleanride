@@ -49,7 +49,7 @@ export default function LoginPage() {
       if (user.role === "ADMIN") router.push("/admin");
       else if (user.role === "PARTNER") router.push("/partner");
       else router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
       setIsLoading(false);

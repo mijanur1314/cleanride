@@ -19,11 +19,11 @@ const storage = multer.diskStorage({
   }
 });
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new AppError('Not an image! Please upload only images.', 400) as any, false);
+    cb(new AppError('Not an image! Please upload only images.', 400), false);
   }
 };
 

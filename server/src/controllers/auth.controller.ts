@@ -16,7 +16,9 @@ const signToken = (id: string, role: string) => {
   });
 };
 
-const createSendToken = (user: any, statusCode: number, res: Response) => {
+import { User } from '@prisma/client';
+
+const createSendToken = (user: User, statusCode: number, res: Response) => {
   const token = signToken(user.id, user.role);
 
   // Remove password from output

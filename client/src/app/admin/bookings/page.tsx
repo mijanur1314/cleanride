@@ -23,7 +23,7 @@ export default function AdminBookings() {
         api.get("/admin/users") // To get partners for assignment
       ]);
       setBookings(bookingsRes.data.data.bookings);
-      setPartners(usersRes.data.data.users.filter((u: any) => u.role === 'PARTNER'));
+      setPartners(usersRes.data.data.users.filter((u: { role: string }) => u.role === 'PARTNER'));
     } catch (error) {
       toast.error("Failed to load bookings");
     } finally {

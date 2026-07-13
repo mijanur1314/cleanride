@@ -63,7 +63,7 @@ export default function MembershipsPage() {
         name: "CleanRide Premium",
         description: `Subscription to ${plan.name} Plan`,
         order_id: order.id,
-        handler: async function (response: any) {
+        handler: async function (response: unknown) {
           try {
             await api.post("/subscriptions/verify", {
               razorpay_order_id: response.razorpay_order_id,
@@ -73,7 +73,7 @@ export default function MembershipsPage() {
             });
             toast.success("Welcome to Premium! Subscription activated.");
             router.push("/dashboard");
-          } catch (err: any) {
+          } catch (err: unknown) {
             toast.error(err.response?.data?.message || "Subscription verification failed");
           }
         },
@@ -86,12 +86,12 @@ export default function MembershipsPage() {
       };
 
       const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
+      rzp.on('payment.failed', function (response: unknown) {
         toast.error(response.error.description || "Payment failed");
       });
       rzp.open();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.message || "Failed to initiate subscription");
     } finally {
       setSubscribing(null);

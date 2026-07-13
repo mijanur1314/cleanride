@@ -220,7 +220,7 @@ export default function BookingPage() {
   );
 }
 
-function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
+function PaymentStep({ availableAddons }: { availableAddons: { id: string; name: string; price: number }[] }) {
   const { user } = useAuthStore();
   const { service, vehicleType, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -236,7 +236,7 @@ function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
       const res = await api.post("/coupons/validate", { code: couponCode });
       setAppliedCoupon(res.data.data.coupon);
       toast.success("Coupon applied!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       setCouponError(error.response?.data?.message || "Invalid coupon");
       setAppliedCoupon(null);
     }
@@ -299,7 +299,7 @@ function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
         name: "CleanRide",
         description: `Payment for ${service?.name}`,
         order_id: order.id,
-        handler: async function (response: any) {
+        handler: async function (response: unknown) {
           try {
             await api.post("/payments/verify", {
               razorpay_order_id: response.razorpay_order_id,
@@ -310,7 +310,7 @@ function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
             toast.success("Payment successful! Booking confirmed.");
             resetBooking();
             router.push("/dashboard");
-          } catch (err: any) {
+          } catch (err: unknown) {
             toast.error(err.response?.data?.message || "Payment verification failed");
           }
         },
@@ -323,12 +323,12 @@ function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
       };
 
       const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
+      rzp.on('payment.failed', function (response: unknown) {
         toast.error(response.error.description || "Payment failed");
       });
       rzp.open();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.message || "Booking failed");
     } finally {
       setIsProcessing(false);

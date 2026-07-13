@@ -2,6 +2,11 @@ import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import prisma from './utils/prisma';
+import { Socket } from 'socket.io';
+
+interface AuthenticatedSocket extends Socket {
+  user: { id: string; role: string; [key: string]: unknown };
+}
 
 let io: SocketIOServer;
 
@@ -20,7 +25,7 @@ export const initSocket = (server: HttpServer, frontendUrl: string) => {
     if (!secret) return next(new Error('Server configuration error'));
     try {
       const decoded = jwt.verify(token, secret) as JwtPayload;
-      (socket as any).user = decoded;
+      (socket as AuthenticatedSocket).user = decoded as { id: string; role: string };
       next();
     } catch (err) {
       return next(new Error('Authentication error: Invalid token'));
@@ -28,7 +33,7 @@ export const initSocket = (server: HttpServer, frontendUrl: string) => {
   });
 
   io.on('connection', (socket) => {
-    const user = (socket as any).user;
+    const { user } = socket as AuthenticatedSocket;
     console.log(`Socket connected: User ${user.id}`);
 
     socket.join(user.id);

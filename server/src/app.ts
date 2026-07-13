@@ -13,6 +13,31 @@ const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+import rateLimit from 'express-rate-limit';
+import { logger } from './utils/logger';
+
+// API Rate Limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // limit each IP to 20 requests per windowMs
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, // standard API limit
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Middleware for request logging
+app.use((req, res, next) => {
+  logger.info(`Incoming Request`, { method: req.method, url: req.url, ip: req.ip });
+  next();
+});
+
 app.use(cors({
   origin: frontendUrl,
   credentials: true
@@ -47,7 +72,8 @@ import { errorHandler } from './middlewares/error.middleware';
 import { AppError } from './utils/AppError';
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api', apiLimiter); // Apply standard limit to all API routes
+app.use('/api/auth', authLimiter, authRoutes); // Apply strict limit to Auth routes
 app.use('/api/users', userRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/stores', storeRoutes);

@@ -117,7 +117,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="[&_tr:last-child]:border-0">
-                {recentBookings.map((booking: any) => (
+                {recentBookings.map((booking: { id: string; user?: { name: string }; service?: { name: string }; status: string; totalAmount: number; createdAt: string }) => (
                   <tr key={booking.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                     <td className="p-4 align-middle font-medium">
                       {booking.user?.name || "Unknown"}

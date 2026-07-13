@@ -50,7 +50,7 @@ export const cacheRoute = (duration: number) => {
       } else {
         // Override res.json to cache the response before sending
         const originalJson = res.json.bind(res);
-        res.json = (body: any) => {
+        res.json = (body: unknown) => {
           redisClient?.set(key, JSON.stringify(body), 'EX', duration).catch(console.error);
           return originalJson(body);
         };

@@ -54,7 +54,7 @@ export default function RegisterPage() {
       
       if (user.role === "PARTNER") router.push("/partner");
       else router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.response?.data?.message || "Registration failed");
     } finally {
       setIsLoading(false);

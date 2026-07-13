@@ -76,7 +76,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
       totalAmount: finalAmount,
       couponId,
       bookingAddons: {
-        create: addons.map((addon: any) => ({
+        create: addons.map((addon: string) => ({
           addonId: addon.id,
           price: addon.price
         }))

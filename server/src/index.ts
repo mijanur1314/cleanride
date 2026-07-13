@@ -1,9 +1,12 @@
 import http from 'http';
 import app from './app';
 import { initSocket } from './socket';
+import prisma from './utils/prisma';
 
 const PORT = process.env.PORT || 5000;
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+import { logger } from './utils/logger';
 
 const server = http.createServer(app);
 
@@ -11,5 +14,30 @@ const server = http.createServer(app);
 initSocket(server, frontendUrl);
 
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
 });
+
+// Graceful Shutdown Handlers
+const shutdown = async (signal: string) => {
+  logger.info(`Received ${signal}. Shutting down gracefully...`);
+  server.close(async () => {
+    logger.info('HTTP server closed.');
+    try {
+      await prisma.$disconnect();
+      logger.info('Database connection closed.');
+      process.exit(0);
+    } catch (err) {
+      logger.error('Error during database disconnection:', err);
+      process.exit(1);
+    }
+  });
+
+  // Force shutdown after 10s if graceful fails
+  setTimeout(() => {
+    logger.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
