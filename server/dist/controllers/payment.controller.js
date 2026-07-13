@@ -10,9 +10,14 @@ const prisma_1 = __importDefault(require("../utils/prisma"));
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
 const email_1 = require("../utils/email");
+const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
+const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
+if (!razorpayKeyId || !razorpayKeySecret) {
+    console.error('FATAL: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not defined in environment variables.');
+}
 const razorpay = new razorpay_1.default({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
+    key_id: razorpayKeyId || 'MISSING_KEY_ID',
+    key_secret: razorpayKeySecret || 'MISSING_KEY_SECRET',
 });
 exports.createOrder = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     const { bookingId } = req.body;
@@ -26,6 +31,9 @@ exports.createOrder = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
         return next(new AppError_1.AppError('Unauthorized access to booking', 403));
     if (booking.payment?.status === 'COMPLETED')
         return next(new AppError_1.AppError('Payment already completed', 400));
+    if (!razorpayKeyId || !razorpayKeySecret) {
+        return next(new AppError_1.AppError('Payment gateway is not configured properly on the server.', 500));
+    }
     const amountInPaise = Math.round(booking.totalAmount * 100);
     const options = {
         amount: amountInPaise,

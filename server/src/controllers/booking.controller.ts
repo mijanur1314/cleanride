@@ -134,41 +134,53 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
     return next(new AppError('Invalid status', 400));
   }
 
-  const booking = await prisma.booking.update({
+  const booking = await prisma.booking.findUnique({
+    where: { id: req.params.id as string },
+    include: { user: true, partner: true }
+  });
+
+  if (!booking) return next(new AppError('Booking not found', 404));
+
+  if (req.user.role === 'PARTNER' && booking.partnerId !== req.user.id) {
+    return next(new AppError('You are not authorized to update this booking', 403));
+  }
+
+  const updatedBooking = await prisma.booking.update({
     where: { id: req.params.id as string },
     data: { status },
     include: { user: true, partner: true }
   });
 
   // Notify the user via Socket.IO
-  if (booking.userId) {
-    io.to(booking.userId).emit('notification', {
+  if (updatedBooking.userId) {
+    io.to(updatedBooking.userId).emit('notification', {
       title: 'Booking Updated',
       message: `Your booking status is now ${status}`,
       type: 'info'
     });
 
-    if (status === 'COMPLETED' && booking.user) {
+    if (status === 'COMPLETED' && updatedBooking.user) {
       // Award loyalty points (1 point per $1 spent)
-      const pointsEarned = Math.floor(booking.totalAmount);
+      const pointsEarned = Math.floor(updatedBooking.totalAmount);
       await prisma.user.update({
-        where: { id: booking.userId },
+        where: { id: updatedBooking.userId },
         data: { loyaltyPoints: { increment: pointsEarned } }
       });
 
       sendEmail(
-        booking.user.email,
+        updatedBooking.user.email,
         'Wash Completed! - CleanRide',
         `<h1>Your service is complete!</h1>
          <p>Hi ${booking.user.name},</p>
          <p>Your vehicle wash service has been marked as <strong>COMPLETED</strong>.</p>
          <p>We hope you enjoy your clean ride. Please log in to your dashboard to leave a review!</p>
-         <p>Thanks for choosing CleanRide.</p>`
+         updatedBooking.partner?.name || 'Partner',
+        status
       );
     }
   }
 
-  res.status(200).json({ success: true, data: { booking } });
+  res.status(200).json({ success: true, data: { booking: updatedBooking } });
 });
 
 export const assignPartner = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -228,6 +240,16 @@ export const updateImages = catchAsync(async (req: Request, res: Response, next:
   }
   if (files?.afterImage) {
     afterImageUrl = `/uploads/${files.afterImage[0].filename}`;
+  }
+
+  const existingBooking = await prisma.booking.findUnique({
+    where: { id: req.params.id as string }
+  });
+
+  if (!existingBooking) return next(new AppError('Booking not found', 404));
+
+  if (req.user.role === 'PARTNER' && existingBooking.partnerId !== req.user.id) {
+    return next(new AppError('You are not authorized to update this booking', 403));
   }
 
   const booking = await prisma.booking.update({

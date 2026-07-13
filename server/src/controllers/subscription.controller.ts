@@ -5,9 +5,14 @@ import prisma from '../utils/prisma';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  console.error("CRITICAL: Razorpay keys are not configured in environment variables.");
+  // Don't crash immediately, wait for request to fail
+}
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
+  key_id: process.env.RAZORPAY_KEY_ID || '',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
 });
 
 export const getPlans = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -24,6 +29,10 @@ export const createSubscriptionOrder = catchAsync(async (req: Request, res: Resp
 
   const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
   if (!plan) return next(new AppError('Plan not found', 404));
+
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    return next(new AppError('Payment gateway is not configured securely', 500));
+  }
 
   const amountInPaise = Math.round(plan.price * 100);
 
@@ -43,15 +52,19 @@ export const createSubscriptionOrder = catchAsync(async (req: Request, res: Resp
 
 export const verifySubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
-  const userId = req.user.id;
 
-  const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
-  const generatedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+  if (!process.env.RAZORPAY_KEY_SECRET) {
+    return next(new AppError('Payment gateway is not configured securely', 500));
+  }
+
+  const body = razorpay_order_id + '|' + razorpay_payment_id;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(body.toString())
     .digest('hex');
 
-  if (generatedSignature !== razorpay_signature) {
+  if (expectedSignature !== razorpay_signature) {
     return next(new AppError('Payment verification failed', 400));
   }
 

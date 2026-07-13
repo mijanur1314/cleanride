@@ -11,7 +11,11 @@ const AppError_1 = require("../utils/AppError");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const zod_1 = require("zod");
 const signToken = (id, role) => {
-    return jsonwebtoken_1.default.sign({ id, role }, process.env.JWT_SECRET || 'secret-key-fallback', {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('FATAL: JWT_SECRET environment variable is not defined.');
+    }
+    return jsonwebtoken_1.default.sign({ id, role }, secret, {
         expiresIn: (process.env.JWT_EXPIRES_IN || '90d'),
     });
 };

@@ -28,7 +28,7 @@ interface ChatBoxProps {
 }
 
 export function ChatBox({ bookingId, partnerName, userName, onClose }: ChatBoxProps) {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +43,9 @@ export function ChatBox({ bookingId, partnerName, userName, onClose }: ChatBoxPr
 
   useEffect(() => {
     // Connect to Socket.IO
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', {
+      auth: { token }
+    });
     socketRef.current = newSocket;
 
     newSocket.on('connect', () => {

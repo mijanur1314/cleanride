@@ -16,7 +16,10 @@ exports.protect = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     if (!token) {
         return next(new AppError_1.AppError('You are not logged in! Please log in to get access.', 401));
     }
-    const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'secret-key-fallback');
+    if (!process.env.JWT_SECRET) {
+        return next(new AppError_1.AppError('FATAL: JWT_SECRET environment variable is not defined.', 500));
+    }
+    const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
     const currentUser = await prisma_1.default.user.findUnique({
         where: { id: decoded.id },
     });

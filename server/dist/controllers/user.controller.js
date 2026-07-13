@@ -27,6 +27,9 @@ exports.getUsers = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     });
 });
 exports.getUserById = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
+    if (req.user.role !== 'ADMIN' && req.user.id !== req.params.id) {
+        return next(new AppError_1.AppError('Unauthorized access to user profile', 403));
+    }
     const user = await prisma_1.default.user.findUnique({
         where: { id: req.params.id },
         select: {

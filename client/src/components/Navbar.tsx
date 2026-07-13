@@ -23,7 +23,7 @@ export interface NotificationData {
 }
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, token } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
@@ -51,7 +51,9 @@ export default function Navbar() {
       fetchNotifs();
       
       // Initialize Socket.IO
-      socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000');
+      socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000', {
+        auth: { token }
+      });
       
       socket.emit('join', user.id);
       
