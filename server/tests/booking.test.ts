@@ -31,7 +31,7 @@ describe('Booking Boundaries', () => {
       const res = await request(app)
         .patch('/api/bookings/123/status')
         .set('Authorization', `Bearer ${token}`)
-        .send({ status: 'IN_PROGRESS' });
+        .send({ status: 'WASH_IN_PROGRESS' });
       
       expect(res.status).toBe(403);
     });

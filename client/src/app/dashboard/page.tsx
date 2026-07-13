@@ -243,7 +243,7 @@ export default function UserDashboard() {
                     <Badge variant="outline" className="mt-2 mb-4">
                       {booking.payment?.status || 'PENDING'}
                     </Badge>
-                    {booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS' ? (
+                    {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
                       <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
                         <MessageCircle className="w-4 h-4" />
                         Chat

@@ -1,3 +1,4 @@
+import { env } from '../utils/env';
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
 
@@ -11,7 +12,7 @@ export const errorHandler = (
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
-  if (process.env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development') {
     res.status(err.statusCode).json({
       success: false,
       status: err.status,

@@ -180,13 +180,13 @@ export default function PartnerDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                        <SelectItem value="WASH_IN_PROGRESS">Wash In Progress</SelectItem>
                         <SelectItem value="COMPLETED">Completed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  {booking.status === 'CONFIRMED' || booking.status === 'IN_PROGRESS' ? (
+                  {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
                     <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 mt-2" onClick={() => setActiveChat({ bookingId: booking.id, userName: booking.user?.name || 'Customer' })}>
                       <MessageCircle className="w-4 h-4" />
                       Chat with Customer

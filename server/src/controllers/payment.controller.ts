@@ -1,3 +1,4 @@
+import { env } from '../utils/env';
 import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
@@ -6,16 +7,9 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { sendEmail } from '../utils/email';
 
-const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
-const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
-
-if (!razorpayKeyId || !razorpayKeySecret) {
-  console.error('FATAL: RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is not defined in environment variables.');
-}
-
 const razorpay = new Razorpay({
-  key_id: razorpayKeyId || 'MISSING_KEY_ID',
-  key_secret: razorpayKeySecret || 'MISSING_KEY_SECRET',
+  key_id: env.RAZORPAY_KEY_ID,
+  key_secret: env.RAZORPAY_KEY_SECRET,
 });
 
 export const createOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -29,10 +23,6 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
   if (!booking) return next(new AppError('Booking not found', 404));
   if (booking.userId !== req.user!.id) return next(new AppError('Unauthorized access to booking', 403));
   if (booking.payment?.status === 'COMPLETED') return next(new AppError('Payment already completed', 400));
-
-  if (!razorpayKeyId || !razorpayKeySecret) {
-    return next(new AppError('Payment gateway is not configured properly on the server.', 500));
-  }
 
   const amountInPaise = Math.round(booking.totalAmount * 100);
 
@@ -70,12 +60,12 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
 export const verifyPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
 
-  if (!process.env.RAZORPAY_KEY_SECRET) {
+  if (!env.RAZORPAY_KEY_SECRET) {
     return next(new AppError('Payment gateway is not configured securely', 500));
   }
 
   const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .createHmac('sha256', env.RAZORPAY_KEY_SECRET)
     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
     .digest('hex');
 
@@ -92,16 +82,22 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
     return next(new AppError('Payment record not found', 404));
   }
 
-  await prisma.payment.update({
-    where: { id: payment.id },
-    data: { status: 'COMPLETED' },
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedPayment = await tx.payment.update({
+      where: { id: payment.id },
+      data: { status: 'COMPLETED' },
+    });
+
+    const booking = await tx.booking.update({
+      where: { id: payment.bookingId },
+      data: { status: 'CONFIRMED' },
+      include: { user: true, service: true }
+    });
+
+    return { updatedPayment, booking };
   });
 
-  // Get user details to send email
-  const booking = await prisma.booking.findUnique({
-    where: { id: payment.bookingId },
-    include: { user: true, service: true }
-  });
+  const { booking } = result;
 
   if (booking && booking.user) {
     await sendEmail({

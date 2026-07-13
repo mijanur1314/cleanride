@@ -4,11 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
-
-dotenv.config();
+import { env } from './utils/env';
 
 const app = express();
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

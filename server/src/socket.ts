@@ -1,3 +1,4 @@
+import { env } from './utils/env';
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import jwt, { JwtPayload } from 'jsonwebtoken';
@@ -21,7 +22,7 @@ export const initSocket = (server: HttpServer, frontendUrl: string) => {
   io.use((socket, next) => {
     const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
     if (!token) return next(new Error('Authentication error: No token provided'));
-    const secret = process.env.JWT_SECRET;
+    const secret = env.JWT_SECRET;
     if (!secret) return next(new Error('Server configuration error'));
     try {
       const decoded = jwt.verify(token, secret) as JwtPayload;

@@ -1,3 +1,4 @@
+import { env } from '../utils/env';
 import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
@@ -5,8 +6,8 @@ import { createClient } from '@supabase/supabase-js';
 import multer from 'multer';
 
 // Supabase client initialization
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_KEY || '';
+const supabaseUrl = env.SUPABASE_URL || '';
+const supabaseKey = env.SUPABASE_KEY || '';
 
 import { SupabaseClient } from '@supabase/supabase-js';
 let supabase: SupabaseClient | null = null;

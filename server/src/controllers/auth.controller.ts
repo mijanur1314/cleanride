@@ -1,3 +1,4 @@
+import { env } from '../utils/env';
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -7,12 +8,12 @@ import prisma from '../utils/prisma';
 import { z } from 'zod';
 
 const signToken = (id: string, role: string) => {
-  const secret = process.env.JWT_SECRET;
+  const secret = env.JWT_SECRET;
   if (!secret) {
     throw new Error('FATAL: JWT_SECRET environment variable is not defined.');
   }
   return jwt.sign({ id, role }, secret, {
-    expiresIn: (process.env.JWT_EXPIRES_IN || '90d') as jwt.SignOptions['expiresIn'],
+    expiresIn: (env.JWT_EXPIRES_IN || '90d') as jwt.SignOptions['expiresIn'],
   });
 };
 

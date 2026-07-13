@@ -1,3 +1,4 @@
+import { env } from '../utils/env';
 import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
@@ -5,14 +6,9 @@ import prisma from '../utils/prisma';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  console.error("CRITICAL: Razorpay keys are not configured in environment variables.");
-  // Don't crash immediately, wait for request to fail
-}
-
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'MISSING_KEY_ID',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'MISSING_KEY_SECRET',
+  key_id: env.RAZORPAY_KEY_ID,
+  key_secret: env.RAZORPAY_KEY_SECRET,
 });
 
 export const getPlans = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -30,7 +26,7 @@ export const createSubscriptionOrder = catchAsync(async (req: Request, res: Resp
   const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
   if (!plan) return next(new AppError('Plan not found', 404));
 
-  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+  if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
     return next(new AppError('Payment gateway is not configured securely', 500));
   }
 
@@ -54,14 +50,14 @@ export const verifySubscription = catchAsync(async (req: Request, res: Response,
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
   const userId = req.user!.id;
 
-  if (!process.env.RAZORPAY_KEY_SECRET) {
+  if (!env.RAZORPAY_KEY_SECRET) {
     return next(new AppError('Payment gateway is not configured securely', 500));
   }
 
   const body = razorpay_order_id + '|' + razorpay_payment_id;
 
   const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .createHmac('sha256', env.RAZORPAY_KEY_SECRET)
     .update(body.toString())
     .digest('hex');
 

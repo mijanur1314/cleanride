@@ -46,43 +46,45 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
     }
   }
 
+  let pointsDiscount = 0;
   if (redeemPoints) {
-    // Validate user has enough points
     const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
     if (!user || user.loyaltyPoints < redeemPoints) {
       return next(new AppError('Insufficient loyalty points', 400));
     }
-    // 10 points = $1 discount
-    const pointsDiscount = redeemPoints * 0.1;
+    pointsDiscount = redeemPoints * 0.1;
     finalAmount -= pointsDiscount;
     if (finalAmount < 0) finalAmount = 0;
-
-    // Deduct points
-    await prisma.user.update({
-      where: { id: req.user!.id },
-      data: { loyaltyPoints: { decrement: redeemPoints } }
-    });
   }
 
-  const booking = await prisma.booking.create({
-    data: {
-      userId: req.user!.id,
-      serviceId,
-      storeId,
-      vehicleType,
-      vehicleNumber,
-      address,
-      bookingDate: new Date(bookingDate),
-      totalAmount: finalAmount,
-      couponId,
-      bookingAddons: {
-        create: addons.map((addon: { id: string; price: number }) => ({
-          addonId: addon.id,
-          price: addon.price
-        }))
-      }
-    },
-    include: { user: true, service: true, bookingAddons: { include: { addon: true } } }
+  const booking = await prisma.$transaction(async (tx) => {
+    if (redeemPoints) {
+      await tx.user.update({
+        where: { id: req.user!.id },
+        data: { loyaltyPoints: { decrement: redeemPoints } }
+      });
+    }
+
+    return await tx.booking.create({
+      data: {
+        userId: req.user!.id,
+        serviceId,
+        storeId,
+        vehicleType,
+        vehicleNumber,
+        address,
+        bookingDate: new Date(bookingDate),
+        totalAmount: finalAmount,
+        couponId,
+        bookingAddons: {
+          create: addons.map((addon: { id: string; price: number }) => ({
+            addonId: addon.id,
+            price: addon.price
+          }))
+        }
+      },
+      include: { user: true, service: true, bookingAddons: { include: { addon: true } } }
+    });
   });
 
   // Send confirmation email
@@ -130,7 +132,7 @@ export const getAllBookings = catchAsync(async (req: Request, res: Response, nex
 
 export const updateBookingStatus = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { status } = req.body;
-  if (!['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(status)) {
+  if (!['PENDING', 'CONFIRMED', 'PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS', 'REVIEW_PENDING', 'COMPLETED', 'CANCELLED'].includes(status)) {
     return next(new AppError('Invalid status', 400));
   }
 
@@ -191,7 +193,7 @@ export const assignPartner = catchAsync(async (req: Request, res: Response, next
 
   const booking = await prisma.booking.update({
     where: { id: req.params.id as string },
-    data: { partnerId, status: 'CONFIRMED' },
+    data: { partnerId, status: 'PARTNER_ASSIGNED' },
     include: { user: true, partner: true }
   });
 

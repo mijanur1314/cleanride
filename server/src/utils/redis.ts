@@ -1,8 +1,9 @@
+import { env } from '../utils/env';
 import Redis from 'ioredis';
 import { Request, Response, NextFunction } from 'express';
 
 // Initialize Redis client only if REDIS_URL is provided
-const redisUrl = process.env.REDIS_URL;
+const redisUrl = env.REDIS_URL;
 let redisClient: Redis | null = null;
 
 if (redisUrl) {

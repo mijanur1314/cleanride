@@ -1,3 +1,4 @@
+import { env } from '../utils/env';
 import nodemailer from 'nodemailer';
 
 interface EmailOptions {
@@ -9,11 +10,11 @@ interface EmailOptions {
 const createTransporter = () => {
   // If SMTP is not fully configured, you can use ethereal email or console log for testing
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: parseInt(process.env.SMTP_PORT || '587'),
+    host: env.SMTP_HOST || 'smtp.ethereal.email',
+    port: parseInt(env.SMTP_PORT || '587'),
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: env.SMTP_USER,
+      pass: env.SMTP_PASS,
     },
   });
 };
@@ -23,7 +24,7 @@ export const sendEmail = async (options: EmailOptions) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"CleanRide Support" <${process.env.SMTP_USER || 'noreply@cleanride.com'}>`,
+      from: `"CleanRide Support" <${env.SMTP_USER || 'noreply@cleanride.com'}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -33,7 +34,7 @@ export const sendEmail = async (options: EmailOptions) => {
     console.log(`Email sent successfully to ${options.to}. Message ID: ${info.messageId}`);
     
     // If using ethereal email for testing, log the preview URL
-    if (process.env.SMTP_HOST === 'smtp.ethereal.email') {
+    if (env.SMTP_HOST === 'smtp.ethereal.email') {
       console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
     }
 
