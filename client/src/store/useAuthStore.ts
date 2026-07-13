@@ -7,7 +7,9 @@ interface User {
   email: string;
   phone?: string;
   loyaltyPoints?: number;
+  referralCode?: string;
   role: 'USER' | 'ADMIN' | 'PARTNER';
+  [key: string]: any; // Allow any other properties to prevent TS errors
 }
 
 interface AuthState {
