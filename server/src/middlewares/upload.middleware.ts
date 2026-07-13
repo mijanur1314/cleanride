@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import multer from 'multer';
 import path from 'path';
 import { AppError } from '../utils/AppError';
@@ -23,7 +24,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new AppError('Not an image! Please upload only images.', 400), false);
+    cb(new Error('Not an image! Please upload only images.') as unknown as null, false);
   }
 };
 

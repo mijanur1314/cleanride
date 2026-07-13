@@ -5,7 +5,7 @@ import prisma from '../utils/prisma';
 
 export const createReview = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { bookingId, rating, comment } = req.body;
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) return next(new AppError('Booking not found', 404));

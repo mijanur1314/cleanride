@@ -50,7 +50,7 @@ export default function LoginPage() {
       else if (user.role === "PARTNER") router.push("/partner");
       else router.push("/dashboard");
     } catch (error: unknown) {
-      toast.error(error.response?.data?.message || "Login failed");
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Login failed");
     } finally {
       setIsLoading(false);
     }

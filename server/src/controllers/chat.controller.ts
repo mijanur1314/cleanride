@@ -9,7 +9,7 @@ export const getBookingMessages = catchAsync(async (req: Request, res: Response,
   const booking = await prisma.booking.findUnique({ where: { id: bookingId as string } });
   if (!booking) return next(new AppError('Booking not found', 404));
   
-  if (req.user.role !== 'ADMIN' && booking.userId !== req.user.id && booking.partnerId !== req.user.id) {
+  if (req.user!.role !== 'ADMIN' && booking.userId !== req.user!.id && booking.partnerId !== req.user!.id) {
     return next(new AppError('Unauthorized access to chat', 403));
   }
 

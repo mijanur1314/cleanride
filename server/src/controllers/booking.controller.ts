@@ -48,7 +48,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 
   if (redeemPoints) {
     // Validate user has enough points
-    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
     if (!user || user.loyaltyPoints < redeemPoints) {
       return next(new AppError('Insufficient loyalty points', 400));
     }
@@ -59,14 +59,14 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 
     // Deduct points
     await prisma.user.update({
-      where: { id: req.user.id },
+      where: { id: req.user!.id },
       data: { loyaltyPoints: { decrement: redeemPoints } }
     });
   }
 
   const booking = await prisma.booking.create({
     data: {
-      userId: req.user.id,
+      userId: req.user!.id,
       serviceId,
       storeId,
       vehicleType,
@@ -76,7 +76,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
       totalAmount: finalAmount,
       couponId,
       bookingAddons: {
-        create: addons.map((addon: string) => ({
+        create: addons.map((addon: { id: string; price: number }) => ({
           addonId: addon.id,
           price: addon.price
         }))
@@ -101,7 +101,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 
 export const getMyBookings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const bookings = await prisma.booking.findMany({
-    where: { userId: req.user.id },
+    where: { userId: req.user!.id },
     include: { service: true, partner: true, store: true, payment: true, review: true, coupon: true, bookingAddons: { include: { addon: true } } },
     orderBy: { createdAt: 'desc' },
   });
@@ -111,7 +111,7 @@ export const getMyBookings = catchAsync(async (req: Request, res: Response, next
 
 export const getPartnerBookings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const bookings = await prisma.booking.findMany({
-    where: { partnerId: req.user.id },
+    where: { partnerId: req.user!.id },
     include: { service: true, user: true, store: true, bookingAddons: { include: { addon: true } } },
     orderBy: { createdAt: 'desc' },
   });
@@ -141,7 +141,7 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
 
   if (!booking) return next(new AppError('Booking not found', 404));
 
-  if (req.user.role === 'PARTNER' && booking.partnerId !== req.user.id) {
+  if (req.user!.role === 'PARTNER' && booking.partnerId !== req.user!.id) {
     return next(new AppError('You are not authorized to update this booking', 403));
   }
 
@@ -246,7 +246,7 @@ export const updateImages = catchAsync(async (req: Request, res: Response, next:
 
   if (!existingBooking) return next(new AppError('Booking not found', 404));
 
-  if (req.user.role === 'PARTNER' && existingBooking.partnerId !== req.user.id) {
+  if (req.user!.role === 'PARTNER' && existingBooking.partnerId !== req.user!.id) {
     return next(new AppError('You are not authorized to update this booking', 403));
   }
 

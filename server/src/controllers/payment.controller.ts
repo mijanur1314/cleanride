@@ -27,7 +27,7 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
   });
 
   if (!booking) return next(new AppError('Booking not found', 404));
-  if (booking.userId !== req.user.id) return next(new AppError('Unauthorized access to booking', 403));
+  if (booking.userId !== req.user!.id) return next(new AppError('Unauthorized access to booking', 403));
   if (booking.payment?.status === 'COMPLETED') return next(new AppError('Payment already completed', 400));
 
   if (!razorpayKeyId || !razorpayKeySecret) {

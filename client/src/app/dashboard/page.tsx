@@ -74,7 +74,7 @@ export default function UserDashboard() {
       // Update local state to show review
       setBookings(bookings.map(b => b.id === bookingId ? { ...b, review: { rating: data.rating, comment: data.comment } } : b));
     } catch (error: unknown) {
-      toast.error(error.response?.data?.message || "Failed to submit review");
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to submit review");
     } finally {
       setSubmittingReview(null);
     }
@@ -93,7 +93,7 @@ export default function UserDashboard() {
       setNewVehicle({ type: '', make: '', model: '', plateNumber: '' });
       toast.success("Vehicle added to garage!");
     } catch (error: unknown) {
-      toast.error(error.response?.data?.message || "Failed to add vehicle");
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to add vehicle");
     } finally {
       setAddingVehicle(false);
     }

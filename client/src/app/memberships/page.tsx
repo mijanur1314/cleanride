@@ -65,16 +65,17 @@ export default function MembershipsPage() {
         order_id: order.id,
         handler: async function (response: unknown) {
           try {
+            const rzp = response as { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string; };
             await api.post("/subscriptions/verify", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
+              razorpay_order_id: rzp.razorpay_order_id,
+              razorpay_payment_id: rzp.razorpay_payment_id,
+              razorpay_signature: rzp.razorpay_signature,
               planId
             });
             toast.success("Welcome to Premium! Subscription activated.");
             router.push("/dashboard");
           } catch (err: unknown) {
-            toast.error(err.response?.data?.message || "Subscription verification failed");
+            toast.error((err as { response?: { data?: { message?: string } } }).response?.data?.message || "Subscription verification failed");
           }
         },
         prefill: {
@@ -87,12 +88,13 @@ export default function MembershipsPage() {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: unknown) {
-        toast.error(response.error.description || "Payment failed");
+        const errRzp = response as { error?: { description?: string } };
+        toast.error(errRzp.error?.description || "Payment failed");
       });
       rzp.open();
 
     } catch (error: unknown) {
-      toast.error(error.response?.data?.message || "Failed to initiate subscription");
+      toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to initiate subscription");
     } finally {
       setSubscribing(null);
     }

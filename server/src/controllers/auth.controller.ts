@@ -21,14 +21,13 @@ import { User } from '@prisma/client';
 const createSendToken = (user: User, statusCode: number, res: Response) => {
   const token = signToken(user.id, user.role);
 
-  // Remove password from output
-  user.password = undefined;
+  const { password, ...userWithoutPassword } = user;
 
   res.status(statusCode).json({
     success: true,
     token,
     data: {
-      user,
+      user: userWithoutPassword,
     },
   });
 };
@@ -118,17 +117,19 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
 export const getMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
+    where: { id: req.user!.id },
   });
 
-  if (user) {
-    (user as Partial<User>).password = undefined;
+  if (!user) {
+    return next(new AppError('User not found', 404));
   }
+
+  const { password, ...userWithoutPassword } = user;
 
   res.status(200).json({
     success: true,
     data: {
-      user,
+      user: userWithoutPassword,
     },
   });
 });

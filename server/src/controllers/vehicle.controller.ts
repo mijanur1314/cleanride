@@ -41,7 +41,7 @@ export const addVehicle = catchAsync(async (req: Request, res: Response, next: N
 
 export const getMyVehicles = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const vehicles = await prisma.vehicle.findMany({
-    where: { userId: req.user.id },
+    where: { userId: req.user!.id },
     orderBy: { createdAt: 'desc' }
   });
 
@@ -53,7 +53,7 @@ export const deleteVehicle = catchAsync(async (req: Request, res: Response, next
     where: { id: req.params.id as string }
   });
 
-  if (!vehicle || vehicle.userId !== req.user.id) {
+  if (!vehicle || vehicle.userId !== req.user!.id) {
     return next(new AppError('Vehicle not found', 404));
   }
 

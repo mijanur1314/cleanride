@@ -25,7 +25,7 @@ export const getUsers = catchAsync(async (req: Request, res: Response, next: Nex
 });
 
 export const getUserById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  if (req.user.role !== 'ADMIN' && req.user.id !== req.params.id) {
+  if (req.user!.role !== 'ADMIN' && req.user!.id !== req.params.id) {
     return next(new AppError('Unauthorized access to user profile', 403));
   }
 
@@ -61,7 +61,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
   }
 
   const updatedUser = await prisma.user.update({
-    where: { id: req.user.id },
+    where: { id: req.user!.id },
     data: {
       name: req.body.name,
       phone: req.body.phone,

@@ -25,7 +25,7 @@ export const getPlans = catchAsync(async (req: Request, res: Response, next: Nex
 
 export const createSubscriptionOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { planId } = req.body;
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
   if (!plan) return next(new AppError('Plan not found', 404));
@@ -52,7 +52,7 @@ export const createSubscriptionOrder = catchAsync(async (req: Request, res: Resp
 
 export const verifySubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
-  const userId = req.user.id;
+  const userId = req.user!.id;
 
   if (!process.env.RAZORPAY_KEY_SECRET) {
     return next(new AppError('Payment gateway is not configured securely', 500));
@@ -100,7 +100,7 @@ export const verifySubscription = catchAsync(async (req: Request, res: Response,
 export const getMySubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const subscription = await prisma.userSubscription.findFirst({
     where: { 
-      userId: req.user.id,
+      userId: req.user!.id,
       isActive: true,
       endDate: { gte: new Date() }
     },

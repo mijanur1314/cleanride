@@ -162,7 +162,7 @@ export default function Home() {
                     {/* Suggestions Dropdown */}
                     {showSuggestions && suggestions.length > 0 && (
                       <div className="absolute top-[calc(100%+16px)] left-0 w-full min-w-[280px] bg-[#1A1A1A] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[100]">
-                        {suggestions.map((sugg: { id: string; name: string; type: string }, idx: number) => (
+                        {suggestions.map((sugg: { display_name: string; lat: string; lon: string; place_id: string }, idx: number) => (
                           <div 
                             key={idx}
                             onClick={() => {
@@ -350,7 +350,7 @@ export default function Home() {
   );
 }
 
-function PackageCard({ image, title, price, time, type, features, isPopular = false }: { image: React.ReactNode, title: string, price: number | string, time: string, type: string, features: string[], isPopular?: boolean }) {
+function PackageCard({ image, title, price, time, type, features, isPopular = false }: { image: string, title: string, price: number | string, time: string, type: string, features: string[], isPopular?: boolean }) {
   const router = useRouter();
   return (
     <motion.div 
