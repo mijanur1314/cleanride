@@ -70,9 +70,12 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
 export const verifyPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
 
-  const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
+  if (!process.env.RAZORPAY_KEY_SECRET) {
+    return next(new AppError('Payment gateway is not configured securely', 500));
+  }
+
   const generatedSignature = crypto
-    .createHmac('sha256', secret)
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
     .update(`${razorpay_order_id}|${razorpay_payment_id}`)
     .digest('hex');
 

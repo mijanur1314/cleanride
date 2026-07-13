@@ -8,7 +8,7 @@ const catchAsync_1 = require("../utils/catchAsync");
 const AppError_1 = require("../utils/AppError");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const zod_1 = require("zod");
-const index_1 = require("../index");
+const socket_1 = require("../socket");
 const mailer_1 = require("../utils/mailer");
 const bookingSchema = zod_1.z.object({
     serviceId: zod_1.z.string().uuid(),
@@ -117,33 +117,41 @@ exports.updateBookingStatus = (0, catchAsync_1.catchAsync)(async (req, res, next
     if (!['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(status)) {
         return next(new AppError_1.AppError('Invalid status', 400));
     }
-    const booking = await prisma_1.default.booking.update({
+    const booking = await prisma_1.default.booking.findUnique({
+        where: { id: req.params.id },
+        include: { user: true, partner: true }
+    });
+    if (!booking)
+        return next(new AppError_1.AppError('Booking not found', 404));
+    if (req.user.role === 'PARTNER' && booking.partnerId !== req.user.id) {
+        return next(new AppError_1.AppError('You are not authorized to update this booking', 403));
+    }
+    const updatedBooking = await prisma_1.default.booking.update({
         where: { id: req.params.id },
         data: { status },
         include: { user: true, partner: true }
     });
-    // Notify the user via Socket.IO
-    if (booking.userId) {
-        index_1.io.to(booking.userId).emit('notification', {
+    if (updatedBooking.userId) {
+        (0, socket_1.getIO)().to(updatedBooking.userId).emit('notification', {
             title: 'Booking Updated',
             message: `Your booking status is now ${status}`,
             type: 'info'
         });
-        if (status === 'COMPLETED' && booking.user) {
+        if (status === 'COMPLETED' && updatedBooking.user) {
             // Award loyalty points (1 point per $1 spent)
-            const pointsEarned = Math.floor(booking.totalAmount);
+            const pointsEarned = Math.floor(updatedBooking.totalAmount);
             await prisma_1.default.user.update({
-                where: { id: booking.userId },
+                where: { id: updatedBooking.userId },
                 data: { loyaltyPoints: { increment: pointsEarned } }
             });
-            (0, mailer_1.sendEmail)(booking.user.email, 'Wash Completed! - CleanRide', `<h1>Your service is complete!</h1>
+            (0, mailer_1.sendEmail)(updatedBooking.user.email, 'Wash Completed! - CleanRide', `<h1>Your service is complete!</h1>
          <p>Hi ${booking.user.name},</p>
          <p>Your vehicle wash service has been marked as <strong>COMPLETED</strong>.</p>
          <p>We hope you enjoy your clean ride. Please log in to your dashboard to leave a review!</p>
          <p>Thanks for choosing CleanRide.</p>`);
         }
     }
-    res.status(200).json({ success: true, data: { booking } });
+    res.status(200).json({ success: true, data: { booking: updatedBooking } });
 });
 exports.assignPartner = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     const { partnerId } = req.body;
@@ -158,7 +166,7 @@ exports.assignPartner = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     });
     // Notify the assigned partner
     if (booking.partnerId) {
-        index_1.io.to(booking.partnerId).emit('notification', {
+        (0, socket_1.getIO)().to(booking.partnerId).emit('notification', {
             title: 'New Job Assigned',
             message: 'You have been assigned to a new wash job.',
             type: 'success'
@@ -166,7 +174,7 @@ exports.assignPartner = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     }
     // Notify the user
     if (booking.userId) {
-        index_1.io.to(booking.userId).emit('notification', {
+        (0, socket_1.getIO)().to(booking.userId).emit('notification', {
             title: 'Partner Assigned',
             message: `${booking.partner?.name || 'A partner'} has been assigned to your booking.`,
             type: 'success'
@@ -189,6 +197,14 @@ exports.updateImages = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     }
     if (files?.afterImage) {
         afterImageUrl = `/uploads/${files.afterImage[0].filename}`;
+    }
+    const existingBooking = await prisma_1.default.booking.findUnique({
+        where: { id: req.params.id }
+    });
+    if (!existingBooking)
+        return next(new AppError_1.AppError('Booking not found', 404));
+    if (req.user.role === 'PARTNER' && existingBooking.partnerId !== req.user.id) {
+        return next(new AppError_1.AppError('You are not authorized to update this booking', 403));
     }
     const booking = await prisma_1.default.booking.update({
         where: { id: req.params.id },

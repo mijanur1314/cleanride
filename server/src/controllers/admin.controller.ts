@@ -3,7 +3,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 import { sendEmail } from '../utils/email';
-import { io } from '../index';
+import { getIO } from '../socket';
 
 export const getDashboardStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   // Aggregate stats
@@ -137,7 +137,7 @@ export const assignPartnerToBooking = catchAsync(async (req: Request, res: Respo
   }
 
   // Emit WebSocket Event to the User's personal room to trigger UI update
-  io.to(booking.userId).emit('booking-updated', {
+  getIO().to(booking.userId).emit('booking-updated', {
     bookingId: booking.id,
     status: booking.status,
     partnerName: booking.partner?.name,

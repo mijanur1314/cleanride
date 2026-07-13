@@ -8,7 +8,7 @@ const catchAsync_1 = require("../utils/catchAsync");
 const AppError_1 = require("../utils/AppError");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const email_1 = require("../utils/email");
-const index_1 = require("../index");
+const socket_1 = require("../socket");
 exports.getDashboardStats = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     // Aggregate stats
     const totalUsers = await prisma_1.default.user.count({ where: { role: 'USER' } });
@@ -128,7 +128,7 @@ exports.assignPartnerToBooking = (0, catchAsync_1.catchAsync)(async (req, res, n
         });
     }
     // Emit WebSocket Event to the User's personal room to trigger UI update
-    index_1.io.to(booking.userId).emit('booking-updated', {
+    (0, socket_1.getIO)().to(booking.userId).emit('booking-updated', {
         bookingId: booking.id,
         status: booking.status,
         partnerName: booking.partner?.name,

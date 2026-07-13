@@ -9,9 +9,13 @@ const AppError_1 = require("../utils/AppError");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const razorpay_1 = __importDefault(require("razorpay"));
 const crypto_1 = __importDefault(require("crypto"));
+if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    console.error("CRITICAL: Razorpay keys are not configured in environment variables.");
+    // Don't crash immediately, wait for request to fail
+}
 const razorpay = new razorpay_1.default({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder',
+    key_id: process.env.RAZORPAY_KEY_ID || '',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || '',
 });
 exports.getPlans = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     const plans = await prisma_1.default.subscriptionPlan.findMany({
@@ -26,6 +30,9 @@ exports.createSubscriptionOrder = (0, catchAsync_1.catchAsync)(async (req, res, 
     const plan = await prisma_1.default.subscriptionPlan.findUnique({ where: { id: planId } });
     if (!plan)
         return next(new AppError_1.AppError('Plan not found', 404));
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        return next(new AppError_1.AppError('Payment gateway is not configured securely', 500));
+    }
     const amountInPaise = Math.round(plan.price * 100);
     const options = {
         amount: amountInPaise,
@@ -41,12 +48,15 @@ exports.createSubscriptionOrder = (0, catchAsync_1.catchAsync)(async (req, res, 
 exports.verifySubscription = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
     const userId = req.user.id;
-    const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
-    const generatedSignature = crypto_1.default
-        .createHmac('sha256', secret)
-        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+        return next(new AppError_1.AppError('Payment gateway is not configured securely', 500));
+    }
+    const body = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSignature = crypto_1.default
+        .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+        .update(body.toString())
         .digest('hex');
-    if (generatedSignature !== razorpay_signature) {
+    if (expectedSignature !== razorpay_signature) {
         return next(new AppError_1.AppError('Payment verification failed', 400));
     }
     const plan = await prisma_1.default.subscriptionPlan.findUnique({ where: { id: planId } });

@@ -3,7 +3,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 import { z } from 'zod';
-import { io } from '../index';
+import { getIO } from '../socket';
 import { sendEmail } from '../utils/mailer';
 
 const bookingSchema = z.object({
@@ -151,9 +151,8 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
     include: { user: true, partner: true }
   });
 
-  // Notify the user via Socket.IO
   if (updatedBooking.userId) {
-    io.to(updatedBooking.userId).emit('notification', {
+    getIO().to(updatedBooking.userId).emit('notification', {
       title: 'Booking Updated',
       message: `Your booking status is now ${status}`,
       type: 'info'
@@ -174,8 +173,7 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
          <p>Hi ${booking.user.name},</p>
          <p>Your vehicle wash service has been marked as <strong>COMPLETED</strong>.</p>
          <p>We hope you enjoy your clean ride. Please log in to your dashboard to leave a review!</p>
-         updatedBooking.partner?.name || 'Partner',
-        status
+         <p>Thanks for choosing CleanRide.</p>`
       );
     }
   }
@@ -199,7 +197,7 @@ export const assignPartner = catchAsync(async (req: Request, res: Response, next
 
   // Notify the assigned partner
   if (booking.partnerId) {
-    io.to(booking.partnerId).emit('notification', {
+    getIO().to(booking.partnerId).emit('notification', {
       title: 'New Job Assigned',
       message: 'You have been assigned to a new wash job.',
       type: 'success'
@@ -208,7 +206,7 @@ export const assignPartner = catchAsync(async (req: Request, res: Response, next
 
   // Notify the user
   if (booking.userId) {
-    io.to(booking.userId).emit('notification', {
+    getIO().to(booking.userId).emit('notification', {
       title: 'Partner Assigned',
       message: `${booking.partner?.name || 'A partner'} has been assigned to your booking.`,
       type: 'success'
