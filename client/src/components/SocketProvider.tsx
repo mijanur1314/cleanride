@@ -53,13 +53,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       return () => {
         socketInstance.disconnect();
       };
-    } else if (socket) {
+    } 
+    if (socket && (!isAuthenticated || !user)) {
       // Disconnect if user logs out
       socket.disconnect();
-      setSocket(null);
-      setIsConnected(false);
+      setTimeout(() => setSocket(null), 0);
+      setTimeout(() => setIsConnected(false), 0);
     }
-  }, [user, isAuthenticated, _hasHydrated, token]);
+  }, [user, isAuthenticated, _hasHydrated, token, socket]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

@@ -14,10 +14,6 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       const res = await api.get("/admin/users");
@@ -28,6 +24,10 @@ export default function AdminUsers() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const customers = users.filter((u) => u.role === 'USER');
   const partners = users.filter((u) => u.role === 'PARTNER');

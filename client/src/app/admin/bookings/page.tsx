@@ -16,10 +16,6 @@ export default function AdminBookings() {
   const [partners, setPartners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       const [bookingsRes, usersRes] = await Promise.all([
@@ -34,6 +30,10 @@ export default function AdminBookings() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const assignPartner = async (bookingId: string, partnerId: string) => {
     try {

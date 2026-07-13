@@ -28,16 +28,6 @@ export default function PartnerDashboard() {
   const [uploadingImages, setUploadingImages] = useState<string | null>(null);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, userName: string } | null>(null);
 
-  useEffect(() => {
-    if (!_hasHydrated) return;
-    if (!isAuthenticated || user?.role !== 'PARTNER') {
-      router.push("/login");
-      return;
-    }
-
-    fetchBookings();
-  }, [isAuthenticated, user, router]);
-
   const fetchBookings = async () => {
     try {
       const res = await api.get("/bookings/partner-bookings");
@@ -48,6 +38,20 @@ export default function PartnerDashboard() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (_hasHydrated && !isAuthenticated) {
+      router.push("/login");
+    }
+    
+    if (user && user.role !== 'PARTNER') {
+      router.push("/");
+    }
+
+    if (isAuthenticated && user?.role === 'PARTNER') {
+      fetchBookings();
+    }
+  }, [isAuthenticated, user, router, _hasHydrated]);
 
   const updateStatus = async (id: string, status: string) => {
     try {
