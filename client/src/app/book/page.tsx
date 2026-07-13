@@ -311,7 +311,7 @@ function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
         prefill: {
           name: user?.name,
           email: user?.email,
-          contact: user?.phone || ""
+          contact: (user as any)?.phone || ""
         },
         theme: { color: "#2563eb" }
       };
