@@ -5,4 +5,9 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   clearMocks: true,
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.test.json'
+    }],
+  },
 };
