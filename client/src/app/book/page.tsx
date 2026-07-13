@@ -286,8 +286,14 @@ function PaymentStep({ availableAddons }: { availableAddons: any[] }) {
       const order = orderRes.data.data.order;
 
       // 3. Initialize Razorpay Checkout
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        toast.error("Payment configuration missing. Please contact support.");
+        return;
+      }
+
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        key: rzpKey,
         amount: order.amount,
         currency: order.currency,
         name: "CleanRide",

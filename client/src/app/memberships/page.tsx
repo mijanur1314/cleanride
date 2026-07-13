@@ -49,8 +49,15 @@ export default function MembershipsPage() {
       const { order, plan } = orderRes.data.data;
 
       // 2. Initialize Razorpay Checkout
+      const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!rzpKey) {
+        toast.error("Payment configuration missing. Please contact support.");
+        setSubscribing(null);
+        return;
+      }
+
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+        key: rzpKey,
         amount: order.amount,
         currency: order.currency,
         name: "CleanRide Premium",
