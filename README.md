@@ -204,7 +204,6 @@ npm run dev
 
 **Sk Mijanur Rahaman**
 - Email: skmijanurrahaman1314@gmail.com
-- GitHub: [mijanur1314](https://github.com/mijanur1314)
 
 ---
 
