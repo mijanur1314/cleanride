@@ -32,13 +32,19 @@ export function ChatBox({ bookingId, partnerName, userName, onClose }: ChatBoxPr
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
 
   useEffect(() => {
     // Connect to Socket.IO
     const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
-    setSocket(newSocket);
+    socketRef.current = newSocket;
 
     newSocket.on('connect', () => {
       newSocket.emit('join-booking', bookingId);
@@ -69,17 +75,11 @@ export function ChatBox({ bookingId, partnerName, userName, onClose }: ChatBoxPr
     fetchMessages();
   }, [bookingId]);
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || !socket) return;
+    if (!newMessage.trim() || !user || !socketRef.current) return;
 
-    socket.emit('send-message', {
+    socketRef.current.emit('send-message', {
       bookingId,
       senderId: user.id,
       content: newMessage.trim()

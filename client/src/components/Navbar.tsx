@@ -11,12 +11,22 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
+import { Socket } from 'socket.io-client';
+
+export interface NotificationData {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+}
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
   const { theme, setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationData[]>([]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,14 +37,16 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    let socket: any;
+    let socket: Socket;
     
     if (user) {
       const fetchNotifs = async () => {
         try {
           const res = await api.get('/notifications');
           setNotifications(res.data.data.notifications);
-        } catch (error) {}
+        } catch (error) {
+          console.error(error);
+        }
       };
       fetchNotifs();
       
@@ -43,7 +55,7 @@ export default function Navbar() {
       
       socket.emit('join', user.id);
       
-      socket.on('notification', (data: any) => {
+      socket.on('notification', (data: { type: string, title: string, message: string }) => {
         if (data.type === 'success') toast.success(data.title, { description: data.message });
         else if (data.type === 'info') toast.info(data.title, { description: data.message });
         else toast(data.title, { description: data.message });
@@ -66,14 +78,18 @@ export default function Navbar() {
     try {
       await api.patch(`/notifications/${id}/read`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, isRead: true } : n));
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const markAllAsRead = async () => {
     try {
       await api.patch(`/notifications/read-all`);
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -14,6 +14,9 @@ COPY . .
 # Generate Prisma client and build typescript
 RUN npx prisma generate
 RUN npm run build
+
+# Switch to non-root user
+USER node
 
 # Expose port
 EXPOSE 5000

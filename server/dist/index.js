@@ -41,6 +41,7 @@ const vehicle_routes_1 = __importDefault(require("./routes/vehicle.routes"));
 const addon_routes_1 = __importDefault(require("./routes/addon.routes"));
 const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 // API Routes
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/users', user_routes_1.default);
@@ -56,6 +57,7 @@ app.use('/api/vehicles', vehicle_routes_1.default);
 app.use('/api/addons', addon_routes_1.default);
 app.use('/api/chat', chat_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);
+app.use('/api/upload', upload_routes_1.default);
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
 const error_middleware_1 = require("./middlewares/error.middleware");

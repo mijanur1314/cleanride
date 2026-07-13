@@ -17,14 +17,19 @@ export const useSocket = () => useContext(SocketContext);
 export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { user, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { user, isAuthenticated, _hasHydrated, token } = useAuthStore();
 
   useEffect(() => {
     if (!_hasHydrated) return;
 
     // Only connect if the user is authenticated
     if (isAuthenticated && user) {
-      const socketInstance = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://localhost:5000");
+      const frontendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
+      const socketInstance = io(frontendUrl, {
+        auth: {
+          token: token
+        }
+      });
 
       socketInstance.on("connect", () => {
         setIsConnected(true);
@@ -42,7 +47,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         // Can optionally refresh data globally if a store is used
       });
 
-      setSocket(socketInstance);
+      // Avoid synchronous setState in effect
+      setTimeout(() => setSocket(socketInstance), 0);
 
       return () => {
         socketInstance.disconnect();
@@ -53,7 +59,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setSocket(null);
       setIsConnected(false);
     }
-  }, [user, isAuthenticated, _hasHydrated]);
+  }, [user, isAuthenticated, _hasHydrated, token]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

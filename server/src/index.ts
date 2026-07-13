@@ -14,7 +14,12 @@ import path from 'path';
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+app.use(cors({
+  origin: frontendUrl,
+  credentials: true
+}));
 app.use(helmet({
   crossOriginResourcePolicy: false // allow serving images
 }));
@@ -79,31 +84,83 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 export const io = new SocketIOServer(server, {
   cors: {
-    origin: '*',
+    origin: frontendUrl,
     methods: ['GET', 'POST', 'PATCH', 'DELETE']
   }
 });
 
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+import jwt from 'jsonwebtoken';
+import { JwtPayload } from 'jsonwebtoken';
+
+// Socket.IO Authentication Middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
   
-  // Clients will emit 'join' with their user ID when they connect
-  socket.on('join', (userId: string) => {
-    socket.join(userId);
-    console.log(`User ${userId} joined their personal room`);
-  });
+  if (!token) {
+    return next(new Error('Authentication error: No token provided'));
+  }
 
-  socket.on('join-booking', (bookingId: string) => {
-    socket.join(`booking_${bookingId}`);
-    console.log(`User joined booking room: ${bookingId}`);
-  });
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    return next(new Error('Server configuration error'));
+  }
 
-  socket.on('send-message', async (data: { bookingId: string, senderId: string, content: string }) => {
+  try {
+    const decoded = jwt.verify(token, secret) as JwtPayload;
+    // Attach user payload to socket
+    (socket as any).user = decoded;
+    next();
+  } catch (err) {
+    return next(new Error('Authentication error: Invalid token'));
+  }
+});
+
+io.on('connection', (socket) => {
+  const user = (socket as any).user;
+  console.log(`Socket connected: User ${user.id}`);
+
+  // Auto-join personal room upon successful connection
+  socket.join(user.id);
+
+  socket.on('join-booking', async (bookingId: string) => {
     try {
+      // Authorization check: Is this user associated with this booking?
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId }
+      });
+
+      if (!booking) {
+        return socket.emit('error', { message: 'Booking not found' });
+      }
+
+      if (user.role !== 'ADMIN' && booking.userId !== user.id && booking.partnerId !== user.id) {
+        return socket.emit('error', { message: 'Unauthorized to join this booking room' });
+      }
+
+      socket.join(`booking_${bookingId}`);
+      console.log(`User ${user.id} joined booking room: ${bookingId}`);
+    } catch (err) {
+      console.error('Socket join-booking error:', err);
+    }
+  });
+
+  socket.on('send-message', async (data: { bookingId: string, content: string }) => {
+    try {
+      // Authorization check
+      const booking = await prisma.booking.findUnique({
+        where: { id: data.bookingId }
+      });
+
+      if (!booking) return socket.emit('error', { message: 'Booking not found' });
+      
+      if (user.role !== 'ADMIN' && booking.userId !== user.id && booking.partnerId !== user.id) {
+        return socket.emit('error', { message: 'Unauthorized to send message in this booking' });
+      }
+
       const message = await prisma.message.create({
         data: {
           bookingId: data.bookingId,
-          senderId: data.senderId,
+          senderId: user.id, // Force senderId from authenticated token, NOT client payload
           content: data.content
         },
         include: { sender: { select: { id: true, name: true, role: true } } }
@@ -117,7 +174,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log(`Socket disconnected: User ${user.id}`);
   });
 });
 

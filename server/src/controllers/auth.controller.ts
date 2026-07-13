@@ -7,7 +7,11 @@ import prisma from '../utils/prisma';
 import { z } from 'zod';
 
 const signToken = (id: string, role: string) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret-key-fallback', {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('FATAL: JWT_SECRET environment variable is not defined.');
+  }
+  return jwt.sign({ id, role }, secret, {
     expiresIn: (process.env.JWT_EXPIRES_IN || '90d') as any,
   });
 };

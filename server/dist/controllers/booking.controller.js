@@ -73,7 +73,7 @@ exports.createBooking = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
             totalAmount: finalAmount,
             couponId,
             bookingAddons: {
-                create: addons.map(addon => ({
+                create: addons.map((addon) => ({
                     addonId: addon.id,
                     price: addon.price
                 }))

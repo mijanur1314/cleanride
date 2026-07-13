@@ -20,7 +20,8 @@ export default function Map({ bookings }: { bookings: any[] }) {
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!mounted) return <div className="h-full w-full bg-muted/20 animate-pulse rounded-md" />;

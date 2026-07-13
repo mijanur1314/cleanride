@@ -8,6 +8,7 @@ const catchAsync_1 = require("../utils/catchAsync");
 const AppError_1 = require("../utils/AppError");
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const email_1 = require("../utils/email");
+const index_1 = require("../index");
 exports.getDashboardStats = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     // Aggregate stats
     const totalUsers = await prisma_1.default.user.count({ where: { role: 'USER' } });
@@ -65,7 +66,7 @@ exports.getAllBookings = (0, catchAsync_1.catchAsync)(async (req, res, next) => 
             user: { select: { name: true, email: true } },
             partner: { select: { name: true, email: true } },
             service: { select: { name: true, price: true } },
-            addons: { select: { addon: { select: { name: true, price: true } } } }
+            bookingAddons: { select: { addon: { select: { name: true, price: true } } } }
         },
         orderBy: { createdAt: 'desc' }
     });
@@ -126,6 +127,13 @@ exports.assignPartnerToBooking = (0, catchAsync_1.catchAsync)(async (req, res, n
       `
         });
     }
+    // Emit WebSocket Event to the User's personal room to trigger UI update
+    index_1.io.to(booking.userId).emit('booking-updated', {
+        bookingId: booking.id,
+        status: booking.status,
+        partnerName: booking.partner?.name,
+        message: 'A partner has been assigned to your booking!'
+    });
     res.status(200).json({
         success: true,
         data: { booking }

@@ -33,6 +33,12 @@ jobs:
     - name: Install dependencies (Client)
       working-directory: ./client
       run: npm ci
+
+    - name: Run Client Lint and Test
+      working-directory: ./client
+      run: |
+        npm run lint
+        npm test
       
     - name: Build Client
       working-directory: ./client
