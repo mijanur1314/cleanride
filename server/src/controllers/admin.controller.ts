@@ -15,8 +15,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   const bookings = await prisma.booking.findMany({
     select: { totalAmount: true }
   });
-  
-  const totalRevenue = bookings.reduce((sum, booking) => sum + booking.totalAmount, 0);
+  const totalRevenue = bookings.reduce((sum: number, booking: { totalAmount: number }) => sum + booking.totalAmount, 0);
 
   // Get recent bookings
   const recentBookings = await prisma.booking.findMany({
