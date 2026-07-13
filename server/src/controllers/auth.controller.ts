@@ -12,7 +12,7 @@ const signToken = (id: string, role: string) => {
     throw new Error('FATAL: JWT_SECRET environment variable is not defined.');
   }
   return jwt.sign({ id, role }, secret, {
-    expiresIn: (process.env.JWT_EXPIRES_IN || '90d') as any,
+    expiresIn: (process.env.JWT_EXPIRES_IN || '90d') as jwt.SignOptions['expiresIn'],
   });
 };
 
@@ -122,7 +122,7 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
   });
 
   if (user) {
-    (user as any).password = undefined;
+    (user as Partial<User>).password = undefined;
   }
 
   res.status(200).json({
