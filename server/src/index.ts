@@ -1,7 +1,6 @@
 import { env } from './utils/env';
 import http from 'http';
 import app from './app';
-import { env } from './utils/env';
 import { logger } from './utils/logger';
 import { initSocket } from './socket';
 import prisma from './utils/prisma';

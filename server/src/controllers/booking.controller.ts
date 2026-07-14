@@ -46,14 +46,13 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
     }
   }
 
-  let pointsDiscount = 0;
   if (redeemPoints) {
     const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
     if (!user || user.loyaltyPoints < redeemPoints) {
       return next(new AppError('Insufficient loyalty points', 400));
     }
-    pointsDiscount = redeemPoints * 0.1;
-    finalAmount -= pointsDiscount;
+    const discount = redeemPoints * 0.1;
+    finalAmount -= discount;
     if (finalAmount < 0) finalAmount = 0;
   }
 
