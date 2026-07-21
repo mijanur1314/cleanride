@@ -2,6 +2,7 @@ import { Request } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { AppError } from '../utils/AppError';
 
 // Ensure directory exists
 const uploadDir = path.join(__dirname, '../../public/uploads');
@@ -20,10 +21,13 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  if (file.mimetype.startsWith('image/') && allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Not an image! Please upload only images.') as unknown as null, false);
+    cb(new AppError('Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).', 400) as unknown as null, false);
   }
 };
 

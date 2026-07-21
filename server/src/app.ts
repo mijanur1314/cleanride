@@ -8,6 +8,7 @@ import prisma from './utils/prisma';
 import redisClient from './utils/redis';
 import crypto from 'crypto';
 import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 declare global {
   namespace Express {
@@ -22,7 +23,11 @@ const app = express();
 if (env.SENTRY_DSN) {
   Sentry.init({
     dsn: env.SENTRY_DSN,
+    integrations: [
+      nodeProfilingIntegration(),
+    ],
     tracesSampleRate: 1.0,
+    profilesSampleRate: 1.0,
   });
 }
 

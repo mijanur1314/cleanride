@@ -15,10 +15,25 @@ if (supabaseUrl && supabaseKey && !supabaseUrl.includes('YOUR_PROJECT_ID')) {
   supabase = createClient(supabaseUrl, supabaseKey);
 }
 
+import path from 'path';
+
 // Multer memory storage (we don't save to disk, we upload directly to Supabase)
 const storage = multer.memoryStorage();
+
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  
+  if (file.mimetype.startsWith('image/') && allowedExtensions.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).', 400) as unknown as null, false);
+  }
+};
+
 export const uploadMiddleware = multer({ 
   storage,
+  fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
