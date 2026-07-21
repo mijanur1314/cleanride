@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, MessageCircle } from "lucide-react";
+import { Trash2, Plus, MessageCircle, Clock, XCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChatBox } from "@/components/ChatBox";
 
 export default function UserDashboard() {
@@ -28,6 +29,43 @@ export default function UserDashboard() {
   const [newVehicle, setNewVehicle] = useState({ type: '', make: '', model: '', plateNumber: '' });
   const [addingVehicle, setAddingVehicle] = useState(false);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, partnerName: string } | null>(null);
+  const [cancelModal, setCancelModal] = useState<string | null>(null);
+  const [rescheduleModal, setRescheduleModal] = useState<string | null>(null);
+  const [newDate, setNewDate] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleCancel = async (id: string) => {
+    setIsProcessing(true);
+    try {
+      await api.patch(`/bookings/${id}/cancel`);
+      toast.success("Booking cancelled successfully");
+      setBookings(bookings.map(b => b.id === id ? { ...b, status: 'CANCELLED', payment: b.payment ? { ...b.payment, status: b.payment.status === 'COMPLETED' ? 'REFUNDED' : b.payment.status } : null } : b));
+      setCancelModal(null);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to cancel booking");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReschedule = async (id: string) => {
+    if (!newDate) {
+      toast.error("Please select a new date and time");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      const res = await api.patch(`/bookings/${id}/reschedule`, { newDate });
+      toast.success("Booking rescheduled successfully");
+      setBookings(bookings.map(b => b.id === id ? { ...b, bookingDate: res.data.data.booking.bookingDate } : b));
+      setRescheduleModal(null);
+      setNewDate('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to reschedule booking");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -269,11 +307,22 @@ export default function UserDashboard() {
                       {booking.payment?.status || 'PENDING'}
                     </Badge>
                     {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
-                      <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
+                      <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 mb-2" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
                         <MessageCircle className="w-4 h-4" />
                         Chat
                       </Button>
                     ) : null}
+                    
+                    {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
+                      <div className="w-full flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => setCancelModal(booking.id)}>
+                          Cancel
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setRescheduleModal(booking.id)}>
+                          Reschedule
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -429,6 +478,55 @@ export default function UserDashboard() {
           onClose={() => setActiveChat(null)}
         />
       )}
+
+      <Dialog open={!!cancelModal} onOpenChange={() => setCancelModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Booking</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel this booking?
+              {bookings.find(b => b.id === cancelModal)?.payment?.status === 'COMPLETED' && (
+                <span className="block mt-2 text-green-600 font-medium bg-green-50 p-2 rounded-md border border-green-200">
+                  Your payment has been processed. A full refund will be issued to your original payment method.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelModal(null)} disabled={isProcessing}>Keep Booking</Button>
+            <Button variant="destructive" onClick={() => cancelModal && handleCancel(cancelModal)} disabled={isProcessing}>
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
+              Yes, Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!rescheduleModal} onOpenChange={() => setRescheduleModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reschedule Booking</DialogTitle>
+            <DialogDescription>
+              Select a new date and time for your booking.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input 
+              type="datetime-local" 
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              min={new Date().toISOString().slice(0, 16)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRescheduleModal(null)} disabled={isProcessing}>Cancel</Button>
+            <Button onClick={() => rescheduleModal && handleReschedule(rescheduleModal)} disabled={isProcessing}>
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Clock className="w-4 h-4 mr-2" />}
+              Confirm New Time
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

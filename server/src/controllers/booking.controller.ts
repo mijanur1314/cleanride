@@ -260,3 +260,86 @@ export const updateImages = catchAsync(async (req: Request, res: Response, next:
   });
   res.status(200).json({ success: true, data: { booking } });
 });
+
+export const cancelMyBooking = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: req.params.id as string },
+    include: { payment: true }
+  });
+
+  if (!booking) return next(new AppError('Booking not found', 404));
+  if (booking.userId !== req.user!.id) return next(new AppError('You are not authorized to cancel this booking', 403));
+
+  if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+    return next(new AppError('Booking cannot be cancelled at this stage. Please contact support.', 400));
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.update({
+      where: { id: booking.id },
+      data: { status: 'CANCELLED' }
+    });
+
+    if (booking.payment && booking.payment.status === 'COMPLETED') {
+      await tx.payment.update({
+        where: { id: booking.payment.id },
+        data: { status: 'REFUNDED' }
+      });
+    }
+  });
+
+  res.status(200).json({ success: true, message: 'Booking cancelled successfully' });
+});
+
+export const rescheduleMyBooking = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { newDate } = req.body;
+  if (!newDate) return next(new AppError('Please provide a new date', 400));
+
+  const parsedDate = new Date(newDate);
+  if (isNaN(parsedDate.getTime()) || parsedDate < new Date()) {
+    return next(new AppError('Please provide a valid future date', 400));
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: req.params.id as string }
+  });
+
+  if (!booking) return next(new AppError('Booking not found', 404));
+  if (booking.userId !== req.user!.id) return next(new AppError('You are not authorized to reschedule this booking', 403));
+
+  if (!['PENDING', 'CONFIRMED'].includes(booking.status)) {
+    return next(new AppError('Booking cannot be rescheduled at this stage.', 400));
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: booking.id },
+    data: { bookingDate: parsedDate }
+  });
+
+  res.status(200).json({ success: true, data: { booking: updatedBooking } });
+});
+
+export const adminCancelBooking = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: req.params.id as string },
+    include: { payment: true }
+  });
+
+  if (!booking) return next(new AppError('Booking not found', 404));
+
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.update({
+      where: { id: booking.id },
+      data: { status: 'CANCELLED' }
+    });
+
+    if (booking.payment && booking.payment.status === 'COMPLETED') {
+      await tx.payment.update({
+        where: { id: booking.payment.id },
+        data: { status: 'REFUNDED' }
+      });
+    }
+  });
+
+  res.status(200).json({ success: true, message: 'Booking cancelled by admin successfully' });
+});

@@ -7,6 +7,9 @@ import {
   updateBookingStatus,
   assignPartner,
   updateImages,
+  cancelMyBooking,
+  rescheduleMyBooking,
+  adminCancelBooking,
 } from '../controllers/booking.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
 
@@ -22,6 +25,9 @@ router.patch('/:id/status', restrictTo('ADMIN', 'PARTNER'), updateBookingStatus)
 
 router.get('/', restrictTo('ADMIN'), getAllBookings);
 router.patch('/:id/assign', restrictTo('ADMIN'), assignPartner);
+router.patch('/:id/admin-cancel', restrictTo('ADMIN'), adminCancelBooking);
+router.patch('/:id/cancel', cancelMyBooking);
+router.patch('/:id/reschedule', rescheduleMyBooking);
 import { upload } from '../middlewares/upload.middleware';
 
 router.patch('/:id/images', restrictTo('PARTNER'), upload.fields([
