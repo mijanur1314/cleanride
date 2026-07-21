@@ -17,6 +17,69 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
   const totalRevenue = bookings.reduce((sum: number, booking: { totalAmount: number }) => sum + booking.totalAmount, 0);
 
+  // 7-day revenue trend
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const recentPaidBookings = await prisma.booking.findMany({
+    where: { 
+      createdAt: { gte: sevenDaysAgo },
+      status: { notIn: ['CANCELLED'] }
+    },
+    select: { createdAt: true, totalAmount: true }
+  });
+
+  const revenueByDayMap = new Map();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    revenueByDayMap.set(dateStr, { date: dateStr, revenue: 0, bookings: 0 });
+  }
+
+  for (const b of recentPaidBookings) {
+    const dateStr = new Date(b.createdAt).toISOString().split('T')[0];
+    if (revenueByDayMap.has(dateStr)) {
+      const entry = revenueByDayMap.get(dateStr);
+      entry.revenue += b.totalAmount;
+      entry.bookings += 1;
+    }
+  }
+  const revenueByDay = Array.from(revenueByDayMap.values());
+
+  // Top Partners
+  const allPartners = await prisma.user.findMany({
+    where: { role: 'PARTNER' },
+    select: { id: true, name: true, email: true }
+  });
+  
+  const completedJobsCount = await prisma.booking.groupBy({
+    by: ['partnerId'],
+    where: { status: 'COMPLETED', partnerId: { not: null } },
+    _count: { id: true }
+  });
+
+  const partnerMap = new Map(allPartners.map(p => [p.id, p]));
+  const topPartners = completedJobsCount
+    .map(stat => ({
+      ...partnerMap.get(stat.partnerId as string),
+      completedJobs: stat._count.id
+    }))
+    .filter(p => p.id)
+    .sort((a, b) => b.completedJobs - a.completedJobs)
+    .slice(0, 5);
+
+  // Assignment Queue
+  const assignmentQueue = await prisma.booking.findMany({
+    where: { status: 'PENDING' },
+    orderBy: { bookingDate: 'asc' },
+    include: {
+      user: { select: { name: true, email: true } },
+      service: { select: { name: true } }
+    }
+  });
+
   // Get recent bookings
   const recentBookings = await prisma.booking.findMany({
     take: 5,
@@ -37,7 +100,11 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
         totalBookings,
         totalRevenue
       },
-      recentBookings
+      recentBookings,
+      revenueByDay,
+      topPartners,
+      assignmentQueue,
+      availablePartners: allPartners
     }
   });
 });

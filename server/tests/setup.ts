@@ -49,3 +49,7 @@ jest.mock('razorpay', () => {
 jest.mock('../src/utils/mailer', () => ({
   sendEmail: jest.fn().mockResolvedValue(true)
 }));
+
+jest.mock('../src/utils/email', () => ({
+  sendEmail: jest.fn().mockResolvedValue(true)
+}));
