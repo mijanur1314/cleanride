@@ -82,7 +82,7 @@ export default function ServicesPage() {
                   <p className="text-gray-400 text-sm mb-6 h-10">{service.description}</p>
                   
                   <div className="flex items-baseline gap-1 mb-8 mt-auto">
-                    <span className="text-gray-400 font-medium">$</span>
+                    <span className="text-gray-400 font-medium">₹</span>
                     <span className="text-5xl font-black tracking-tighter text-white">{service.price}</span>
                   </div>
                   

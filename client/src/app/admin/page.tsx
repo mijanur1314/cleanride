@@ -132,7 +132,7 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="h-[300px] w-full mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={revenueByDay?.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()) || []}>
+                <LineChart data={revenueByDay ? [...revenueByDay].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()) : []}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                   <XAxis 
                     dataKey="date" 

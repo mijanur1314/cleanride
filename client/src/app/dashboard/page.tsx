@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -156,9 +157,16 @@ export default function UserDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
         {/* Left Column */}
         <div className="md:col-span-1 space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1">My Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight mb-1">My Dashboard</h1>
+              <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+            </div>
+            <Link href="/book">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg">
+                Book a Wash
+              </Button>
+            </Link>
           </div>
 
           <Card className="border-primary/10 bg-blue-50/50 dark:bg-blue-900/10">
@@ -234,8 +242,11 @@ export default function UserDashboard() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <Car className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
-                <p className="text-lg font-medium">No bookings yet</p>
-                <p className="text-muted-foreground">You haven't booked any services yet.</p>
+                <p className="text-lg font-medium mb-1">No bookings yet</p>
+                <p className="text-muted-foreground mb-6">You haven't booked any services yet.</p>
+                <Link href="/book">
+                  <Button size="lg" className="font-bold">Book a Wash Now</Button>
+                </Link>
               </CardContent>
             </Card>
           ) : (
@@ -297,7 +308,7 @@ export default function UserDashboard() {
                   </div>
                   <div className="bg-muted/30 p-6 sm:w-48 flex flex-col items-end justify-center border-t sm:border-t-0 sm:border-l">
                     <p className="text-sm text-muted-foreground font-medium mb-1">Total Amount</p>
-                    <p className="text-3xl font-extrabold">${booking.totalAmount}</p>
+                    <p className="text-3xl font-extrabold">₹{booking.totalAmount}</p>
                     {booking.coupon && (
                       <Badge variant="outline" className="mt-1 text-green-500 border-green-500/20 bg-green-500/10">
                         Coupon Applied

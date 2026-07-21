@@ -12,6 +12,7 @@ import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
 import { Socket } from 'socket.io-client';
+import { usePathname } from 'next/navigation';
 
 export interface NotificationData {
   id: string;
@@ -27,6 +28,7 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,6 +96,10 @@ export default function Navbar() {
     }
   };
 
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/partner')) {
+    return null;
+  }
+
   return (
     <nav className={`w-full fixed top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/10 py-2' : 'bg-transparent py-4'}`}>
       <div className="container flex items-center justify-between mx-auto px-6">
@@ -114,16 +120,7 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-white hover:bg-white/10 rounded-full"
-          >
-            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+
 
           {user ? (
             <div className="flex items-center gap-4">

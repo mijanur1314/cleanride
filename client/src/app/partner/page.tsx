@@ -340,12 +340,12 @@ export default function PartnerDashboard() {
                 </div>
                 <CardContent className="p-6">
                   <h3 className="text-indigo-200 font-medium text-sm mb-1">Lifetime Earnings</h3>
-                  <div className="text-5xl font-black mb-4">${lifetimeEarnings.toFixed(2)}</div>
+                  <div className="text-5xl font-black mb-4">₹{lifetimeEarnings.toFixed(2)}</div>
                   
                   <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium text-indigo-100">Available to Withdraw</span>
-                      <span className="text-lg font-bold">${lifetimeEarnings > 0 ? (lifetimeEarnings * 0.4).toFixed(2) : '0.00'}</span>
+                      <span className="text-lg font-bold">₹{lifetimeEarnings > 0 ? (lifetimeEarnings * 0.4).toFixed(2) : '0.00'}</span>
                     </div>
                     <Button 
                       className="w-full bg-white text-indigo-900 hover:bg-indigo-50 font-bold rounded-xl h-11"
@@ -377,7 +377,7 @@ export default function PartnerDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-black text-green-600 text-lg">+${(b.totalAmount * 0.7).toFixed(2)}</div>
+                        <div className="font-black text-green-600 text-lg">+₹{(b.totalAmount * 0.7).toFixed(2)}</div>
                       </div>
                     </div>
                   ))}

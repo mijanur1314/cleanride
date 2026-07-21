@@ -60,7 +60,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       setTimeout(() => setSocket(null), 0);
       setTimeout(() => setIsConnected(false), 0);
     }
-  }, [user, isAuthenticated, _hasHydrated, token, socket]);
+  }, [user, isAuthenticated, _hasHydrated, token]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected }}>

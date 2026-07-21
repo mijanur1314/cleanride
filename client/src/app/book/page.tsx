@@ -82,7 +82,7 @@ export default function BookingPage() {
                   >
                     <CardHeader>
                       <CardTitle>{s.name}</CardTitle>
-                      <CardDescription className="text-xl font-bold text-foreground">${s.price}</CardDescription>
+                      <CardDescription className="text-xl font-bold text-foreground">₹{s.price}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground">{s.description}</p>
@@ -110,7 +110,7 @@ export default function BookingPage() {
                                 <CardTitle className="text-lg">{addon.name}</CardTitle>
                                 {addon.description && <CardDescription>{addon.description}</CardDescription>}
                               </div>
-                              <span className="font-bold text-green-600">+${addon.price}</span>
+                              <span className="font-bold text-green-600">+₹{addon.price}</span>
                             </div>
                           </CardHeader>
                         </Card>
@@ -394,7 +394,7 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
           {user && (user.loyaltyPoints || 0) > 0 && (
             <div className="pt-4 border-t">
               <Label>Redeem Loyalty Points</Label>
-              <p className="text-xs text-muted-foreground mb-2">You have {user.loyaltyPoints} points available (10 points = $1)</p>
+              <p className="text-xs text-muted-foreground mb-2">You have {user.loyaltyPoints} points available (10 points = ₹1)</p>
               <div className="flex items-center gap-4">
                 <Input 
                   type="number"

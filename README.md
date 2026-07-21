@@ -56,13 +56,15 @@ The platform serves **three distinct user roles**:
 | Feature | Description |
 |---|---|
 | 📋 **Assignment Dashboard** | View a dedicated feed of all bookings assigned by the Admin |
-| 🔄 **Status Updates** | Update live booking statuses (`CONFIRMED`, `IN_PROGRESS`, `COMPLETED`) |
-| 📷 **Visual Proof Uploads** | Directly upload images to Supabase Cloud Storage to verify wash completion |
+| 🔄 **Status Updates** | Update live booking statuses (`CONFIRMED`, `EN_ROUTE`, `WASH_IN_PROGRESS`, `COMPLETED`) |
+| 🗺️ **Google Maps Integration** | "Accept & Navigate" button instantly opens turn-by-turn driving directions to the customer's vehicle |
+| 📷 **Visual Proof Uploads** | Directly upload images to verify wash completion |
 
 ### 🛡️ Admins
 | Feature | Description |
 |---|---|
 | 👥 **Manual Dispatching** | Assign unassigned bookings to specific available washing partners |
+| 📋 **Service Management** | Beautiful grid-based interface to manage premium wash packages and pricing (₹) |
 | 📈 **Platform Analytics** | High-level dashboard showing total revenue, active users, and booking volume |
 | 🚘 **Global Management** | Full overview of every customer, partner, and service happening on the platform |
 

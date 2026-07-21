@@ -147,7 +147,7 @@ export default function MembershipsPage() {
                 <p className="text-sm text-gray-400 min-h-[40px]">{plan.benefits?.[0] || 'Exclusive member benefits'}</p>
                 
                 <div className="my-8 flex items-baseline gap-2">
-                  <span className="text-5xl font-extrabold text-white">${plan.price}</span>
+                  <span className="text-5xl font-extrabold text-white">₹{plan.price}</span>
                   <span className="text-gray-400">/mo</span>
                 </div>
 

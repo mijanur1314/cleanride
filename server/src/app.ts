@@ -50,7 +50,7 @@ const authLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
-  max: 100, // standard API limit
+  max: 1000, // standard API limit (increased for development)
   standardHeaders: true,
   legacyHeaders: false,
 });

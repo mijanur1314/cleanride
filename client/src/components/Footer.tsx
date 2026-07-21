@@ -1,8 +1,17 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/partner')) {
+    return null;
+  }
+
   return (
     <footer className="bg-[#0A0A0A] border-t border-white/5 pt-20 pb-10 text-white relative overflow-hidden">
       {/* Background glow */}
@@ -57,7 +66,7 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
             <span className="hover:text-white transition-colors cursor-pointer">English (US)</span>
-            <span className="hover:text-white transition-colors cursor-pointer">$ USD</span>
+            <span className="hover:text-white transition-colors cursor-pointer">₹ INR</span>
           </div>
         </div>
       </div>

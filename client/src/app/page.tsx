@@ -252,7 +252,7 @@ export default function Home() {
             <PackageCard 
               image="https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1000&auto=format&fit=crop"
               title="Express Wash"
-              price="39"
+              price="1499"
               time="45 mins"
               type="Exterior Only"
               features={["Foam Cannon Wash", "Microfiber Dry", "Tire Dressing", "Glass Cleaning"]}
@@ -260,7 +260,7 @@ export default function Home() {
             <PackageCard 
               image="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1000&auto=format&fit=crop"
               title="The Signature"
-              price="89"
+              price="2999"
               time="2 hours"
               type="Full Detail"
               isPopular
@@ -269,7 +269,7 @@ export default function Home() {
             <PackageCard 
               image="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=1000&auto=format&fit=crop"
               title="Showroom Reset"
-              price="199"
+              price="4999"
               time="4+ hours"
               type="Premium Care"
               features={["The Signature included", "Paint Sealant", "Leather Condition", "Carpet Extraction"]}
@@ -386,7 +386,7 @@ function PackageCard({ image, title, price, time, type, features, isPopular = fa
         <h3 className="font-bold text-2xl mb-1" style={{ fontFamily: 'var(--font-heading)' }}>{title}</h3>
         
         <div className="flex items-baseline gap-1 mb-8 mt-4">
-          <span className="text-gray-400 font-medium">$</span>
+          <span className="text-gray-400 font-medium">₹</span>
           <span className="text-5xl font-black tracking-tighter text-white">{price}</span>
         </div>
         
