@@ -230,6 +230,31 @@ export default function UserDashboard() {
                           <span className="line-clamp-2">{booking.address}</span>
                         </div>
                       </div>
+
+                      {/* Booking Status Timeline */}
+                      {booking.status !== 'PENDING' && booking.status !== 'CANCELLED' && (
+                        <div className="mt-6 flex items-center justify-between w-full max-w-sm">
+                          {[
+                            { label: 'Confirmed', step: 1, statuses: ['CONFIRMED', 'PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS', 'REVIEW_PENDING', 'COMPLETED'] },
+                            { label: 'Assigned', step: 2, statuses: ['PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS', 'REVIEW_PENDING', 'COMPLETED'] },
+                            { label: 'Washing', step: 3, statuses: ['WASH_IN_PROGRESS', 'REVIEW_PENDING', 'COMPLETED'] },
+                            { label: 'Completed', step: 4, statuses: ['REVIEW_PENDING', 'COMPLETED'] },
+                          ].map((s, idx, arr) => {
+                            const isPast = s.statuses.includes(booking.status);
+                            return (
+                              <div key={s.label} className="flex-1 flex flex-col items-center relative group">
+                                {idx > 0 && (
+                                  <div className={`w-full h-1 absolute top-2.5 right-1/2 ${isPast ? 'bg-primary' : 'bg-muted'}`} />
+                                )}
+                                <div className={`w-6 h-6 rounded-full z-10 flex items-center justify-center text-xs font-bold transition-colors ${isPast ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30' : 'bg-muted text-muted-foreground border border-muted-foreground/20'}`}>
+                                  {isPast ? '✓' : s.step}
+                                </div>
+                                <span className={`text-[10px] mt-1.5 text-center font-medium ${isPast ? 'text-foreground' : 'text-muted-foreground'}`}>{s.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="bg-muted/30 p-6 sm:w-48 flex flex-col items-end justify-center border-t sm:border-t-0 sm:border-l">

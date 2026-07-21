@@ -19,7 +19,7 @@ export const validateCoupon = catchAsync(async (req: Request, res: Response, nex
   res.status(200).json({ success: true, data: { coupon } });
 });
 
-export const getActiveCoupons = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getActiveCoupons = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const coupons = await prisma.coupon.findMany({
     where: { 
       isActive: true,

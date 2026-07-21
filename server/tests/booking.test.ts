@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../src/app';
 import jwt from 'jsonwebtoken';
+import prisma from '../src/utils/prisma';
 
 describe('Booking Boundaries', () => {
   const secret = process.env.JWT_SECRET || 'test-secret';
@@ -34,6 +35,19 @@ describe('Booking Boundaries', () => {
         .send({ status: 'WASH_IN_PROGRESS' });
       
       expect(res.status).toBe(403);
+    });
+
+    it('should return 404 for partner updating a non-existent booking', async () => {
+      (prisma.user.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'dummy-partner', role: 'PARTNER', name: 'Partner' });
+      (prisma.booking.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      
+      const token = jwt.sign({ id: 'dummy-partner', role: 'PARTNER' }, secret);
+      const res = await request(app)
+        .patch('/api/bookings/99999999-9999-9999-9999-999999999999/status')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ status: 'WASH_IN_PROGRESS' });
+      
+      expect(res.status).toBe(404);
     });
   });
 });

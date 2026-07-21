@@ -13,7 +13,7 @@ const serviceSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const getServices = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getServices = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const services = await prisma.service.findMany({
     where: req.user?.role === 'ADMIN' ? {} : { isActive: true },
   });
@@ -55,7 +55,7 @@ export const updateService = catchAsync(async (req: Request, res: Response, next
   res.status(200).json({ success: true, data: { service } });
 });
 
-export const deleteService = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteService = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   await prisma.service.delete({ where: { id: req.params.id as string } });
   res.status(204).json({ success: true, data: null });
 });

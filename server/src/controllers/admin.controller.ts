@@ -5,7 +5,7 @@ import prisma from '../utils/prisma';
 import { sendEmail } from '../utils/email';
 import { getIO } from '../socket';
 
-export const getDashboardStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getDashboardStats = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   // Aggregate stats
   const totalUsers = await prisma.user.count({ where: { role: 'USER' } });
   const totalPartners = await prisma.user.count({ where: { role: 'PARTNER' } });
@@ -42,7 +42,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
 });
 
-export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getAllUsers = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -62,7 +62,7 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, next: 
   });
 });
 
-export const getAllBookings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getAllBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const bookings = await prisma.booking.findMany({
     include: {
       user: { select: { name: true, email: true } },

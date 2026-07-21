@@ -1,13 +1,12 @@
 import { env } from '../utils/env';
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/AppError';
 
 export const errorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';

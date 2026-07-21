@@ -13,7 +13,7 @@ const storeSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const getStores = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getStores = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const stores = await prisma.store.findMany({
     where: req.user?.role === 'ADMIN' ? {} : { isActive: true },
   });
@@ -55,7 +55,7 @@ export const updateStore = catchAsync(async (req: Request, res: Response, next: 
   res.status(200).json({ success: true, data: { store } });
 });
 
-export const deleteStore = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteStore = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   await prisma.store.delete({ where: { id: req.params.id as string } });
   res.status(204).json({ success: true, data: null });
 });

@@ -100,7 +100,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
   res.status(201).json({ success: true, data: { booking } });
 });
 
-export const getMyBookings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getMyBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const bookings = await prisma.booking.findMany({
     where: { userId: req.user!.id },
     include: { service: true, partner: true, store: true, payment: true, review: true, coupon: true, bookingAddons: { include: { addon: true } } },
@@ -110,7 +110,7 @@ export const getMyBookings = catchAsync(async (req: Request, res: Response, next
   res.status(200).json({ success: true, results: bookings.length, data: { bookings } });
 });
 
-export const getPartnerBookings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getPartnerBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const bookings = await prisma.booking.findMany({
     where: { partnerId: req.user!.id },
     include: { service: true, user: true, store: true, bookingAddons: { include: { addon: true } } },
@@ -120,7 +120,7 @@ export const getPartnerBookings = catchAsync(async (req: Request, res: Response,
   res.status(200).json({ success: true, results: bookings.length, data: { bookings } });
 });
 
-export const getAllBookings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getAllBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const bookings = await prisma.booking.findMany({
     include: { user: true, partner: true, service: true, store: true, payment: true, bookingAddons: { include: { addon: true } } },
     orderBy: { createdAt: 'desc' },

@@ -1,7 +1,6 @@
 import { Request } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { AppError } from '../utils/AppError';
 import fs from 'fs';
 
 // Ensure directory exists

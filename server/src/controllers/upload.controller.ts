@@ -36,7 +36,7 @@ export const uploadFile = catchAsync(async (req: Request, res: Response, next: N
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
   
   // Upload to Supabase bucket called 'cleanride-media'
-  const { data, error } = await supabase
+  const { error } = await supabase
     .storage
     .from('cleanride-media')
     .upload(fileName, file.buffer, {

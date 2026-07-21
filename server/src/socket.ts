@@ -28,7 +28,7 @@ export const initSocket = (server: HttpServer, frontendUrl: string) => {
       const decoded = jwt.verify(token, secret) as JwtPayload;
       (socket as AuthenticatedSocket).user = decoded as { id: string; role: string };
       next();
-    } catch (err) {
+    } catch (_err) {
       return next(new Error('Authentication error: Invalid token'));
     }
   });

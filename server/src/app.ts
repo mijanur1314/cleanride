@@ -2,9 +2,10 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 import path from 'path';
 import { env } from './utils/env';
+import prisma from './utils/prisma';
+import redisClient from './utils/redis';
 
 const app = express();
 const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
@@ -50,6 +51,30 @@ app.use('/uploads', express.static(path.join(__dirname, '../../public/uploads'))
 
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'ok', message: 'CleanRide Server is running' });
+});
+
+app.get('/ready', async (req: Request, res: Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    let redisStatus = 'not_configured';
+    
+    if (redisClient) {
+      if (redisClient.status === 'ready') {
+        redisStatus = 'connected';
+      } else {
+        throw new Error('Redis is configured but not ready');
+      }
+    }
+
+    res.status(200).json({ 
+      status: 'ok', 
+      database: 'connected',
+      redis: redisStatus
+    });
+  } catch (error) {
+    logger.error('Readiness probe failed', error);
+    res.status(503).json({ status: 'error', message: 'Service Unavailable' });
+  }
 });
 
 import authRoutes from './routes/auth.routes';

@@ -27,7 +27,7 @@ export const createReview = catchAsync(async (req: Request, res: Response, next:
   res.status(201).json({ success: true, data: { review } });
 });
 
-export const getReviews = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getReviews = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const reviews = await prisma.review.findMany({
     include: { user: { select: { name: true } } },
     orderBy: { createdAt: 'desc' }

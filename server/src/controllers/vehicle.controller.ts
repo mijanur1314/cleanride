@@ -39,7 +39,7 @@ export const addVehicle = catchAsync(async (req: Request, res: Response, next: N
   res.status(201).json({ success: true, data: { vehicle } });
 });
 
-export const getMyVehicles = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getMyVehicles = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const vehicles = await prisma.vehicle.findMany({
     where: { userId: req.user!.id },
     orderBy: { createdAt: 'desc' }

@@ -3,7 +3,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 
-export const getUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const users = await prisma.user.findMany({
     select: {
       id: true,
@@ -83,7 +83,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
   });
 });
 
-export const deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUser = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   await prisma.user.delete({
     where: { id: req.params.id as string },
   });

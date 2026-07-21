@@ -58,7 +58,7 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
 });
 
 export const verifyPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, _bookingId } = req.body;
 
   if (!env.RAZORPAY_KEY_SECRET) {
     return next(new AppError('Payment gateway is not configured securely', 500));

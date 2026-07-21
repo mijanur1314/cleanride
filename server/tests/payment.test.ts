@@ -23,5 +23,20 @@ describe('Payment Boundaries', () => {
       
       expect(res.status).toBe(401);
     });
+
+    it('should reject invalid razorpay signature', async () => {
+      const token = jwt.sign({ id: 'dummy-user', role: 'USER' }, secret);
+      const res = await request(app)
+        .post('/api/payments/verify')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          razorpay_order_id: 'order_123',
+          razorpay_payment_id: 'pay_123',
+          razorpay_signature: 'invalid_signature'
+        });
+      
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
   });
 });

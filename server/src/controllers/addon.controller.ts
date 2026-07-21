@@ -3,7 +3,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 
-export const getAddons = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getAddons = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const addons = await prisma.addon.findMany({
     where: { isActive: true },
     orderBy: { createdAt: 'desc' }

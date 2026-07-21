@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -59,6 +60,82 @@ export default function AdminBookings() {
         <h1 className="text-3xl font-heading font-bold">Manage Bookings</h1>
         <p className="text-muted-foreground mt-1">View all bookings and assign service partners.</p>
       </div>
+
+      <Tabs defaultValue="action-required" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="action-required" className="relative">
+            Action Required
+            {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).length > 0 && (
+              <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="all">All Bookings</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="action-required">
+          <Card className="border-red-500/20 shadow-sm bg-red-50/50 dark:bg-red-950/10">
+            <CardHeader>
+              <CardTitle className="text-red-600 dark:text-red-400">Unassigned Confirmed Bookings</CardTitle>
+              <CardDescription>Bookings that have been paid/confirmed but need a partner assigned immediately.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative w-full overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Service</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell className="font-medium">
+                          {booking.user?.name}
+                          <span className="block text-xs text-muted-foreground font-normal">{booking.user?.email}</span>
+                        </TableCell>
+                        <TableCell>{booking.service?.name}</TableCell>
+                        <TableCell>{format(new Date(booking.bookingDate), "MMM d, h:mm a")}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-orange-200">Needs Partner</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Select onValueChange={(val) => assignPartner(booking.id, val)}>
+                            <SelectTrigger className="w-[140px] ml-auto h-8 text-xs border-red-500/30">
+                              <SelectValue placeholder="Assign Partner" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {partners.map(p => (
+                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="text-green-500 text-2xl">✓</span>
+                            <span>All confirmed bookings have been assigned!</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="all">
 
       <Card className="border-border/50 shadow-sm">
         <CardHeader>
@@ -132,6 +209,8 @@ export default function AdminBookings() {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -22,7 +22,7 @@ import { User } from '@prisma/client';
 const createSendToken = (user: User, statusCode: number, res: Response) => {
   const token = signToken(user.id, user.role);
 
-  const { password, ...userWithoutPassword } = user;
+  const { password: _password, ...userWithoutPassword } = user;
 
   res.status(statusCode).json({
     success: true,
@@ -125,7 +125,7 @@ export const getMe = catchAsync(async (req: Request, res: Response, next: NextFu
     return next(new AppError('User not found', 404));
   }
 
-  const { password, ...userWithoutPassword } = user;
+  const { password: _password, ...userWithoutPassword } = user;
 
   res.status(200).json({
     success: true,

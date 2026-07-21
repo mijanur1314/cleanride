@@ -11,7 +11,7 @@ const razorpay = new Razorpay({
   key_secret: env.RAZORPAY_KEY_SECRET,
 });
 
-export const getPlans = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getPlans = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const plans = await prisma.subscriptionPlan.findMany({
     where: { isActive: true },
     orderBy: { price: 'asc' }
@@ -93,7 +93,7 @@ export const verifySubscription = catchAsync(async (req: Request, res: Response,
   });
 });
 
-export const getMySubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getMySubscription = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const subscription = await prisma.userSubscription.findFirst({
     where: { 
       userId: req.user!.id,
