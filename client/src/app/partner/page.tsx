@@ -4,18 +4,15 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Calendar, CheckCircle2, Camera } from "lucide-react";
+import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageCircle } from "lucide-react";
 import { ChatBox } from "@/components/ChatBox";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
@@ -24,9 +21,10 @@ export default function PartnerDashboard() {
   const router = useRouter();
   const [bookings, setBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [images, setImages] = useState<{ [key: string]: { before: File | null, after: File | null } }>({});
+  const [images, setImages] = useState<{ [key: string]: { before: File | null, after: File | null, beforePreview?: string, afterPreview?: string } }>({});
   const [uploadingImages, setUploadingImages] = useState<string | null>(null);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, userName: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'jobs' | 'earnings'>('jobs');
 
   const fetchBookings = async () => {
     try {
@@ -65,11 +63,13 @@ export default function PartnerDashboard() {
 
   const handleFileChange = (id: string, type: 'before' | 'after', file: File | null | undefined) => {
     if (file) {
+      const previewUrl = URL.createObjectURL(file);
       setImages(prev => ({
         ...prev,
         [id]: {
           ...prev[id],
-          [type]: file
+          [type]: file,
+          [`${type}Preview`]: previewUrl
         }
       }));
     }
@@ -97,6 +97,8 @@ export default function PartnerDashboard() {
       toast.success("Images uploaded successfully");
       setImages(prev => {
         const next = { ...prev };
+        if (next[id]?.beforePreview) URL.revokeObjectURL(next[id].beforePreview!);
+        if (next[id]?.afterPreview) URL.revokeObjectURL(next[id].afterPreview!);
         delete next[id];
         return next;
       });
@@ -108,215 +110,315 @@ export default function PartnerDashboard() {
     }
   };
 
+  const openNavigation = (address: string) => {
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, '_blank');
+  };
+
   if (isLoading) {
-    return <div className="flex h-[calc(100vh-4rem)] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+    return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
   const completedBookings = bookings.filter(b => b.status === 'COMPLETED');
+  const activeBookings = bookings.filter(b => b.status !== 'COMPLETED');
   const lifetimeEarnings = completedBookings.reduce((sum, b) => sum + (b.totalAmount * 0.7), 0);
 
   return (
-    <div className="container mx-auto pt-28 pb-12 px-4">
-      <div className="mb-8 flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Partner Dashboard</h1>
-          <p className="text-muted-foreground">Manage your assigned services</p>
+    <div className="min-h-screen bg-muted/20 pb-24 pt-20 px-4 md:px-8">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Partner Hub</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage your jobs and earnings</p>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {activeTab === 'jobs' ? (
+          <motion.div 
+            key="jobs"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            {activeBookings.length > 0 && (
+              <div className="rounded-2xl overflow-hidden border shadow-sm h-48 relative mb-6">
+                <Map bookings={activeBookings} />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold tracking-tight">Active Assignments</h2>
+              <Badge variant="secondary" className="rounded-full">{activeBookings.length}</Badge>
+            </div>
+            
+            {activeBookings.length === 0 ? (
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center justify-center py-16 text-center bg-card rounded-3xl border shadow-sm"
+              >
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <p className="text-lg font-bold">All caught up!</p>
+                <p className="text-muted-foreground text-sm max-w-[200px] mx-auto mt-2">You don't have any pending assignments right now.</p>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AnimatePresence>
+                  {activeBookings.map((booking) => (
+                    <motion.div
+                      key={booking.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Card className="overflow-hidden border-0 shadow-md rounded-2xl bg-gradient-to-b from-card to-card/50">
+                        <div className={`h-2 w-full ${booking.status === 'EN_ROUTE' ? 'bg-orange-500' : booking.status === 'WASH_IN_PROGRESS' ? 'bg-blue-500' : 'bg-indigo-500'}`} />
+                        <CardContent className="p-5">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-bold text-lg leading-tight">{booking.service?.name}</h3>
+                              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                Customer: <span className="font-medium text-foreground">{booking.user?.name}</span>
+                              </p>
+                            </div>
+                            <Badge variant={booking.status === 'WASH_IN_PROGRESS' ? 'default' : 'secondary'} className="text-[10px] uppercase tracking-wider px-2 py-1">
+                              {booking.status.replace(/_/g, ' ')}
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-3 mb-6 bg-muted/40 rounded-xl p-3">
+                            <div className="flex items-start gap-3">
+                              <Calendar className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                              <span className="text-sm font-medium">{format(new Date(booking.bookingDate), "PPpp")}</span>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                              <span className="text-sm text-muted-foreground leading-snug">{booking.address}</span>
+                            </div>
+                          </div>
+
+                          {/* Dynamic Actions */}
+                          <div className="space-y-3">
+                            {(booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED') && (
+                              <Button 
+                                className="w-full rounded-xl h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 text-white" 
+                                onClick={() => {
+                                  updateStatus(booking.id, 'EN_ROUTE');
+                                  openNavigation(booking.address);
+                                }}
+                              >
+                                <Navigation className="w-4 h-4 mr-2" />
+                                Accept & Navigate
+                              </Button>
+                            )}
+
+                            {booking.status === 'EN_ROUTE' && (
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="outline"
+                                  className="rounded-xl h-12 flex-1"
+                                  onClick={() => openNavigation(booking.address)}
+                                >
+                                  <Navigation className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  className="w-full rounded-xl h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white flex-[4]" 
+                                  onClick={() => updateStatus(booking.id, 'WASH_IN_PROGRESS')}
+                                >
+                                  Arrived - Start Wash
+                                </Button>
+                              </div>
+                            )}
+
+                            {booking.status === 'WASH_IN_PROGRESS' && (
+                              <div className="space-y-4">
+                                <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+                                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                                    <Camera className="w-4 h-4" /> Required Proof
+                                  </h4>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {/* Before Image */}
+                                    <div className="relative">
+                                      {booking.beforeImageUrl ? (
+                                        <div className="aspect-square rounded-lg bg-green-50 flex flex-col items-center justify-center border border-green-200">
+                                          <CheckCircle2 className="w-6 h-6 text-green-500 mb-1" />
+                                          <span className="text-[10px] font-medium text-green-700">Uploaded</span>
+                                        </div>
+                                      ) : images[booking.id]?.beforePreview ? (
+                                        <div className="aspect-square rounded-lg overflow-hidden relative border group">
+                                          <img src={images[booking.id].beforePreview} alt="Before" className="w-full h-full object-cover" />
+                                          <button onClick={() => setImages(p => { const next = {...p}; if(next[booking.id]){ next[booking.id].before = null; delete next[booking.id].beforePreview; } return next; })} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 backdrop-blur-sm cursor-pointer z-10">
+                                            <X className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <label className="aspect-square rounded-lg bg-background border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+                                          <Camera className="w-5 h-5 text-muted-foreground mb-1" />
+                                          <span className="text-[10px] font-medium text-muted-foreground">Before</span>
+                                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileChange(booking.id, 'before', e.target.files?.[0])} />
+                                        </label>
+                                      )}
+                                    </div>
+                                    {/* After Image */}
+                                    <div className="relative">
+                                      {booking.afterImageUrl ? (
+                                        <div className="aspect-square rounded-lg bg-green-50 flex flex-col items-center justify-center border border-green-200">
+                                          <CheckCircle2 className="w-6 h-6 text-green-500 mb-1" />
+                                          <span className="text-[10px] font-medium text-green-700">Uploaded</span>
+                                        </div>
+                                      ) : images[booking.id]?.afterPreview ? (
+                                        <div className="aspect-square rounded-lg overflow-hidden relative border group">
+                                          <img src={images[booking.id].afterPreview} alt="After" className="w-full h-full object-cover" />
+                                          <button onClick={() => setImages(p => { const next = {...p}; if(next[booking.id]){ next[booking.id].after = null; delete next[booking.id].afterPreview; } return next; })} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 backdrop-blur-sm cursor-pointer z-10">
+                                            <X className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <label className="aspect-square rounded-lg bg-background border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
+                                          <Camera className="w-5 h-5 text-muted-foreground mb-1" />
+                                          <span className="text-[10px] font-medium text-muted-foreground">After</span>
+                                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileChange(booking.id, 'after', e.target.files?.[0])} />
+                                        </label>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {(!booking.beforeImageUrl || !booking.afterImageUrl) && (
+                                    <Button 
+                                      size="sm" 
+                                      className="w-full mt-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white"
+                                      onClick={() => submitImages(booking.id)}
+                                      disabled={uploadingImages === booking.id || (!images[booking.id]?.before && !images[booking.id]?.after)}
+                                    >
+                                      {uploadingImages === booking.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Camera className="w-4 h-4 mr-2" />}
+                                      Upload Photos
+                                    </Button>
+                                  )}
+                                </div>
+
+                                <Button 
+                                  className="w-full rounded-xl h-12 text-base font-bold bg-green-600 hover:bg-green-700 text-white" 
+                                  onClick={() => updateStatus(booking.id, 'COMPLETED')}
+                                >
+                                  Complete Job
+                                </Button>
+                              </div>
+                            )}
+
+                            <Button 
+                              variant="outline" 
+                              className="w-full rounded-xl h-10 border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100" 
+                              onClick={() => setActiveChat({ bookingId: booking.id, userName: booking.user?.name || 'Customer' })}
+                            >
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Message Customer
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="earnings"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div className="grid grid-cols-1 gap-4">
+              <Card className="bg-gradient-to-br from-indigo-900 to-blue-900 text-white border-0 shadow-lg rounded-3xl overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                  <DollarSign className="w-32 h-32" />
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-indigo-200 font-medium text-sm mb-1">Lifetime Earnings</h3>
+                  <div className="text-5xl font-black mb-4">${lifetimeEarnings.toFixed(2)}</div>
+                  
+                  <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-md">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-indigo-100">Available to Withdraw</span>
+                      <span className="text-lg font-bold">${lifetimeEarnings > 0 ? (lifetimeEarnings * 0.4).toFixed(2) : '0.00'}</span>
+                    </div>
+                    <Button 
+                      className="w-full bg-white text-indigo-900 hover:bg-indigo-50 font-bold rounded-xl h-11"
+                      disabled={lifetimeEarnings === 0}
+                      onClick={() => toast.success('Withdrawal request submitted! Funds will arrive in 2-3 business days.')}
+                    >
+                      Withdraw Funds
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div>
+              <h2 className="text-xl font-bold tracking-tight mb-4">Completed Jobs</h2>
+              {completedBookings.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground bg-white rounded-2xl border shadow-sm">
+                  <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  No completed jobs yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {completedBookings.map(b => (
+                    <div key={b.id} className="p-4 bg-white rounded-2xl border shadow-sm flex justify-between items-center">
+                      <div>
+                        <div className="font-bold">{b.service?.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-green-500" /> Completed on {format(new Date(b.bookingDate), "MMM d")}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-black text-green-600 text-lg">+${(b.totalAmount * 0.7).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sticky Bottom Navigation */}
+      <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-xl border-t pb-safe z-40 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <div className="flex justify-around items-center h-16 max-w-md mx-auto">
+          <button 
+            onClick={() => setActiveTab('jobs')}
+            className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${activeTab === 'jobs' ? 'text-indigo-600' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <Briefcase className={`w-6 h-6 mb-1 ${activeTab === 'jobs' ? 'fill-indigo-100' : ''}`} />
+            <span className="text-[10px] font-medium">Jobs</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('earnings')}
+            className={`flex flex-col items-center justify-center w-20 h-full transition-colors ${activeTab === 'earnings' ? 'text-indigo-600' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <DollarSign className={`w-6 h-6 mb-1 ${activeTab === 'earnings' ? 'fill-indigo-100' : ''}`} />
+            <span className="text-[10px] font-medium">Earnings</span>
+          </button>
         </div>
       </div>
 
-      <Tabs defaultValue="jobs" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="jobs">Assigned Jobs</TabsTrigger>
-          <TabsTrigger value="earnings">Earnings</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="jobs">
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight mb-4">Live Service Map</h2>
-            <Card className="p-1 mb-8 shadow-sm">
-              <Map bookings={bookings.filter(b => b.status !== 'COMPLETED')} />
-            </Card>
-
-            <h2 className="text-2xl font-bold tracking-tight mb-4">Assigned Bookings</h2>
-            
-            {bookings.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <CheckCircle2 className="w-12 h-12 text-green-500 mb-4 opacity-50" />
-              <p className="text-lg font-medium">All caught up!</p>
-              <p className="text-muted-foreground">You don't have any pending assignments.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {bookings.map((booking) => (
-              <Card key={booking.id} className="border-t-4 border-t-blue-500">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl">{booking.service?.name}</CardTitle>
-                    <Badge variant={booking.status === 'COMPLETED' ? 'default' : 'secondary'}>
-                      {booking.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm font-medium pt-1">Customer: {booking.user?.name}</p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium text-foreground">{format(new Date(booking.bookingDate), "PPpp")}</span>
-                    </div>
-                    <div className="flex items-start gap-2 mt-1">
-                      <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                      <span>{booking.address}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 pt-2 border-t">
-                    <label className="text-sm font-medium">Update Status</label>
-                    <Select defaultValue={booking.status} onValueChange={(val) => updateStatus(booking.id, val)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                        <SelectItem value="WASH_IN_PROGRESS">Wash In Progress</SelectItem>
-                        <SelectItem value="COMPLETED">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
-                    <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 mt-2" onClick={() => setActiveChat({ bookingId: booking.id, userName: booking.user?.name || 'Customer' })}>
-                      <MessageCircle className="w-4 h-4" />
-                      Chat with Customer
-                    </Button>
-                  ) : null}
-                </CardContent>
-                <CardFooter className="bg-muted/30 border-t flex-col items-start gap-4 p-4">
-                  <div className="w-full">
-                    <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-muted-foreground" /> Service Images
-                    </h4>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Before Wash</label>
-                        {booking.beforeImageUrl ? (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            <span className="text-xs font-medium">Uploaded</span>
-                          </div>
-                        ) : (
-                          <Input 
-                            type="file" 
-                            accept="image/*"
-                            className="text-xs h-9 cursor-pointer" 
-                            onChange={(e) => handleFileChange(booking.id, 'before', e.target.files?.[0])}
-                          />
-                        )}
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground mb-1 block">After Wash</label>
-                        {booking.afterImageUrl ? (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-500" />
-                            <span className="text-xs font-medium">Uploaded</span>
-                          </div>
-                        ) : (
-                          <Input 
-                            type="file"
-                            accept="image/*"
-                            className="text-xs h-9 cursor-pointer"
-                            onChange={(e) => handleFileChange(booking.id, 'after', e.target.files?.[0])}
-                          />
-                        )}
-                      </div>
-                    </div>
-                    
-                    {(!booking.beforeImageUrl || !booking.afterImageUrl) && (
-                      <Button 
-                        size="sm" 
-                        className="w-full mt-2"
-                        onClick={() => submitImages(booking.id)}
-                        disabled={uploadingImages === booking.id || !images[booking.id]}
-                      >
-                        {uploadingImages === booking.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                        Upload Images
-                      </Button>
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="earnings">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <Card className="bg-primary/5 border-primary/20">
-              <CardHeader>
-                <CardTitle className="text-lg">Lifetime Earnings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-extrabold text-primary">${lifetimeEarnings.toFixed(2)}</div>
-                <p className="text-sm text-muted-foreground mt-2">Calculated at 70% commission rate</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Available for Payout</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-4xl font-extrabold">${lifetimeEarnings > 0 ? (lifetimeEarnings * 0.4).toFixed(2) : '0.00'}</div>
-                <p className="text-sm text-muted-foreground mt-2">Funds settled in the last 7 days</p>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  className="w-full" 
-                  disabled={lifetimeEarnings === 0}
-                  onClick={() => toast.success('Withdrawal request submitted! Funds will arrive in 2-3 business days.')}
-                >
-                  Withdraw Funds
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-          
-          <h2 className="text-2xl font-bold tracking-tight mb-4">Earning History</h2>
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y">
-                {completedBookings.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">No completed jobs yet.</div>
-                ) : (
-                  completedBookings.map(b => (
-                    <div key={b.id} className="p-4 flex justify-between items-center hover:bg-muted/30 transition-colors">
-                      <div>
-                        <div className="font-semibold">{b.service?.name}</div>
-                        <div className="text-sm text-muted-foreground">{format(new Date(b.bookingDate), "MMM d, yyyy")}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-green-500">+${(b.totalAmount * 0.7).toFixed(2)}</div>
-                        <div className="text-xs text-muted-foreground">Booking: ${b.totalAmount}</div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
       {activeChat && (
-        <ChatBox 
-          bookingId={activeChat.bookingId} 
-          userName={activeChat.userName}
-          onClose={() => setActiveChat(null)}
-        />
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm sm:p-4">
+          <div className="w-full h-full max-w-lg mx-auto bg-background flex flex-col overflow-hidden sm:rounded-2xl sm:shadow-2xl sm:border sm:h-[80vh] sm:mt-[10vh]">
+            <ChatBox 
+              bookingId={activeChat.bookingId} 
+              userName={activeChat.userName}
+              onClose={() => setActiveChat(null)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
