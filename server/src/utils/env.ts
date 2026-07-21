@@ -21,6 +21,7 @@ const envSchema = z.object({
   SMTP_PASS: z.string().optional(),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_KEY: z.string().optional(),
+  SENTRY_DSN: z.string().url().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

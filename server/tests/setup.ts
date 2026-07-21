@@ -20,7 +20,32 @@ jest.mock('../src/utils/prisma', () => ({
     booking: {
       create: jest.fn(),
       findUnique: jest.fn(),
-      update: jest.fn()
-    }
+      update: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn()
+    },
+    service: {
+      findUnique: jest.fn()
+    },
+    payment: {
+      create: jest.fn(),
+      update: jest.fn(),
+      findFirst: jest.fn()
+    },
+    $transaction: jest.fn()
   }
+}));
+
+jest.mock('razorpay', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      orders: {
+        create: jest.fn().mockResolvedValue({ id: 'order_test123' })
+      }
+    };
+  });
+});
+
+jest.mock('../src/utils/mailer', () => ({
+  sendEmail: jest.fn().mockResolvedValue(true)
 }));

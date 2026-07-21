@@ -6,8 +6,26 @@ import path from 'path';
 import { env } from './utils/env';
 import prisma from './utils/prisma';
 import redisClient from './utils/redis';
+import crypto from 'crypto';
+import * as Sentry from '@sentry/node';
+
+declare global {
+  namespace Express {
+    interface Request {
+      id?: string;
+    }
+  }
+}
 
 const app = express();
+
+if (env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: env.SENTRY_DSN,
+    tracesSampleRate: 1.0,
+  });
+}
+
 const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(express.json());
@@ -32,9 +50,16 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Request ID Middleware
+app.use((req, res, next) => {
+  req.id = crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.id);
+  next();
+});
+
 // Middleware for request logging
 app.use((req, res, next) => {
-  logger.info(`Incoming Request`, { method: req.method, url: req.url, ip: req.ip });
+  logger.info(`Incoming Request`, { method: req.method, url: req.url, ip: req.ip, requestId: req.id });
   next();
 });
 
@@ -119,6 +144,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Global Error Handler
+if (env.SENTRY_DSN) {
+  Sentry.setupExpressErrorHandler(app);
+}
 app.use(errorHandler);
 
 export default app;

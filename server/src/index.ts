@@ -4,6 +4,7 @@ import app from './app';
 import { logger } from './utils/logger';
 import { initSocket } from './socket';
 import prisma from './utils/prisma';
+import redisClient from './utils/redis';
 
 const PORT = env.PORT || 5000;
 const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
@@ -25,6 +26,10 @@ const shutdown = async (signal: string) => {
     try {
       await prisma.$disconnect();
       logger.info('Database connection closed.');
+      if (redisClient) {
+        await redisClient.quit();
+        logger.info('Redis connection closed.');
+      }
       process.exit(0);
     } catch (err) {
       logger.error('Error during database disconnection:', err);
