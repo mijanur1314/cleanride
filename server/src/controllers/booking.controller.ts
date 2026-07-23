@@ -10,6 +10,7 @@ const bookingSchema = z.object({
   serviceId: z.string().uuid(),
   storeId: z.string().uuid().optional(),
   vehicleType: z.string(),
+  vehicleName: z.string().optional(),
   vehicleNumber: z.string().optional(),
   vehicleImage: z.string(),
   address: z.string().optional(),
@@ -23,7 +24,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
   const parsed = bookingSchema.safeParse(req.body);
   if (!parsed.success) return next(new AppError('Invalid input data', 400));
 
-  const { serviceId, storeId, vehicleType, vehicleNumber, vehicleImage, address, bookingDate, couponId, addonIds, redeemPoints } = parsed.data;
+  const { serviceId, storeId, vehicleType, vehicleName, vehicleNumber, vehicleImage, address, bookingDate, couponId, addonIds, redeemPoints } = parsed.data;
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
   if (!service) return next(new AppError('Service not found', 404));
@@ -71,6 +72,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
         serviceId,
         storeId,
         vehicleType,
+        vehicleName,
         vehicleNumber,
         beforeImageUrl: vehicleImage,
         address,

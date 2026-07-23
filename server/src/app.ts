@@ -135,6 +135,8 @@ import addonRoutes from './routes/addon.routes';
 import chatRoutes from './routes/chat.routes';
 import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
+import ticketRoutes from './routes/ticket.routes';
+import settingsRoutes from './routes/settings.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { AppError } from './utils/AppError';
 
@@ -155,6 +157,8 @@ app.use('/api/addons', addonRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {

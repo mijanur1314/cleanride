@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 const vehicleSchema = z.object({
   type: z.string().min(1),
+  name: z.string().optional(),
   make: z.string().optional(),
   model: z.string().optional(),
   plateNumber: z.string().optional(),
@@ -16,7 +17,7 @@ export const addVehicle = catchAsync(async (req: Request, res: Response, next: N
   const parsed = vehicleSchema.safeParse(req.body);
   if (!parsed.success) return next(new AppError('Invalid input data', 400));
 
-  const { type, make, model, plateNumber, isDefault } = parsed.data;
+  const { type, name, make, model, plateNumber, isDefault } = parsed.data;
 
   if (isDefault) {
     await prisma.vehicle.updateMany({
@@ -29,6 +30,7 @@ export const addVehicle = catchAsync(async (req: Request, res: Response, next: N
     data: {
       userId: req.user!.id,
       type: type as string,
+      name,
       make,
       model,
       plateNumber,

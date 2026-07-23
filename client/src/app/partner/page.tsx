@@ -8,7 +8,8 @@ import api from "@/lib/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft } from "lucide-react";
+import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
@@ -19,7 +20,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
 export default function PartnerDashboard() {
-  const { user, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { user, token, isAuthenticated, _hasHydrated, logout, login } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [images, setImages] = useState<{ [key: string]: { before: File | null, after: File | null, beforePreview?: string, afterPreview?: string } }>({});
@@ -46,6 +47,28 @@ export default function PartnerDashboard() {
       router.push("/");
     }
   }, [isAuthenticated, user, router, _hasHydrated]);
+
+  // Check verification status in background
+  useEffect(() => {
+    if (isAuthenticated && user && !user.isVerified) {
+      const checkStatus = async () => {
+        try {
+          const res = await api.get('/auth/me');
+          if (res.data.data.user.isVerified) {
+            login(res.data.data.user, token || undefined);
+            toast.success("Account verified! Welcome to the Partner Hub.");
+          }
+        } catch (error) {
+          console.error("Failed to check verification status", error);
+        }
+      };
+      
+      // Check immediately on mount, and then poll every 10 seconds
+      checkStatus();
+      const interval = setInterval(checkStatus, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user?.isVerified, token, login]);
 
   const updateStatus = async (id: string, status: string) => {
     try {
@@ -135,30 +158,39 @@ export default function PartnerDashboard() {
 
   const [kycFile, setKycFile] = useState<File | null>(null);
   const [kycPreview, setKycPreview] = useState<string | null>(null);
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
   const [isUploadingKyc, setIsUploadingKyc] = useState(false);
 
   const handleKycUpload = async () => {
-    if (!kycFile) return toast.error("Please select a document first");
+    if (!kycFile || !selfieFile) return toast.error("Please select both your ID document and a selfie.");
     setIsUploadingKyc(true);
     try {
-      const formData = new FormData();
-      formData.append('file', kycFile);
+      const docFormData = new FormData();
+      docFormData.append('file', kycFile);
       
-      const uploadRes = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      const fileUrl = uploadRes.data.url;
+      const selfieFormData = new FormData();
+      selfieFormData.append('file', selfieFile);
+      
+      // Upload both files concurrently
+      const [docRes, selfieRes] = await Promise.all([
+        api.post('/upload', docFormData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+        api.post('/upload', selfieFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      ]);
+      
+      const documentUrl = docRes.data.data.url;
+      const selfieUrl = selfieRes.data.data.url;
 
-      await api.patch('/users/kyc', { kycDocumentUrl: fileUrl });
-      toast.success("KYC Document submitted successfully! Waiting for admin approval.");
+      await api.patch('/users/kyc', { kycDocumentUrl: documentUrl, kycSelfieUrl: selfieUrl });
+      toast.success("KYC Documents submitted successfully! Waiting for admin approval.");
       
-      // Update local user state if needed or just let them know
       setKycFile(null);
       setKycPreview(null);
-      // Hacky way to trigger a refresh
+      setSelfieFile(null);
+      setSelfiePreview(null);
       window.location.reload();
-    } catch (error) {
-      toast.error("Failed to upload KYC document");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to upload KYC document");
     } finally {
       setIsUploadingKyc(false);
     }
@@ -184,36 +216,66 @@ export default function PartnerDashboard() {
             </p>
 
             <div className="w-full space-y-4">
-              <div 
-                className="w-full h-40 border-2 border-dashed border-white/10 rounded-xl bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors relative overflow-hidden"
-                onClick={() => document.getElementById('kyc-upload')?.click()}
-              >
-                {kycPreview ? (
-                  <img src={kycPreview} alt="KYC Preview" className="w-full h-full object-cover" />
-                ) : (
-                  <>
-                    <Camera className="w-8 h-8 text-gray-500 mb-2" />
-                    <span className="text-sm text-gray-500 font-medium">Click to select ID Document</span>
-                  </>
-                )}
-                <input 
-                  type="file" 
-                  id="kyc-upload" 
-                  className="hidden" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setKycFile(file);
-                      setKycPreview(URL.createObjectURL(file));
-                    }
-                  }}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div 
+                  className="w-full h-32 border-2 border-dashed border-white/10 rounded-xl bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors relative overflow-hidden"
+                  onClick={() => document.getElementById('kyc-upload')?.click()}
+                >
+                  {kycPreview ? (
+                    <img src={kycPreview} alt="KYC Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <Camera className="w-6 h-6 text-gray-500 mb-2" />
+                      <span className="text-xs text-gray-500 font-medium text-center px-2">ID Document<br/>(Aadhar/DL)</span>
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    id="kyc-upload" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setKycFile(file);
+                        setKycPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                </div>
+
+                <div 
+                  className="w-full h-32 border-2 border-dashed border-white/10 rounded-xl bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors relative overflow-hidden"
+                  onClick={() => document.getElementById('selfie-upload')?.click()}
+                >
+                  {selfiePreview ? (
+                    <img src={selfiePreview} alt="Selfie Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <Camera className="w-6 h-6 text-gray-500 mb-2" />
+                      <span className="text-xs text-gray-500 font-medium text-center px-2">Live Selfie<br/>(Face clearly visible)</span>
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    id="selfie-upload" 
+                    className="hidden" 
+                    accept="image/*"
+                    capture="user"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelfieFile(file);
+                        setSelfiePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               <Button 
                 onClick={handleKycUpload}
-                disabled={!kycFile || isUploadingKyc}
+                disabled={!kycFile || !selfieFile || isUploadingKyc}
                 className="w-full bg-white text-black hover:bg-gray-200 h-12 font-medium"
               >
                 {isUploadingKyc ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit KYC Document'}
@@ -228,19 +290,38 @@ export default function PartnerDashboard() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 pb-28 pt-20 px-4 md:px-8 selection:bg-white/20">
       {/* Header */}
-      <div className="mb-8 mt-4 relative z-10 flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => router.back()} 
-          className="rounded-full bg-white/5 hover:bg-white/10 text-white shrink-0 h-12 w-12 border border-white/10 transition-colors"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </Button>
-        <div>
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent font-heading">Partner Hub</h1>
-          <p className="text-gray-400 text-sm mt-1 font-light">Manage your premium assignments and earnings</p>
+      <div className="mb-8 mt-4 relative z-10 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent font-heading">Partner Hub</h1>
+            <p className="text-gray-400 text-sm mt-1 font-light">Manage your premium assignments and earnings</p>
+          </div>
         </div>
+
+        {/* Profile Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="rounded-full border-white/20 bg-transparent text-white hover:bg-white/10 h-12 w-12 shrink-0 hidden sm:flex">
+              <User className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 bg-[#1A1A1A] border-white/10 text-white shadow-2xl rounded-xl z-[100] p-2">
+            <div className="flex flex-col space-y-1 p-2 pb-3">
+              <p className="font-medium text-sm text-white leading-none">{user?.name || 'Partner'}</p>
+              <p className="text-xs text-gray-400 leading-none mt-1.5">{user?.email}</p>
+              <div className="pt-2.5">
+                <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-400 border-blue-500/20 uppercase tracking-widest px-2 py-0.5">
+                  Partner
+                </Badge>
+              </div>
+            </div>
+            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuItem onClick={logout} className="py-2.5 px-3 focus:bg-red-500/10 text-red-400 focus:text-red-400 cursor-pointer flex items-center w-full rounded-lg mt-1">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <AnimatePresence mode="wait">

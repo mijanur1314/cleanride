@@ -45,6 +45,10 @@ export const protect = catchAsync(async (req: Request, res: Response, next: Next
     return next(new AppError('The user belonging to this token does no longer exist.', 401));
   }
 
+  if (currentUser.isBanned) {
+    return next(new AppError('Your account has been banned. Please contact support.', 403));
+  }
+
   req.user = currentUser;
   next();
 });

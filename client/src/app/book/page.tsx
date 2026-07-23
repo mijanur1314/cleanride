@@ -26,7 +26,7 @@ const VEHICLE_CATEGORIES: Record<string, string[]> = {
 export default function BookingPage() {
   const router = useRouter();
   const { user, _hasHydrated } = useAuthStore();
-  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
+  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
   
   const [services, setServices] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -172,7 +172,7 @@ export default function BookingPage() {
                         {vehicles.map(v => (
                           <div 
                             key={v.id} 
-                            onClick={() => setVehicleDetails("Passenger Cars & Vehicles", v.type, v.plateNumber || '')}
+                            onClick={() => setVehicleDetails("Passenger Cars & Vehicles", v.type, v.name || "", v.plateNumber || '')}
                             className={`p-5 rounded-2xl cursor-pointer flex items-center gap-4 transition-all border ${vehicleType === v.type && vehicleNumber === (v.plateNumber || '') ? 'border-white/40 bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'border-white/10 hover:bg-white/[0.02]'}`}
                           >
                             <Car className={`w-6 h-6 ${vehicleType === v.type && vehicleNumber === (v.plateNumber || '') ? 'text-white' : 'text-gray-500'}`} />
@@ -194,7 +194,7 @@ export default function BookingPage() {
                     <div className="space-y-3">
                       <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle Category *</Label>
                       <Select 
-                        onValueChange={(v) => setVehicleDetails(v, "", vehicleNumber || undefined)} 
+                        onValueChange={(v) => setVehicleDetails(v, "", vehicleName || "", vehicleNumber || undefined)} 
                         value={vehicleCategory || ""}
                       >
                         <SelectTrigger className="bg-black/50 border-white/10 rounded-xl h-14 text-white focus:ring-white/20"><SelectValue placeholder="Select category" /></SelectTrigger>
@@ -209,7 +209,7 @@ export default function BookingPage() {
                     <div className="space-y-3">
                       <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle Type *</Label>
                       <Select 
-                        onValueChange={(v) => setVehicleDetails(vehicleCategory!, v, vehicleNumber || undefined)} 
+                        onValueChange={(v) => setVehicleDetails(vehicleCategory!, v, vehicleName || "", vehicleNumber || undefined)} 
                         value={vehicleType || ""}
                         disabled={!vehicleCategory}
                       >
@@ -224,8 +224,13 @@ export default function BookingPage() {
                   </div>
 
                   <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle Name (Optional)</Label>
+                    <Input placeholder="e.g. Hunter 350" value={vehicleName || ''} onChange={(e) => setVehicleDetails(vehicleCategory!, vehicleType!, e.target.value, vehicleNumber || undefined)} className="bg-black/50 border-white/10 rounded-xl h-14 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
+                  </div>
+
+                  <div className="space-y-3">
                     <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle License Plate (Optional)</Label>
-                    <Input placeholder="e.g. ABC 1234" value={vehicleNumber || ''} onChange={(e) => setVehicleDetails(vehicleCategory!, vehicleType!, e.target.value)} className="bg-black/50 border-white/10 rounded-xl h-14 text-white placeholder:text-gray-600 focus-visible:ring-white/20 uppercase" />
+                    <Input placeholder="e.g. ABC 1234" value={vehicleNumber || ''} onChange={(e) => setVehicleDetails(vehicleCategory!, vehicleType!, vehicleName || "", e.target.value)} className="bg-black/50 border-white/10 rounded-xl h-14 text-white placeholder:text-gray-600 focus-visible:ring-white/20 uppercase" />
                   </div>
                   
                   <div className="space-y-3 pt-2">
@@ -315,7 +320,7 @@ export default function BookingPage() {
 
 function PaymentStep({ availableAddons }: { availableAddons: { id: string; name: string; price: number }[] }) {
   const { user } = useAuthStore();
-  const { service, vehicleType, vehicleNumber, vehicleImageUrl, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
+  const { service, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -365,6 +370,7 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
       const bookingRes = await api.post("/bookings", {
         serviceId: service?.id,
         vehicleType,
+        vehicleName,
         vehicleNumber,
         vehicleImage: vehicleImageUrl,
         bookingDate: bookingDate?.toISOString(),
@@ -444,7 +450,7 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
           <div className="p-6 bg-black/40 rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-6 border border-white/5">
             <div>
               <h4 className="font-bold text-xl text-white font-heading mb-1">{service?.name}</h4>
-              <p className="text-sm font-light text-gray-400">{vehicleType}</p>
+              <p className="text-sm font-light text-gray-400">{vehicleName ? `${vehicleName} - ${vehicleType}` : vehicleType}</p>
               <p className="text-sm font-light text-gray-400">{bookingDate?.toLocaleString()}</p>
               <p className="text-sm font-light text-gray-400 mt-2 flex items-start gap-1 max-w-sm"><span className="opacity-50">📍</span> {address}</p>
               {addonIds.length > 0 && (

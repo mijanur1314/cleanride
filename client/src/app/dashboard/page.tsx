@@ -32,7 +32,7 @@ export default function UserDashboard() {
   const toggleBooking = (id: string) => {
     setExpandedBookings(prev => ({ ...prev, [id]: !prev[id] }));
   };
-  const [newVehicle, setNewVehicle] = useState({ type: '', make: '', model: '', plateNumber: '' });
+  const [newVehicle, setNewVehicle] = useState({ type: '', name: '', make: '', model: '', plateNumber: '' });
   const [addingVehicle, setAddingVehicle] = useState(false);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, partnerName: string } | null>(null);
   const [cancelModal, setCancelModal] = useState<string | null>(null);
@@ -134,7 +134,7 @@ export default function UserDashboard() {
     try {
       const res = await api.post("/vehicles", newVehicle);
       setVehicles([res.data.data.vehicle, ...vehicles]);
-      setNewVehicle({ type: '', make: '', model: '', plateNumber: '' });
+      setNewVehicle({ type: '', name: '', make: '', model: '', plateNumber: '' });
       toast.success("Vehicle added to garage!");
     } catch (error: unknown) {
       toast.error((error as { response?: { data?: { message?: string } } }).response?.data?.message || "Failed to add vehicle");
@@ -465,6 +465,10 @@ export default function UserDashboard() {
                     <Input value={newVehicle.type} onChange={(e) => setNewVehicle({...newVehicle, type: e.target.value})} placeholder="e.g. Sedan, SUV" required className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
                   </div>
                   <div>
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Vehicle Name (Optional)</label>
+                    <Input value={newVehicle.name} onChange={(e) => setNewVehicle({...newVehicle, name: e.target.value})} placeholder="e.g. Hunter 350, My Daily" className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
+                  </div>
+                  <div>
                     <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Make</label>
                     <Input value={newVehicle.make} onChange={(e) => setNewVehicle({...newVehicle, make: e.target.value})} placeholder="e.g. Toyota" className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
                   </div>
@@ -498,11 +502,17 @@ export default function UserDashboard() {
                   <CardHeader className="pb-3 pt-5 relative z-10 border-b border-white/5">
                     <CardTitle className="text-lg flex items-center gap-2 text-white font-heading">
                       <Car className="w-5 h-5 text-gray-400" />
-                      {v.type}
+                      {v.name ? v.name : v.type}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4 relative z-10">
                     <div className="space-y-3">
+                      {v.name && (
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Type</p>
+                          <p className="text-sm font-medium text-white">{v.type}</p>
+                        </div>
+                      )}
                       {v.make && (
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Make</p>

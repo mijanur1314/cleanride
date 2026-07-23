@@ -119,7 +119,9 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, _next:
       createdAt: true,
       loyaltyPoints: true,
       isVerified: true,
-      kycDocumentUrl: true
+      kycDocumentUrl: true,
+      kycSelfieUrl: true,
+      isBanned: true
     },
     orderBy: { createdAt: 'desc' }
   });

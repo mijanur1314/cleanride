@@ -10,6 +10,7 @@ interface BookingState {
   service: Service | null;
   vehicleCategory: string | null;
   vehicleType: string | null;
+  vehicleName: string | null;
   vehicleNumber: string | null;
   vehicleImageUrl: string | null;
   bookingDate: Date | null;
@@ -18,7 +19,7 @@ interface BookingState {
   addonIds: string[];
   step: number;
   setService: (service: Service) => void;
-  setVehicleDetails: (category: string, type: string, number?: string) => void;
+  setVehicleDetails: (category: string, type: string, name?: string, number?: string) => void;
   setVehicleImage: (url: string) => void;
   setBookingDate: (date: Date) => void;
   setLocation: (address: string, storeId?: string) => void;
@@ -32,6 +33,7 @@ export const useBookingStore = create<BookingState>((set) => ({
   service: null,
   vehicleCategory: null,
   vehicleType: null,
+  vehicleName: null,
   vehicleNumber: null,
   vehicleImageUrl: null,
   bookingDate: null,
@@ -41,7 +43,7 @@ export const useBookingStore = create<BookingState>((set) => ({
   step: 1,
   
   setService: (service) => set({ service }),
-  setVehicleDetails: (category, type, number) => set({ vehicleCategory: category, vehicleType: type, vehicleNumber: number }),
+  setVehicleDetails: (category, type, name, number) => set({ vehicleCategory: category, vehicleType: type, vehicleName: name, vehicleNumber: number }),
   setVehicleImage: (url) => set({ vehicleImageUrl: url }),
   setBookingDate: (date) => set({ bookingDate: date }),
   setLocation: (address, storeId) => set({ address, storeId }),
@@ -57,6 +59,7 @@ export const useBookingStore = create<BookingState>((set) => ({
     service: null,
     vehicleCategory: null,
     vehicleType: null,
+    vehicleName: null,
     vehicleNumber: null,
     vehicleImageUrl: null,
     bookingDate: null,

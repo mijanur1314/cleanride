@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "@/lib/axios";
 import { toast } from "sonner";
 import { Save, Bell, Shield, Globe, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,23 +13,39 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
-    siteName: "CleanRide Premium",
-    supportEmail: "support@cleanride.com",
-    contactPhone: "+1 (555) 123-4567",
-    taxRate: 8.5,
+    siteName: "",
+    supportEmail: "",
+    contactPhone: "",
+    taxRate: 0,
     enableNotifications: true,
     maintenanceMode: false,
   });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get('/settings');
+      setSettings(res.data.data.settings);
+    } catch (error) {
+      toast.error('Failed to load settings');
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call for saving settings
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await api.patch('/settings', settings);
       toast.success("Platform settings have been successfully updated!");
-    }, 800);
+    } catch (error) {
+      toast.error('Failed to update settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -151,11 +168,18 @@ export default function SettingsPage() {
                   <Button 
                     type="button" 
                     variant={settings.maintenanceMode ? "default" : "destructive"}
-                    onClick={() => {
-                      setSettings({...settings, maintenanceMode: !settings.maintenanceMode});
-                      toast(settings.maintenanceMode ? "Maintenance mode disabled" : "Maintenance mode activated", {
-                        style: { backgroundColor: settings.maintenanceMode ? '#10b981' : '#ef4444', color: 'white', border: 'none' }
-                      });
+                    onClick={async () => {
+                      const newMaintenanceMode = !settings.maintenanceMode;
+                      setSettings({...settings, maintenanceMode: newMaintenanceMode});
+                      try {
+                        await api.patch('/settings', { maintenanceMode: newMaintenanceMode });
+                        toast(newMaintenanceMode ? "Maintenance mode activated" : "Maintenance mode disabled", {
+                          style: { backgroundColor: newMaintenanceMode ? '#ef4444' : '#10b981', color: 'white', border: 'none' }
+                        });
+                      } catch (error) {
+                        toast.error('Failed to update maintenance mode');
+                        setSettings({...settings, maintenanceMode: !newMaintenanceMode}); // revert
+                      }
                     }}
                   >
                     {settings.maintenanceMode ? "Disable Maintenance Mode" : "Enable Maintenance Mode"}

@@ -40,6 +40,8 @@ model User {
   role       Role     @default(USER)
   isVerified     Boolean  @default(false)
   kycDocumentUrl String?
+  kycSelfieUrl   String?
+  isBanned       Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -51,6 +53,8 @@ model User {
   notifications    Notification[]
   vehicles         Vehicle[]
   messagesSent     Message[]
+  tickets          Ticket[]
+  ticketMessages   TicketMessage[]
   
   // Referrals and Loyalty
   loyaltyPoints    Int      @default(0)
@@ -95,6 +99,7 @@ model Booking {
   partnerId     String?
   storeId       String?       // Optional if it's a doorstep service
   vehicleType   String
+  vehicleName   String?
   vehicleNumber String?
   address       String?       // Address for doorstep service
   bookingDate   DateTime
@@ -202,6 +207,7 @@ model Vehicle {
   id          String   @id @default(uuid())
   userId      String
   type        String   // SUV, Sedan, Hatchback
+  name        String?  // e.g., Hunter 350, My Daily Driver
   make        String?  // e.g., Toyota
   model       String?  // e.g., Camry
   plateNumber String?
@@ -246,4 +252,45 @@ model Message {
 
   booking Booking @relation(fields: [bookingId], references: [id])
   sender  User    @relation(fields: [senderId], references: [id])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Ticket {
+  id          String        @id @default(uuid())
+  userId      String
+  subject     String
+  status      TicketStatus  @default(OPEN)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user        User          @relation(fields: [userId], references: [id])
+  messages    TicketMessage[]
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid())
+  ticketId  String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  sender    User     @relation(fields: [senderId], references: [id])
+}
+
+model SystemSetting {
+  id                  String   @id @default("global")
+  siteName            String   @default("CleanRide Premium")
+  supportEmail        String   @default("support@cleanride.com")
+  contactPhone        String   @default("+1 (555) 123-4567")
+  taxRate             Float    @default(8.5)
+  enableNotifications Boolean  @default(true)
+  maintenanceMode     Boolean  @default(false)
+  updatedAt           DateTime @updatedAt
 }

@@ -10,7 +10,8 @@ import {
   Users, 
   Settings,
   Car,
-  LogOut
+  LogOut,
+  MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const sidebarLinks = [
   { name: "Bookings", href: "/admin/bookings", icon: CalendarCheck },
   { name: "Users & Partners", href: "/admin/users", icon: Users },
   { name: "Services", href: "/admin/services", icon: Car },
+  { name: "Support Inbox", href: "/admin/support", icon: MessageSquare },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

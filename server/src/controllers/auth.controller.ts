@@ -122,6 +122,10 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
     return next(new AppError('Incorrect email or password', 401));
   }
 
+  if (user.isBanned) {
+    return next(new AppError('Your account has been banned. Please contact support.', 403));
+  }
+
   createSendToken(user, 200, res);
 });
 

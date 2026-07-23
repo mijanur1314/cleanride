@@ -84,15 +84,16 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
 });
 
 export const updateKyc = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { kycDocumentUrl } = req.body;
-  if (!kycDocumentUrl) {
-    return next(new AppError('Please provide a KYC document URL.', 400));
+  const { kycDocumentUrl, kycSelfieUrl } = req.body;
+  if (!kycDocumentUrl || !kycSelfieUrl) {
+    return next(new AppError('Please provide both KYC document URL and Selfie URL.', 400));
   }
 
   const updatedUser = await prisma.user.update({
     where: { id: req.user!.id },
     data: {
-      kycDocumentUrl, // TS Server should refresh after save
+      kycDocumentUrl,
+      kycSelfieUrl,
     },
   });
 
@@ -113,5 +114,24 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, _next: 
   res.status(204).json({
     success: true,
     data: null,
+  });
+});
+
+export const banUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { isBanned } = req.body;
+  if (isBanned === undefined) {
+    return next(new AppError('Please provide isBanned status', 400));
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: req.params.id as string },
+    data: { isBanned },
+    select: { id: true, name: true, email: true, isBanned: true }
+  });
+
+  res.status(200).json({
+    success: true,
+    message: updatedUser.isBanned ? 'User banned successfully' : 'User unbanned successfully',
+    data: { user: updatedUser }
   });
 });
