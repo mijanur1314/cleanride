@@ -4,10 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from './ui/button';
-import { Menu, Bell, Star, Sun, Moon } from 'lucide-react';
+import { Menu, Bell, Star, Sun, Moon, User, LayoutDashboard, LogOut } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -161,10 +162,26 @@ export default function Navbar() {
                 </PopoverContent>
               </Popover>
 
-              <Link href={user.role === 'ADMIN' ? '/admin' : user.role === 'PARTNER' ? '/partner' : '/dashboard'}>
-                <Button variant="outline" className="border-white/20 text-white bg-transparent hover:bg-white/10 rounded-full px-6 font-semibold hidden md:inline-flex">Dashboard</Button>
-              </Link>
-              <Button onClick={logout} className="bg-white text-black hover:bg-gray-200 rounded-full px-6 font-bold shadow-xl hidden md:inline-flex">Logout</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full border-white/20 bg-transparent text-white hover:bg-white/10 hidden md:inline-flex">
+                    <User className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-[#1A1A1A] border-white/10 text-white shadow-2xl rounded-xl z-[100]">
+                  <DropdownMenuItem className="py-3 px-4 focus:bg-white/10 cursor-pointer" asChild>
+                    <Link href={user.role === 'ADMIN' ? '/admin' : user.role === 'PARTNER' ? '/partner' : '/dashboard'} className="flex items-center w-full">
+                      <LayoutDashboard className="w-4 h-4 mr-3 text-gray-400" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/5 mx-2" />
+                  <DropdownMenuItem onClick={logout} className="py-3 px-4 focus:bg-red-500/10 text-red-400 focus:text-red-400 cursor-pointer flex items-center w-full">
+                    <LogOut className="w-4 h-4 mr-3" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-4">

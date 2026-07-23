@@ -38,8 +38,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange
         >
           <QueryProvider>
@@ -47,7 +47,7 @@ export default function RootLayout({
               <Navbar />
               <main className="flex-1">{children}</main>
               <Footer />
-              <Toaster theme="light" position="top-center" />
+              <Toaster theme="dark" position="top-center" />
             </SocketProvider>
           </QueryProvider>
         </ThemeProvider>

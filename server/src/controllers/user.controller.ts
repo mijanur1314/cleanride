@@ -83,6 +83,28 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
   });
 });
 
+export const updateKyc = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { kycDocumentUrl } = req.body;
+  if (!kycDocumentUrl) {
+    return next(new AppError('Please provide a KYC document URL.', 400));
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: {
+      kycDocumentUrl, // TS Server should refresh after save
+    },
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'KYC Document submitted successfully',
+    data: {
+      user: updatedUser,
+    },
+  });
+});
+
 export const deleteUser = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   await prisma.user.delete({
     where: { id: req.params.id as string },

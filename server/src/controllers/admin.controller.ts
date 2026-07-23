@@ -118,7 +118,8 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, _next:
       role: true,
       createdAt: true,
       loyaltyPoints: true,
-      isVerified: true
+      isVerified: true,
+      kycDocumentUrl: true
     },
     orderBy: { createdAt: 'desc' }
   });

@@ -39,7 +39,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex h-screen bg-[#050505] text-gray-100 selection:bg-white/20 font-sans">
+    <div className="dark flex h-screen bg-[#050505] text-gray-100 selection:bg-white/20 font-sans">
       {/* Sidebar */}
       <aside className="w-64 bg-[#0A0A0A]/80 backdrop-blur-xl border-r border-white/10 flex flex-col hidden md:flex z-10">
         <div className="p-6 border-b border-white/5">

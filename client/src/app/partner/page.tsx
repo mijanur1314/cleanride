@@ -133,10 +133,97 @@ export default function PartnerDashboard() {
     });
   }, [completedBookings, sortOrder]);
 
+  const [kycFile, setKycFile] = useState<File | null>(null);
+  const [kycPreview, setKycPreview] = useState<string | null>(null);
+  const [isUploadingKyc, setIsUploadingKyc] = useState(false);
+
+  const handleKycUpload = async () => {
+    if (!kycFile) return toast.error("Please select a document first");
+    setIsUploadingKyc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', kycFile);
+      
+      const uploadRes = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const fileUrl = uploadRes.data.url;
+
+      await api.patch('/users/kyc', { kycDocumentUrl: fileUrl });
+      toast.success("KYC Document submitted successfully! Waiting for admin approval.");
+      
+      // Update local user state if needed or just let them know
+      setKycFile(null);
+      setKycPreview(null);
+      // Hacky way to trigger a refresh
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to upload KYC document");
+    } finally {
+      setIsUploadingKyc(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
 
+  // Fallback for unverified partners
+  if (user && !user.isVerified) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] text-gray-100 flex flex-col items-center justify-center p-4 selection:bg-white/20">
+        <Card className="max-w-md w-full bg-[#111] border-white/10 shadow-2xl p-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20">
+              <Briefcase className="w-8 h-8 text-blue-400" />
+            </div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent font-heading mb-2">Account Not Verified</h1>
+            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+              To ensure platform safety, we require all our premium partners to submit a KYC document (like a Driver's License or ID card). 
+              If you have already submitted it, please wait for admin approval.
+            </p>
+
+            <div className="w-full space-y-4">
+              <div 
+                className="w-full h-40 border-2 border-dashed border-white/10 rounded-xl bg-white/5 flex flex-col items-center justify-center cursor-pointer hover:border-white/20 transition-colors relative overflow-hidden"
+                onClick={() => document.getElementById('kyc-upload')?.click()}
+              >
+                {kycPreview ? (
+                  <img src={kycPreview} alt="KYC Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <>
+                    <Camera className="w-8 h-8 text-gray-500 mb-2" />
+                    <span className="text-sm text-gray-500 font-medium">Click to select ID Document</span>
+                  </>
+                )}
+                <input 
+                  type="file" 
+                  id="kyc-upload" 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setKycFile(file);
+                      setKycPreview(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+              </div>
+
+              <Button 
+                onClick={handleKycUpload}
+                disabled={!kycFile || isUploadingKyc}
+                className="w-full bg-white text-black hover:bg-gray-200 h-12 font-medium"
+              >
+                {isUploadingKyc ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Submit KYC Document'}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 pb-28 pt-20 px-4 md:px-8 selection:bg-white/20">

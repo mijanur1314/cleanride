@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, MessageCircle, Clock, XCircle } from "lucide-react";
+import { Trash2, Plus, MessageCircle, Clock, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChatBox } from "@/components/ChatBox";
 
@@ -27,6 +27,11 @@ export default function UserDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [reviewData, setReviewData] = useState<{ [key: string]: { rating: number, comment: string } }>({});
   const [submittingReview, setSubmittingReview] = useState<string | null>(null);
+  const [expandedBookings, setExpandedBookings] = useState<Record<string, boolean>>({});
+
+  const toggleBooking = (id: string) => {
+    setExpandedBookings(prev => ({ ...prev, [id]: !prev[id] }));
+  };
   const [newVehicle, setNewVehicle] = useState({ type: '', make: '', model: '', plateNumber: '' });
   const [addingVehicle, setAddingVehicle] = useState(false);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, partnerName: string } | null>(null);
@@ -255,22 +260,38 @@ export default function UserDashboard() {
               </Link>
             </div>
           ) : (
-            bookings.map((booking) => (
+            bookings.map((booking, index) => {
+              const isExpanded = expandedBookings[booking.id] ?? index === 0; // First one expanded by default
+              return (
               <Card key={booking.id} className="overflow-hidden border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-                <div className="flex flex-col lg:flex-row relative z-10 p-8 gap-8 items-center">
-                  <div className="flex-1 flex flex-col justify-between w-full">
-                    <div>
-                      <div className="flex justify-between items-start mb-6">
-                        <h3 className="font-bold text-2xl font-heading text-white">{booking.service?.name}</h3>
-                        <Badge variant="outline" className={`text-[10px] uppercase tracking-widest px-2.5 py-1 ${
-                          booking.status === 'COMPLETED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                          booking.status === 'PENDING' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                          'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                        }`}>
-                          {booking.status.replace(/_/g, ' ')}
-                        </Badge>
-                      </div>
+                
+                {/* Header (Always Visible) */}
+                <div 
+                  className="flex justify-between items-center p-6 lg:p-8 cursor-pointer hover:bg-white/[0.02] transition-colors relative z-10"
+                  onClick={() => toggleBooking(booking.id)}
+                >
+                  <div className="flex items-center gap-4">
+                    <h3 className="font-bold text-2xl font-heading text-white">{booking.service?.name}</h3>
+                    <Badge variant="outline" className={`text-[10px] uppercase tracking-widest px-2.5 py-1 ${
+                      booking.status === 'COMPLETED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                      booking.status === 'PENDING' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                      'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                    }`}>
+                      {booking.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
+                  <div className="text-gray-500">
+                    {isExpanded ? <ChevronUp className="w-6 h-6" /> : <ChevronDown className="w-6 h-6" />}
+                  </div>
+                </div>
+
+                {/* Collapsible Content */}
+                {isExpanded && (
+                  <>
+                    <div className="flex flex-col lg:flex-row relative z-10 p-6 pt-0 lg:p-8 lg:pt-0 gap-8 items-center border-t border-white/5 mt-4">
+                      <div className="flex-1 flex flex-col justify-between w-full">
+                        <div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 mt-4 text-sm text-gray-400 bg-black/40 rounded-2xl p-5 border border-white/5 font-light">
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-gray-500" />
@@ -423,8 +444,10 @@ export default function UserDashboard() {
                     )}
                   </div>
                 )}
+                  </>
+                )}
               </Card>
-            ))
+            )})
           )}
           </TabsContent>
 

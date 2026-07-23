@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Shield, Clock, Zap, ChevronRight, Navigation } from "lucide-react";
+import { MapPin, Calendar, Shield, Clock, Zap, ChevronRight, Navigation, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
@@ -72,7 +73,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0A0A0A] text-white selection:bg-primary selection:text-primary-foreground">
+    <div className="dark flex flex-col min-h-screen bg-[#0A0A0A] text-white selection:bg-primary selection:text-primary-foreground">
       
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col justify-center pt-40 pb-32 overflow-hidden">
@@ -190,13 +191,18 @@ export default function Home() {
               
               <div className="flex-1 px-6 py-2 border-b md:border-b-0 md:border-r border-white/10 text-left relative z-40">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Service Type</label>
-                <div className="flex items-center gap-3 text-gray-200">
+                <div className="flex items-center gap-3 text-gray-200 relative w-full">
                   <Shield className="w-5 h-5 text-gray-400 shrink-0" />
-                  <select className="bg-transparent border-none outline-none text-lg w-full appearance-none font-medium cursor-pointer">
-                    <option className="bg-[#141414] py-2">The Signature Detail</option>
-                    <option className="bg-[#141414] py-2">Express Exterior</option>
-                    <option className="bg-[#141414] py-2">Interior Deep Clean</option>
-                  </select>
+                  <Select defaultValue="The Signature Detail">
+                    <SelectTrigger className="w-full bg-transparent border-none outline-none shadow-none text-lg font-medium p-0 h-auto focus:ring-0 focus:ring-offset-0 [&>svg]:text-gray-500">
+                      <SelectValue placeholder="Select service" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-xl shadow-2xl z-[100]">
+                      <SelectItem value="The Signature Detail" className="py-3 cursor-pointer focus:bg-white/10">The Signature Detail</SelectItem>
+                      <SelectItem value="Express Exterior" className="py-3 cursor-pointer focus:bg-white/10">Express Exterior</SelectItem>
+                      <SelectItem value="Interior Deep Clean" className="py-3 cursor-pointer focus:bg-white/10">Interior Deep Clean</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -334,7 +340,7 @@ export default function Home() {
                         <div className="h-3 w-24 bg-white/20 rounded-full mb-2" />
                         <div className="h-2 w-16 bg-white/10 rounded-full" />
                       </div>
-                    </div>
+                      </div>
                     <div className="h-16 rounded-xl bg-white/5 flex items-center px-4 border border-white/5">
                       <div className="w-10 h-10 rounded-full bg-white/10" />
                       <div className="ml-4 flex-1">

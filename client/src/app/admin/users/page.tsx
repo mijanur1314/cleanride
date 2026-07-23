@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminUsers() {
@@ -134,7 +134,19 @@ export default function AdminUsers() {
                         </TableCell>
                         <TableCell className="text-right">
                           {!p.isVerified ? (
-                            <Button size="sm" onClick={() => verifyPartner(p.id, true)} className="bg-green-600 hover:bg-green-700 text-white">Approve</Button>
+                            <div className="flex justify-end gap-2">
+                              {p.kycDocumentUrl && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => window.open(p.kycDocumentUrl, '_blank')}
+                                  title="View KYC Document"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Button size="sm" onClick={() => verifyPartner(p.id, true)} className="bg-green-600 hover:bg-green-700 text-white">Approve</Button>
+                            </div>
                           ) : (
                             <Button size="sm" variant="outline" onClick={() => verifyPartner(p.id, false)} className="text-red-500 hover:text-red-600">Revoke</Button>
                           )}
