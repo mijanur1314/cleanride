@@ -22,7 +22,7 @@ export default function Footer() {
           
           <div className="lg:col-span-2 flex flex-col gap-6">
             <Link href="/" className="relative w-36 h-24 group block">
-              <Image src="/logo.png" alt="CleanRide Logo" fill className="object-contain object-left" />
+              <Image src="/logo.png" alt="CleanRide Logo" fill sizes="150px" className="object-contain object-left" />
             </Link>
             <p className="text-gray-400 font-light max-w-sm leading-relaxed text-lg">
               Premium vehicle detailing and luxury car care services delivered straight to your doorstep.

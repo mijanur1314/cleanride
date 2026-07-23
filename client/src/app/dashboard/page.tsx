@@ -153,54 +153,55 @@ export default function UserDashboard() {
   }
 
   return (
-    <div className="container mx-auto pt-28 pb-12 px-4">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+    <div className="min-h-screen bg-[#0A0A0A] text-gray-100 pt-32 pb-12 px-4 selection:bg-white/20">
+      <div className="container mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
         {/* Left Column */}
-        <div className="md:col-span-1 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="flex flex-col gap-6">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight mb-1">My Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+              <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent font-heading">My Dashboard</h1>
+              <p className="text-gray-400 font-light">Welcome back, <span className="text-gray-200 font-medium">{user?.name}</span></p>
             </div>
             <Link href="/book">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg">
+              <Button className="w-full bg-white text-black hover:bg-gray-200 font-bold uppercase tracking-widest text-xs h-14 shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all">
                 Book a Wash
               </Button>
             </Link>
           </div>
 
-          <Card className="border-primary/10 bg-blue-50/50 dark:bg-blue-900/10">
-            <CardHeader>
-              <CardTitle className="text-lg">Profile Info</CardTitle>
+          <Card className="border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+            <CardHeader className="pb-4 relative z-10 border-b border-white/5">
+              <CardTitle className="text-sm uppercase tracking-widest font-bold text-gray-400">Profile Info</CardTitle>
             </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-muted-foreground">Name:</p>
-              <p className="font-semibold">{user?.name}</p>
+          <CardContent className="space-y-4 pt-6 relative z-10">
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Name</p>
+              <p className="font-semibold text-white">{user?.name}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-muted-foreground">Email:</p>
-              <p className="font-semibold">{user?.email}</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Email</p>
+              <p className="font-semibold text-white">{user?.email}</p>
             </div>
             
             {user?.loyaltyPoints !== undefined && (
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-muted-foreground">Loyalty Points:</p>
-                <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  <Zap className="w-3 h-3 mr-1" /> {user.loyaltyPoints}
+              <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-2">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Loyalty Points</p>
+                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 px-2 py-1">
+                  <Zap className="w-3 h-3 mr-1.5" /> {user.loyaltyPoints}
                 </Badge>
               </div>
             )}
             
             {user?.referralCode && (
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-muted-foreground">Referral Code:</p>
-                <code className="bg-muted px-2 py-0.5 rounded text-sm">{user.referralCode}</code>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Referral Code</p>
+                <code className="bg-black border border-white/10 px-2.5 py-1 rounded-md text-xs font-mono text-gray-300">{user.referralCode}</code>
               </div>
             )}
 
             <div className="pt-2">
-              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+              <Badge variant="outline" className="bg-white/5 text-gray-300 border-white/10 uppercase tracking-widest text-[10px]">
                 {user?.role}
               </Badge>
             </div>
@@ -208,21 +209,24 @@ export default function UserDashboard() {
         </Card>
 
         {subscription && (
-          <Card className="border-green-500/20 bg-green-50/50 dark:bg-green-900/10 mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="w-4 h-4 text-green-500" />
+          <Card className="border-green-500/20 bg-gradient-to-br from-[#141414] to-green-950/20 mt-6 rounded-3xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
+              <Zap className="w-16 h-16 text-green-500" />
+            </div>
+            <CardHeader className="pb-2 border-b border-white/5 relative z-10">
+              <CardTitle className="text-sm uppercase tracking-widest font-bold text-green-400 flex items-center gap-2">
+                <Zap className="w-4 h-4" />
                 Active Subscription
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3 pt-4 relative z-10">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Plan</p>
-                <p className="font-semibold">{subscription.plan?.name}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Plan</p>
+                <p className="font-semibold text-white text-lg">{subscription.plan?.name}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Valid Until</p>
-                <p className="font-semibold">{format(new Date(subscription.endDate), "PPP")}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-widest">Valid Until</p>
+                <p className="font-semibold text-gray-300">{format(new Date(subscription.endDate), "PPP")}</p>
               </div>
             </CardContent>
           </Card>
@@ -230,59 +234,61 @@ export default function UserDashboard() {
         </div>
 
         {/* Right Column: Content */}
-        <div className="md:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           <Tabs defaultValue="bookings" className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
-              <TabsTrigger value="garage">My Garage</TabsTrigger>
+            <TabsList className="mb-6 bg-[#141414] border border-white/10 p-1 rounded-xl w-full sm:w-auto h-auto">
+              <TabsTrigger value="bookings" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-gray-400 rounded-lg py-2.5 px-6 font-medium transition-all">Recent Bookings</TabsTrigger>
+              <TabsTrigger value="garage" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-gray-400 rounded-lg py-2.5 px-6 font-medium transition-all">My Garage</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="bookings" className="space-y-4">
+            <TabsContent value="bookings" className="space-y-6">
           {bookings.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <Car className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-1">No bookings yet</p>
-                <p className="text-muted-foreground mb-6">You haven't booked any services yet.</p>
-                <Link href="/book">
-                  <Button size="lg" className="font-bold">Book a Wash Now</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center py-24 text-center bg-[#141414] rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+              <div className="w-20 h-20 bg-white/5 text-gray-500 rounded-full flex items-center justify-center mb-6 border border-white/10 backdrop-blur-md relative z-10">
+                <Car className="w-10 h-10" />
+              </div>
+              <p className="text-2xl font-bold font-heading text-white relative z-10 mb-2">No bookings yet</p>
+              <p className="text-gray-400 font-light relative z-10 mb-8 max-w-xs">You haven't booked any premium services yet. Treat your vehicle today.</p>
+              <Link href="/book" className="relative z-10">
+                <Button className="h-12 px-8 bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs rounded-xl transition-all">Book a Wash</Button>
+              </Link>
+            </div>
           ) : (
             bookings.map((booking) => (
-              <Card key={booking.id} className="overflow-hidden">
-                <div className="flex flex-col sm:flex-row">
-                  <div className="p-6 flex-1 flex flex-col justify-between">
+              <Card key={booking.id} className="overflow-hidden border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <div className="flex flex-col lg:flex-row relative z-10 p-8 gap-8 items-center">
+                  <div className="flex-1 flex flex-col justify-between w-full">
                     <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-xl">{booking.service?.name}</h3>
-                        <Badge className={
-                          booking.status === 'COMPLETED' ? 'bg-green-500 hover:bg-green-600' :
-                          booking.status === 'PENDING' ? 'bg-orange-500 hover:bg-orange-600' :
-                          'bg-blue-500 hover:bg-blue-600'
-                        }>
-                          {booking.status}
+                      <div className="flex justify-between items-start mb-6">
+                        <h3 className="font-bold text-2xl font-heading text-white">{booking.service?.name}</h3>
+                        <Badge variant="outline" className={`text-[10px] uppercase tracking-widest px-2.5 py-1 ${
+                          booking.status === 'COMPLETED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                          booking.status === 'PENDING' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                          'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                        }`}>
+                          {booking.status.replace(/_/g, ' ')}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 mt-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>{format(new Date(booking.bookingDate), "PPpp")}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 mt-4 text-sm text-gray-400 bg-black/40 rounded-2xl p-5 border border-white/5 font-light">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-300 font-medium">{format(new Date(booking.bookingDate), "PPpp")}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Car className="w-4 h-4" />
-                          <span>{booking.vehicleType} {booking.vehicleNumber ? `(${booking.vehicleNumber})` : ''}</span>
+                        <div className="flex items-center gap-3">
+                          <Car className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-300">{booking.vehicleType} {booking.vehicleNumber ? `(${booking.vehicleNumber})` : ''}</span>
                         </div>
-                        <div className="flex items-start gap-2 sm:col-span-2 mt-1">
-                          <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
-                          <span className="line-clamp-2">{booking.address}</span>
+                        <div className="flex items-start gap-3 sm:col-span-2">
+                          <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-gray-500" />
+                          <span className="line-clamp-2 leading-snug">{booking.address}</span>
                         </div>
                       </div>
 
                       {/* Booking Status Timeline */}
                       {booking.status !== 'PENDING' && booking.status !== 'CANCELLED' && (
-                        <div className="mt-6 flex items-center justify-between w-full max-w-sm">
+                        <div className="mt-8 mb-2 flex items-center justify-between w-full max-w-md mx-auto">
                           {[
                             { label: 'Confirmed', step: 1, statuses: ['CONFIRMED', 'PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS', 'REVIEW_PENDING', 'COMPLETED'] },
                             { label: 'Assigned', step: 2, statuses: ['PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS', 'REVIEW_PENDING', 'COMPLETED'] },
@@ -293,12 +299,12 @@ export default function UserDashboard() {
                             return (
                               <div key={s.label} className="flex-1 flex flex-col items-center relative group">
                                 {idx > 0 && (
-                                  <div className={`w-full h-1 absolute top-2.5 right-1/2 ${isPast ? 'bg-primary' : 'bg-muted'}`} />
+                                  <div className={`w-full h-[2px] absolute top-3.5 right-1/2 ${isPast ? 'bg-blue-500' : 'bg-white/10'}`} />
                                 )}
-                                <div className={`w-6 h-6 rounded-full z-10 flex items-center justify-center text-xs font-bold transition-colors ${isPast ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30' : 'bg-muted text-muted-foreground border border-muted-foreground/20'}`}>
+                                <div className={`w-7 h-7 rounded-full z-10 flex items-center justify-center text-xs font-bold transition-all duration-300 ${isPast ? 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-[#141414] border-2 border-white/10 text-gray-500'}`}>
                                   {isPast ? '✓' : s.step}
                                 </div>
-                                <span className={`text-[10px] mt-1.5 text-center font-medium ${isPast ? 'text-foreground' : 'text-muted-foreground'}`}>{s.label}</span>
+                                <span className={`text-[10px] mt-2 text-center uppercase tracking-widest font-bold ${isPast ? 'text-white' : 'text-gray-600'}`}>{s.label}</span>
                               </div>
                             );
                           })}
@@ -306,31 +312,35 @@ export default function UserDashboard() {
                       )}
                     </div>
                   </div>
-                  <div className="bg-muted/30 p-6 sm:w-48 flex flex-col items-end justify-center border-t sm:border-t-0 sm:border-l">
-                    <p className="text-sm text-muted-foreground font-medium mb-1">Total Amount</p>
-                    <p className="text-3xl font-extrabold">₹{booking.totalAmount}</p>
+                  <div className="bg-black/40 p-6 rounded-3xl border border-white/5 w-full lg:w-72 lg:shrink-0 flex flex-col items-center justify-center shadow-lg">
+                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2 text-center">Total Amount</p>
+                    <p className="text-4xl font-black font-heading text-white text-center">₹{booking.totalAmount}</p>
                     {booking.coupon && (
-                      <Badge variant="outline" className="mt-1 text-green-500 border-green-500/20 bg-green-500/10">
+                      <Badge variant="outline" className="mt-2 text-[10px] text-green-400 border-green-500/20 bg-green-500/10 tracking-widest uppercase">
                         Coupon Applied
                       </Badge>
                     )}
-                    <Badge variant="outline" className="mt-2 mb-4">
-                      {booking.payment?.status || 'PENDING'}
+                    <Badge variant="outline" className={`mt-3 mb-6 text-[10px] tracking-widest uppercase ${
+                      (booking.payment?.status || 'PENDING') === 'COMPLETED' 
+                        ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                        : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                    }`}>
+                      Payment: {booking.payment?.status || 'PENDING'}
                     </Badge>
                     {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
-                      <Button variant="outline" size="sm" className="w-full gap-2 border-blue-500 text-blue-600 hover:bg-blue-50 mb-2" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
+                      <Button variant="outline" className="w-full gap-2 border-white/10 text-gray-300 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl mb-3 h-12" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
                         <MessageCircle className="w-4 h-4" />
-                        Chat
+                        Message Detailer
                       </Button>
                     ) : null}
                     
                     {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
                       <div className="w-full flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => setCancelModal(booking.id)}>
+                        <Button variant="outline" className="flex-1 text-red-400 border-red-500/20 bg-red-500/5 hover:bg-red-500/10 hover:text-red-300 rounded-xl h-10 text-xs tracking-widest uppercase font-bold" onClick={() => setCancelModal(booking.id)}>
                           Cancel
                         </Button>
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => setRescheduleModal(booking.id)}>
-                          Reschedule
+                        <Button variant="outline" className="flex-1 text-white border-white/10 bg-white/5 hover:bg-white/10 rounded-xl h-10 text-xs tracking-widest uppercase font-bold" onClick={() => setRescheduleModal(booking.id)}>
+                          Move
                         </Button>
                       </div>
                     )}
@@ -339,24 +349,28 @@ export default function UserDashboard() {
 
                 {/* Advanced Details: Images & Reviews */}
                 {(booking.beforeImageUrl || booking.afterImageUrl || booking.status === 'COMPLETED') && (
-                  <div className="border-t bg-muted/10 p-6">
+                  <div className="border-t border-white/5 bg-black/20 p-8 relative z-10">
                     {/* Images */}
                     {(booking.beforeImageUrl || booking.afterImageUrl) && (
-                      <div className="mb-6">
-                        <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                      <div className="mb-8">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
                           <Camera className="w-4 h-4" /> Service Images
                         </h4>
                         <div className="flex gap-4">
                           {booking.beforeImageUrl && (
-                            <div className="flex-1">
-                              <p className="text-xs text-muted-foreground mb-1">Before</p>
-                              <img src={booking.beforeImageUrl} alt="Before" className="w-full h-32 object-cover rounded-md" />
+                            <div className="flex-1 group relative">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl z-10 flex items-end p-3">
+                                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Before Wash</span>
+                              </div>
+                              <img src={booking.beforeImageUrl} alt="Before" className="w-full h-40 object-cover rounded-xl border border-white/10 group-hover:border-white/30 transition-colors" />
                             </div>
                           )}
                           {booking.afterImageUrl && (
-                            <div className="flex-1">
-                              <p className="text-xs text-muted-foreground mb-1">After</p>
-                              <img src={booking.afterImageUrl} alt="After" className="w-full h-32 object-cover rounded-md border-2 border-green-500/20" />
+                            <div className="flex-1 group relative">
+                              <div className="absolute inset-0 bg-gradient-to-t from-green-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl z-10 flex items-end p-3">
+                                <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">After Wash</span>
+                              </div>
+                              <img src={booking.afterImageUrl} alt="After" className="w-full h-40 object-cover rounded-xl border-2 border-green-500/30 group-hover:border-green-500/60 transition-colors" />
                             </div>
                           )}
                         </div>
@@ -367,36 +381,36 @@ export default function UserDashboard() {
                     {booking.status === 'COMPLETED' && (
                       <div>
                         {booking.review ? (
-                          <div className="bg-muted/30 p-4 rounded-md">
-                            <div className="flex items-center gap-1 mb-2">
+                          <div className="bg-black/40 p-5 rounded-2xl border border-white/5">
+                            <div className="flex items-center gap-1 mb-3">
                               {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`w-4 h-4 ${i < booking.review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}`} />
+                                <Star key={i} className={`w-4 h-4 ${i < booking.review.rating ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-white/10'}`} />
                               ))}
                             </div>
-                            <p className="text-sm italic">"{booking.review.comment}"</p>
+                            <p className="text-sm font-light text-gray-300 italic leading-relaxed">"{booking.review.comment}"</p>
                           </div>
                         ) : (
-                          <div className="bg-muted/30 p-4 rounded-md">
-                            <h4 className="text-sm font-medium mb-3">Leave a Review</h4>
-                            <div className="flex items-center gap-1 mb-3">
+                          <div className="bg-black/40 p-6 rounded-2xl border border-white/5">
+                            <h4 className="text-xs font-bold tracking-widest uppercase text-gray-400 mb-4">Leave a Review</h4>
+                            <div className="flex items-center gap-2 mb-4">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <Star 
                                   key={star} 
-                                  className={`w-6 h-6 cursor-pointer hover:scale-110 transition-transform ${
-                                    (reviewData[booking.id]?.rating || 0) >= star ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'
+                                  className={`w-8 h-8 cursor-pointer hover:scale-110 transition-all ${
+                                    (reviewData[booking.id]?.rating || 0) >= star ? 'text-yellow-400 fill-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]' : 'text-white/10'
                                   }`} 
                                   onClick={() => setReviewData({ ...reviewData, [booking.id]: { ...reviewData[booking.id], rating: star } })}
                                 />
                               ))}
                             </div>
                             <Textarea 
-                              placeholder="How was the service?" 
-                              className="mb-3 text-sm" 
+                              placeholder="How did our detailer do?" 
+                              className="mb-4 text-sm bg-black/50 border-white/10 rounded-xl resize-none text-white placeholder:text-gray-600 focus:border-white/30 transition-colors h-24" 
                               value={reviewData[booking.id]?.comment || ''}
                               onChange={(e) => setReviewData({ ...reviewData, [booking.id]: { ...reviewData[booking.id], comment: e.target.value } })}
                             />
                             <Button 
-                              size="sm" 
+                              className="bg-white text-black hover:bg-gray-200 font-bold uppercase tracking-widest text-xs h-12 px-6 rounded-xl transition-colors" 
                               onClick={() => submitReview(booking.id)}
                               disabled={submittingReview === booking.id}
                             >
@@ -415,31 +429,32 @@ export default function UserDashboard() {
           </TabsContent>
 
           <TabsContent value="garage" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New Vehicle</CardTitle>
-                <CardDescription>Save your vehicles for faster booking checkout.</CardDescription>
+            <Card className="bg-[#141414] border-white/10 shadow-2xl rounded-3xl relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+              <CardHeader className="relative z-10">
+                <CardTitle className="font-heading text-2xl text-white">Add New Vehicle</CardTitle>
+                <CardDescription className="text-gray-400 font-light">Save your vehicles for faster booking checkout.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="relative z-10">
+                <form onSubmit={handleAddVehicle} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="text-sm font-medium">Type (e.g., Sedan, SUV) *</label>
-                    <Input value={newVehicle.type} onChange={(e) => setNewVehicle({...newVehicle, type: e.target.value})} placeholder="SUV" required />
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Type *</label>
+                    <Input value={newVehicle.type} onChange={(e) => setNewVehicle({...newVehicle, type: e.target.value})} placeholder="e.g. Sedan, SUV" required className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Make (e.g., Toyota)</label>
-                    <Input value={newVehicle.make} onChange={(e) => setNewVehicle({...newVehicle, make: e.target.value})} placeholder="Toyota" />
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Make</label>
+                    <Input value={newVehicle.make} onChange={(e) => setNewVehicle({...newVehicle, make: e.target.value})} placeholder="e.g. Toyota" className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Model (e.g., RAV4)</label>
-                    <Input value={newVehicle.model} onChange={(e) => setNewVehicle({...newVehicle, model: e.target.value})} placeholder="RAV4" />
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Model</label>
+                    <Input value={newVehicle.model} onChange={(e) => setNewVehicle({...newVehicle, model: e.target.value})} placeholder="e.g. RAV4" className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">License Plate</label>
-                    <Input value={newVehicle.plateNumber} onChange={(e) => setNewVehicle({...newVehicle, plateNumber: e.target.value})} placeholder="ABC-1234" />
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">License Plate</label>
+                    <Input value={newVehicle.plateNumber} onChange={(e) => setNewVehicle({...newVehicle, plateNumber: e.target.value})} placeholder="ABC-1234" className="bg-black/50 border-white/10 rounded-xl h-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20 uppercase" />
                   </div>
-                  <div className="md:col-span-2 pt-2">
-                    <Button type="submit" disabled={addingVehicle}>
+                  <div className="md:col-span-2 pt-4">
+                    <Button type="submit" disabled={addingVehicle} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-12 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                       {addingVehicle ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
                       Add Vehicle
                     </Button>
@@ -448,31 +463,48 @@ export default function UserDashboard() {
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {vehicles.map((v) => (
-                <Card key={v.id} className="relative overflow-hidden group">
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20" onClick={() => handleDeleteVehicle(v.id)}>
+                <Card key={v.id} className="relative overflow-hidden group bg-[#141414] border-white/5 shadow-xl rounded-2xl">
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                    <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-full h-8 w-8" onClick={() => handleDeleteVehicle(v.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Car className="w-5 h-5 text-primary" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                  <CardHeader className="pb-3 pt-5 relative z-10 border-b border-white/5">
+                    <CardTitle className="text-lg flex items-center gap-2 text-white font-heading">
+                      <Car className="w-5 h-5 text-gray-400" />
                       {v.type}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      {v.make && <p><span className="font-medium text-foreground">Make:</span> {v.make}</p>}
-                      {v.model && <p><span className="font-medium text-foreground">Model:</span> {v.model}</p>}
-                      {v.plateNumber && <p><span className="font-medium text-foreground">Plate:</span> {v.plateNumber}</p>}
+                  <CardContent className="pt-4 relative z-10">
+                    <div className="space-y-3">
+                      {v.make && (
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Make</p>
+                          <p className="text-sm font-medium text-white">{v.make}</p>
+                        </div>
+                      )}
+                      {v.model && (
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Model</p>
+                          <p className="text-sm font-medium text-white">{v.model}</p>
+                        </div>
+                      )}
+                      {v.plateNumber && (
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Plate Number</p>
+                          <p className="text-sm font-medium text-white uppercase">{v.plateNumber}</p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               ))}
               {vehicles.length === 0 && (
-                <div className="sm:col-span-2 text-center p-8 border border-dashed rounded-lg text-muted-foreground">
+                <div className="sm:col-span-2 lg:col-span-3 text-center py-16 border border-dashed border-white/10 rounded-3xl text-gray-500 font-light bg-[#141414]/50">
+                  <Car className="w-10 h-10 mx-auto mb-4 opacity-20" />
                   No vehicles in your garage yet. Add one above!
                 </div>
               )}

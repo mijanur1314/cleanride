@@ -3,7 +3,8 @@ import {
   getDashboardStats, 
   getAllUsers, 
   getAllBookings, 
-  assignPartnerToBooking 
+  assignPartnerToBooking,
+  verifyPartner
 } from '../controllers/admin.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
 
@@ -15,6 +16,7 @@ router.use(restrictTo('ADMIN'));
 
 router.get('/stats', getDashboardStats);
 router.get('/users', getAllUsers);
+router.patch('/users/:userId/verify', verifyPartner);
 router.get('/bookings', getAllBookings);
 router.patch('/bookings/:bookingId/assign', assignPartnerToBooking);
 

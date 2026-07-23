@@ -11,6 +11,7 @@ const bookingSchema = z.object({
   storeId: z.string().uuid().optional(),
   vehicleType: z.string(),
   vehicleNumber: z.string().optional(),
+  vehicleImage: z.string(),
   address: z.string().optional(),
   bookingDate: z.string().datetime(),
   couponId: z.string().uuid().optional(),
@@ -22,7 +23,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
   const parsed = bookingSchema.safeParse(req.body);
   if (!parsed.success) return next(new AppError('Invalid input data', 400));
 
-  const { serviceId, storeId, vehicleType, vehicleNumber, address, bookingDate, couponId, addonIds, redeemPoints } = parsed.data;
+  const { serviceId, storeId, vehicleType, vehicleNumber, vehicleImage, address, bookingDate, couponId, addonIds, redeemPoints } = parsed.data;
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
   if (!service) return next(new AppError('Service not found', 404));
@@ -71,6 +72,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
         storeId,
         vehicleType,
         vehicleNumber,
+        beforeImageUrl: vehicleImage,
         address,
         bookingDate: new Date(bookingDate),
         totalAmount: finalAmount,
@@ -101,32 +103,78 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 });
 
 export const getMyBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const bookings = await prisma.booking.findMany({
-    where: { userId: req.user!.id },
-    include: { service: true, partner: true, store: true, payment: true, review: true, coupon: true, bookingAddons: { include: { addon: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
 
-  res.status(200).json({ success: true, results: bookings.length, data: { bookings } });
+  const where = { userId: req.user!.id };
+
+  const [bookings, total] = await Promise.all([
+    prisma.booking.findMany({
+      where,
+      include: { service: true, partner: true, store: true, payment: true, review: true, coupon: true, bookingAddons: { include: { addon: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.booking.count({ where })
+  ]);
+
+  res.status(200).json({ 
+    success: true, 
+    results: bookings.length, 
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+    data: { bookings } 
+  });
 });
 
 export const getPartnerBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const bookings = await prisma.booking.findMany({
-    where: { partnerId: req.user!.id },
-    include: { service: true, user: true, store: true, bookingAddons: { include: { addon: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
 
-  res.status(200).json({ success: true, results: bookings.length, data: { bookings } });
+  const where = { partnerId: req.user!.id };
+
+  const [bookings, total] = await Promise.all([
+    prisma.booking.findMany({
+      where,
+      include: { service: true, user: true, store: true, bookingAddons: { include: { addon: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.booking.count({ where })
+  ]);
+
+  res.status(200).json({ 
+    success: true, 
+    results: bookings.length, 
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+    data: { bookings } 
+  });
 });
 
 export const getAllBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const bookings = await prisma.booking.findMany({
-    include: { user: true, partner: true, service: true, store: true, payment: true, bookingAddons: { include: { addon: true } } },
-    orderBy: { createdAt: 'desc' },
-  });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
 
-  res.status(200).json({ success: true, results: bookings.length, data: { bookings } });
+  const [bookings, total] = await Promise.all([
+    prisma.booking.findMany({
+      include: { user: true, partner: true, service: true, store: true, payment: true, bookingAddons: { include: { addon: true } } },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.booking.count()
+  ]);
+
+  res.status(200).json({ 
+    success: true, 
+    results: bookings.length, 
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+    data: { bookings } 
+  });
 });
 
 export const updateBookingStatus = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -146,9 +194,16 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
     return next(new AppError('You are not authorized to update this booking', 403));
   }
 
+  const updateData: any = { status };
+  if (status === 'WASH_IN_PROGRESS') {
+    updateData.arrivalTime = new Date();
+  } else if (status === 'COMPLETED') {
+    updateData.dischargeTime = new Date();
+  }
+
   const updatedBooking = await prisma.booking.update({
     where: { id: req.params.id as string },
-    data: { status },
+    data: updateData,
     include: { user: true, partner: true }
   });
 
@@ -188,6 +243,9 @@ export const assignPartner = catchAsync(async (req: Request, res: Response, next
   const partner = await prisma.user.findUnique({ where: { id: partnerId } });
   if (!partner || partner.role !== 'PARTNER') {
     return next(new AppError('Invalid partner ID', 400));
+  }
+  if (!partner.isVerified) {
+    return next(new AppError('Partner is not verified yet', 403));
   }
 
   const booking = await prisma.booking.update({

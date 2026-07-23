@@ -12,18 +12,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Car, CheckCircle2 } from "lucide-react";
+import { Loader2, Car, CheckCircle2, Upload, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+const VEHICLE_CATEGORIES: Record<string, string[]> = {
+  "Two-Wheelers": ["Motorcycles", "Scooters and Scootettes", "Mopeds"],
+  "Passenger Cars & Vehicles": ["Hatchbacks", "Sedans", "SUVs", "MPVs / MUVs", "Electric Vehicles (EVs)"],
+  "Three-Wheelers": ["Auto-Rickshaws", "E-Rickshaws"],
+  "Commercial Vehicles (CVs)": ["Buses", "Light Commercial Vehicles (LCVs)", "Heavy Commercial Vehicles (HCVs)"],
+  "Utility & Special Purpose Vehicles": ["Agricultural Vehicles", "Emergency & Construction Vehicles"]
+};
 
 export default function BookingPage() {
   const router = useRouter();
   const { user, _hasHydrated } = useAuthStore();
-  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleType, vehicleNumber, resetBooking } = useBookingStore();
+  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
   
   const [services, setServices] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [addons, setAddons] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await api.post("/upload", formData);
+      useBookingStore.getState().setVehicleImage(res.data.data.url);
+      toast.success("Vehicle image uploaded successfully!");
+    } catch (error) {
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -57,60 +85,62 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="container max-w-3xl mx-auto pt-28 pb-12 px-4">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Book a Service</h1>
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <span className={step >= 1 ? "text-blue-600" : ""}>Service</span> &rarr;
-          <span className={step >= 2 ? "text-blue-600" : ""}>Vehicle</span> &rarr;
-          <span className={step >= 3 ? "text-blue-600" : ""}>Schedule & Location</span> &rarr;
-          <span className={step >= 4 ? "text-blue-600" : ""}>Payment</span>
+    <div className="min-h-screen bg-[#0A0A0A] text-gray-100 pt-32 pb-12 px-4 selection:bg-white/20">
+      <div className="container max-w-4xl mx-auto">
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold tracking-tight mb-4 font-heading bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">Book a Service</h1>
+          <div className="flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest text-gray-600">
+            <span className={step >= 1 ? "text-white" : ""}>Service</span> <span className="opacity-50">&rarr;</span>
+            <span className={step >= 2 ? "text-white" : ""}>Vehicle</span> <span className="opacity-50">&rarr;</span>
+            <span className={step >= 3 ? "text-white" : ""}>Schedule</span> <span className="opacity-50">&rarr;</span>
+            <span className={step >= 4 ? "text-white" : ""}>Payment</span>
+          </div>
         </div>
-      </div>
 
-      <div className="relative">
-        <AnimatePresence mode="wait">
+        <div className="relative">
+          <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {services.map((s) => (
                   <Card 
                     key={s.id} 
-                    className={`cursor-pointer transition-all hover:border-blue-500 ${service?.id === s.id ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                    className={`cursor-pointer transition-all duration-300 rounded-3xl overflow-hidden relative group ${service?.id === s.id ? 'border-white/40 bg-white/5 shadow-[0_0_30px_rgba(255,255,255,0.05)]' : 'border-white/5 bg-[#141414] hover:bg-white/[0.02]'}`}
                     onClick={() => setService(s)}
                   >
-                    <CardHeader>
-                      <CardTitle>{s.name}</CardTitle>
-                      <CardDescription className="text-xl font-bold text-foreground">₹{s.price}</CardDescription>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                    <CardHeader className="pb-4 border-b border-white/5 relative z-10">
+                      <CardTitle className="font-heading text-xl text-white">{s.name}</CardTitle>
+                      <CardDescription className="text-3xl font-black text-white mt-1">₹{s.price}</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{s.description}</p>
-                      <p className="text-sm font-medium mt-2 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> {s.duration} mins</p>
+                    <CardContent className="pt-5 relative z-10">
+                      <p className="text-sm font-light text-gray-400 leading-relaxed">{s.description}</p>
+                      <p className="text-xs font-bold uppercase tracking-widest mt-6 flex items-center gap-2 text-gray-300"><CheckCircle2 className="w-4 h-4 text-green-400"/> {s.duration} mins</p>
                     </CardContent>
                   </Card>
                 ))}
               </div>
 
               {service && addons.length > 0 && (
-                <div className="mt-8">
-                  <h3 className="text-xl font-semibold mb-4">Enhance Your Wash (Add-ons)</h3>
+                <div className="mt-12">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6 text-center">Enhance Your Wash (Add-ons)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {addons.map(addon => {
                       const isSelected = useBookingStore.getState().addonIds.includes(addon.id);
                       return (
                         <Card 
                           key={addon.id} 
-                          className={`cursor-pointer transition-all hover:border-blue-500 ${isSelected ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                          className={`cursor-pointer transition-all rounded-2xl relative overflow-hidden ${isSelected ? 'border-green-500/50 bg-green-500/10 shadow-[0_0_20px_rgba(34,197,94,0.1)]' : 'border-white/5 bg-[#141414] hover:bg-white/[0.02]'}`}
                           onClick={() => useBookingStore.getState().toggleAddon(addon.id)}
                         >
-                          <CardHeader className="py-4">
-                            <div className="flex justify-between items-start">
+                          <CardHeader className="py-5 px-6 relative z-10">
+                            <div className="flex justify-between items-center">
                               <div>
-                                <CardTitle className="text-lg">{addon.name}</CardTitle>
-                                {addon.description && <CardDescription>{addon.description}</CardDescription>}
+                                <CardTitle className="text-base font-heading text-white">{addon.name}</CardTitle>
+                                {addon.description && <CardDescription className="text-xs font-light text-gray-400 mt-1">{addon.description}</CardDescription>}
                               </div>
-                              <span className="font-bold text-green-600">+₹{addon.price}</span>
+                              <span className="font-bold text-green-400 text-lg">+₹{addon.price}</span>
                             </div>
                           </CardHeader>
                         </Card>
@@ -120,91 +150,153 @@ export default function BookingPage() {
                 </div>
               )}
 
-              <div className="mt-8 flex justify-end">
-                <Button onClick={nextStep} disabled={!service} className="bg-blue-600 hover:bg-blue-700">Continue to Vehicle Details</Button>
+              <div className="mt-10 flex justify-end">
+                <Button onClick={nextStep} disabled={!service} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Vehicle Details</Button>
               </div>
             </motion.div>
           )}
 
           {step === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Vehicle Details</CardTitle>
-                  <CardDescription>Tell us about the vehicle you want to wash</CardDescription>
+              <Card className="border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <CardHeader className="pb-6 relative z-10 border-b border-white/5">
+                  <CardTitle className="font-heading text-2xl text-white">Vehicle Details</CardTitle>
+                  <CardDescription className="text-gray-400 font-light">Tell us about the vehicle you want to wash</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6 pt-8 relative z-10">
                   {vehicles.length > 0 && (
-                    <div className="space-y-2 mb-6">
-                      <Label>Select Saved Vehicle</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-4 mb-8">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Select Saved Vehicle</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {vehicles.map(v => (
                           <div 
                             key={v.id} 
-                            onClick={() => setVehicleDetails(v.type, v.plateNumber || '')}
-                            className={`p-3 border rounded-md cursor-pointer flex items-center gap-3 transition-colors ${vehicleType === v.type && vehicleNumber === (v.plateNumber || '') ? 'border-blue-500 bg-blue-50/50' : 'hover:border-gray-400'}`}
+                            onClick={() => setVehicleDetails("Passenger Cars & Vehicles", v.type, v.plateNumber || '')}
+                            className={`p-5 rounded-2xl cursor-pointer flex items-center gap-4 transition-all border ${vehicleType === v.type && vehicleNumber === (v.plateNumber || '') ? 'border-white/40 bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'border-white/10 hover:bg-white/[0.02]'}`}
                           >
-                            <Car className="w-5 h-5" />
+                            <Car className={`w-6 h-6 ${vehicleType === v.type && vehicleNumber === (v.plateNumber || '') ? 'text-white' : 'text-gray-500'}`} />
                             <div>
-                              <p className="font-medium text-sm">{v.make} {v.model} ({v.type})</p>
-                              {v.plateNumber && <p className="text-xs text-muted-foreground">{v.plateNumber}</p>}
+                              <p className="font-bold text-white text-sm">{v.make} {v.model}</p>
+                              <p className="text-xs font-light text-gray-400 mt-1">{v.type} {v.plateNumber && `• ${v.plateNumber}`}</p>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="relative py-4">
-                        <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or Enter Manually</span></div>
+                      <div className="relative py-6">
+                        <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/5" /></div>
+                        <div className="relative flex justify-center text-[10px] tracking-widest uppercase font-bold"><span className="bg-[#141414] px-4 text-gray-500">Or Enter Manually</span></div>
                       </div>
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <Label>Vehicle Type</Label>
-                    <Select onValueChange={(v) => setVehicleDetails(v)} value={vehicleType || ""}>
-                      <SelectTrigger><SelectValue placeholder="Select vehicle type" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Sedan">Sedan</SelectItem>
-                        <SelectItem value="SUV">SUV</SelectItem>
-                        <SelectItem value="Hatchback">Hatchback</SelectItem>
-                        <SelectItem value="Bike">Motorcycle / Bike</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle Category *</Label>
+                      <Select 
+                        onValueChange={(v) => setVehicleDetails(v, "", vehicleNumber || undefined)} 
+                        value={vehicleCategory || ""}
+                      >
+                        <SelectTrigger className="bg-black/50 border-white/10 rounded-xl h-14 text-white focus:ring-white/20"><SelectValue placeholder="Select category" /></SelectTrigger>
+                        <SelectContent className="bg-[#141414] border-white/10 text-white">
+                          {Object.keys(VEHICLE_CATEGORIES).map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle Type *</Label>
+                      <Select 
+                        onValueChange={(v) => setVehicleDetails(vehicleCategory!, v, vehicleNumber || undefined)} 
+                        value={vehicleType || ""}
+                        disabled={!vehicleCategory}
+                      >
+                        <SelectTrigger className="bg-black/50 border-white/10 rounded-xl h-14 text-white focus:ring-white/20 disabled:opacity-50"><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent className="bg-[#141414] border-white/10 text-white">
+                          {vehicleCategory && VEHICLE_CATEGORIES[vehicleCategory].map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Vehicle License Plate (Optional)</Label>
-                    <Input placeholder="ABC 1234" value={useBookingStore.getState().vehicleNumber || ''} onChange={(e) => setVehicleDetails(vehicleType!, e.target.value)} />
+
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Vehicle License Plate (Optional)</Label>
+                    <Input placeholder="e.g. ABC 1234" value={vehicleNumber || ''} onChange={(e) => setVehicleDetails(vehicleCategory!, vehicleType!, e.target.value)} className="bg-black/50 border-white/10 rounded-xl h-14 text-white placeholder:text-gray-600 focus-visible:ring-white/20 uppercase" />
+                  </div>
+                  
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Current Vehicle Condition *</Label>
+                    <p className="text-xs font-light text-gray-400">Please upload a picture of your vehicle to help our detailers prepare.</p>
+                    
+                    <div className="relative border-2 border-dashed border-white/10 rounded-2xl bg-black/30 p-8 text-center hover:bg-white/[0.02] transition-colors group">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={isUploadingImage}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
+                      />
+                      
+                      {isUploadingImage ? (
+                        <div className="flex flex-col items-center justify-center space-y-3 relative z-10">
+                          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                          <p className="text-sm font-medium text-gray-400">Uploading image...</p>
+                        </div>
+                      ) : vehicleImageUrl ? (
+                        <div className="flex flex-col items-center space-y-3 relative z-10">
+                          <div className="w-full max-w-[200px] aspect-video rounded-lg overflow-hidden border border-white/10 relative">
+                            <img src={vehicleImageUrl} alt="Vehicle" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-xs font-bold uppercase tracking-widest text-white flex items-center gap-2"><Upload className="w-4 h-4" /> Change Image</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center space-y-3 relative z-10">
+                          <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center text-gray-400 group-hover:text-white transition-colors group-hover:scale-110">
+                            <ImageIcon className="w-6 h-6" />
+                          </div>
+                          <p className="text-sm font-bold text-gray-300">Tap to upload vehicle photo</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-widest font-bold">Required for booking</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-              <div className="mt-8 flex justify-between">
-                <Button variant="outline" onClick={prevStep}>Back</Button>
-                <Button onClick={nextStep} disabled={!vehicleType} className="bg-blue-600 hover:bg-blue-700">Continue to Schedule</Button>
+              <div className="mt-8 flex justify-between gap-4">
+                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
+                <Button onClick={nextStep} disabled={!vehicleType || !vehicleImageUrl || isUploadingImage} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed">Continue to Schedule</Button>
               </div>
             </motion.div>
           )}
 
           {step === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Schedule & Location</CardTitle>
-                  <CardDescription>When and where do you want the service?</CardDescription>
+              <Card className="border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <CardHeader className="pb-6 relative z-10 border-b border-white/5">
+                  <CardTitle className="font-heading text-2xl text-white">Schedule & Location</CardTitle>
+                  <CardDescription className="text-gray-400 font-light">When and where do you want the service?</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Date & Time</Label>
-                    <Input type="datetime-local" onChange={(e) => setBookingDate(new Date(e.target.value))} />
+                <CardContent className="space-y-6 pt-8 relative z-10">
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Date & Time *</Label>
+                    <Input type="datetime-local" onChange={(e) => setBookingDate(new Date(e.target.value))} className="bg-black/50 border-white/10 rounded-xl h-14 text-white focus-visible:ring-white/20 [color-scheme:dark]" />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Service Address (For Doorstep)</Label>
-                    <Input placeholder="123 Main St, City, ZIP" onChange={(e) => setLocation(e.target.value)} />
+                  <div className="space-y-3">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block">Service Address (For Doorstep) *</Label>
+                    <Input placeholder="123 Main St, City, ZIP" onChange={(e) => setLocation(e.target.value)} className="bg-black/50 border-white/10 rounded-xl h-14 text-white placeholder:text-gray-600 focus-visible:ring-white/20" />
                   </div>
                 </CardContent>
               </Card>
-              <div className="mt-8 flex justify-between">
-                <Button variant="outline" onClick={prevStep}>Back</Button>
-                <Button onClick={nextStep} className="bg-blue-600 hover:bg-blue-700">Continue to Payment</Button>
+              <div className="mt-8 flex justify-between gap-4">
+                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
+                <Button onClick={nextStep} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Payment</Button>
               </div>
             </motion.div>
           )}
@@ -214,7 +306,8 @@ export default function BookingPage() {
                <PaymentStep availableAddons={addons} />
             </motion.div>
           )}
-        </AnimatePresence>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
@@ -222,7 +315,7 @@ export default function BookingPage() {
 
 function PaymentStep({ availableAddons }: { availableAddons: { id: string; name: string; price: number }[] }) {
   const { user } = useAuthStore();
-  const { service, vehicleType, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
+  const { service, vehicleType, vehicleNumber, vehicleImageUrl, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -272,6 +365,8 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
       const bookingRes = await api.post("/bookings", {
         serviceId: service?.id,
         vehicleType,
+        vehicleNumber,
+        vehicleImage: vehicleImageUrl,
         bookingDate: bookingDate?.toISOString(),
         address,
         couponId: appliedCoupon?.id,
@@ -339,62 +434,65 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Review & Payment</CardTitle>
-          <CardDescription>Review your booking details</CardDescription>
+      <Card className="border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+        <CardHeader className="pb-6 relative z-10 border-b border-white/5">
+          <CardTitle className="font-heading text-2xl text-white">Review & Payment</CardTitle>
+          <CardDescription className="text-gray-400 font-light">Review your booking details before checking out</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-muted rounded-lg flex justify-between items-center">
+        <CardContent className="space-y-8 pt-8 relative z-10">
+          <div className="p-6 bg-black/40 rounded-2xl flex flex-col md:flex-row justify-between md:items-center gap-6 border border-white/5">
             <div>
-              <h4 className="font-semibold">{service?.name}</h4>
-              <p className="text-sm text-muted-foreground">{vehicleType}</p>
-              <p className="text-sm text-muted-foreground">{bookingDate?.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground line-clamp-1">{address}</p>
+              <h4 className="font-bold text-xl text-white font-heading mb-1">{service?.name}</h4>
+              <p className="text-sm font-light text-gray-400">{vehicleType}</p>
+              <p className="text-sm font-light text-gray-400">{bookingDate?.toLocaleString()}</p>
+              <p className="text-sm font-light text-gray-400 mt-2 flex items-start gap-1 max-w-sm"><span className="opacity-50">📍</span> {address}</p>
               {addonIds.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase">Add-ons</p>
+                <div className="mt-4 pt-4 border-t border-white/5">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Selected Add-ons</p>
                   {availableAddons.filter(a => addonIds.includes(a.id)).map(a => (
-                    <p key={a.id} className="text-sm text-muted-foreground flex justify-between">
+                    <p key={a.id} className="text-sm font-medium text-gray-300 flex justify-between max-w-sm">
                       <span>{a.name}</span>
-                      <span>+${a.price}</span>
+                      <span className="text-green-400">+₹{a.price}</span>
                     </p>
                   ))}
                 </div>
               )}
             </div>
-            <div className="text-right flex-shrink-0">
+            <div className="md:text-right flex-shrink-0 bg-[#141414] p-5 rounded-xl border border-white/5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Total to Pay</p>
               {appliedCoupon ? (
                 <>
-                  <div className="text-lg font-bold line-through text-muted-foreground">${service?.price}</div>
-                  <div className="text-2xl font-bold text-green-500">${calculateFinalPrice()}</div>
+                  <div className="text-sm font-medium line-through text-gray-500">₹{service?.price}</div>
+                  <div className="text-4xl font-black text-white font-heading">₹{calculateFinalPrice()}</div>
                 </>
               ) : (
-                <div className="text-2xl font-bold">${service?.price}</div>
+                <div className="text-4xl font-black text-white font-heading">₹{calculateFinalPrice()}</div>
               )}
             </div>
           </div>
           
-          <div className="pt-4 border-t">
-            <Label>Coupon Code</Label>
-            <div className="flex gap-2 mt-1">
+          <div className="pt-8 border-t border-white/5">
+            <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block mb-2">Coupon Code</Label>
+            <div className="flex gap-3">
               <Input 
-                placeholder="Enter coupon code" 
+                placeholder="Enter promo code" 
                 value={couponCode} 
-                onChange={(e) => setCouponCode(e.target.value)} 
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())} 
                 disabled={!!appliedCoupon}
+                className="bg-black/50 border-white/10 rounded-xl h-14 text-white placeholder:text-gray-600 focus-visible:ring-white/20 uppercase max-w-sm"
               />
-              <Button onClick={handleApplyCoupon} disabled={!couponCode || !!appliedCoupon} variant="secondary">
-                {appliedCoupon ? 'Applied' : 'Apply'}
+              <Button onClick={handleApplyCoupon} disabled={!couponCode || !!appliedCoupon} className="bg-white/10 text-white hover:bg-white/20 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">
+                {appliedCoupon ? 'Applied ✓' : 'Apply'}
               </Button>
             </div>
-            {couponError && <p className="text-sm text-red-500 mt-1">{couponError}</p>}
+            {couponError && <p className="text-sm font-medium text-red-400 mt-2">{couponError}</p>}
           </div>
 
           {user && (user.loyaltyPoints || 0) > 0 && (
-            <div className="pt-4 border-t">
-              <Label>Redeem Loyalty Points</Label>
-              <p className="text-xs text-muted-foreground mb-2">You have {user.loyaltyPoints} points available (10 points = ₹1)</p>
+            <div className="pt-8 border-t border-white/5">
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block mb-2">Redeem Loyalty Points</Label>
+              <p className="text-xs font-light text-gray-400 mb-4">You have <strong className="text-white">{user.loyaltyPoints}</strong> points available (10 points = ₹1)</p>
               <div className="flex items-center gap-4">
                 <Input 
                   type="number"
@@ -402,9 +500,10 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
                   max={user.loyaltyPoints}
                   value={redeemPoints}
                   onChange={(e) => setRedeemPoints(Math.min(parseInt(e.target.value) || 0, user.loyaltyPoints || 0))}
+                  className="bg-black/50 border-white/10 rounded-xl h-14 text-white focus-visible:ring-white/20 max-w-[150px]"
                 />
-                <span className="text-sm text-green-500 whitespace-nowrap">
-                  -${(redeemPoints * 0.1).toFixed(2)}
+                <span className="text-sm font-bold text-green-400 tracking-widest">
+                  -₹{(redeemPoints * 0.1).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -412,11 +511,11 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
         </CardContent>
       </Card>
       
-      <div className="mt-8 flex justify-between">
-        <Button variant="outline" onClick={prevStep} disabled={isProcessing}>Back</Button>
-        <Button onClick={handlePayment} disabled={isProcessing} className="bg-orange-500 hover:bg-orange-600 text-white">
+      <div className="mt-8 flex justify-between gap-4">
+        <Button variant="outline" onClick={prevStep} disabled={isProcessing} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
+        <Button onClick={handlePayment} disabled={isProcessing} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">
           {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          Pay ${calculateFinalPrice().toFixed(2)}
+          Pay ₹{calculateFinalPrice().toFixed(2)}
         </Button>
       </div>
     </>

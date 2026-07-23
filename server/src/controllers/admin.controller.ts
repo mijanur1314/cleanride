@@ -51,7 +51,7 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   // Top Partners
   const allPartners = await prisma.user.findMany({
     where: { role: 'PARTNER' },
-    select: { id: true, name: true, email: true }
+    select: { id: true, name: true, email: true, isVerified: true }
   });
   
   const completedJobsCount = await prisma.booking.groupBy({
@@ -117,7 +117,8 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response, _next:
       email: true,
       role: true,
       createdAt: true,
-      loyaltyPoints: true
+      loyaltyPoints: true,
+      isVerified: true
     },
     orderBy: { createdAt: 'desc' }
   });
@@ -156,6 +157,9 @@ export const assignPartnerToBooking = catchAsync(async (req: Request, res: Respo
   const partner = await prisma.user.findUnique({ where: { id: partnerId } });
   if (!partner || partner.role !== 'PARTNER') {
     return next(new AppError('Invalid partner ID', 400));
+  }
+  if (!partner.isVerified) {
+    return next(new AppError('Partner is not verified yet', 403));
   }
 
   const booking = await prisma.booking.update({
@@ -215,4 +219,22 @@ export const assignPartnerToBooking = catchAsync(async (req: Request, res: Respo
     success: true,
     data: { booking }
   });
+});
+
+export const verifyPartner = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.params.userId as string;
+  const { isVerified } = req.body;
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== 'PARTNER') {
+    return next(new AppError('Invalid partner ID', 400));
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { isVerified },
+    select: { id: true, name: true, isVerified: true }
+  });
+
+  res.status(200).json({ success: true, data: { user: updatedUser } });
 });

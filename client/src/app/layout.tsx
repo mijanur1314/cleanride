@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SocketProvider } from "@/components/SocketProvider";
+import { QueryProvider } from "@/components/QueryProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
@@ -34,19 +35,21 @@ export default function RootLayout({
       className={`${outfit.variable} ${spaceGrotesk.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
           forcedTheme="light"
           disableTransitionOnChange
         >
-          <SocketProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <Toaster theme="light" position="top-center" />
-          </SocketProvider>
+          <QueryProvider>
+            <SocketProvider>
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <Toaster theme="light" position="top-center" />
+            </SocketProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

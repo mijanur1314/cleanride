@@ -71,7 +71,7 @@ export default function AdminDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-border/50 shadow-sm">
+        <Card className="bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl hover:bg-[#0f0f0f] transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
             <div className="p-2 bg-primary/10 rounded-full">
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 shadow-sm">
+        <Card className="bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl hover:bg-[#0f0f0f] transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Bookings</CardTitle>
             <div className="p-2 bg-blue-500/10 rounded-full">
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 shadow-sm">
+        <Card className="bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl hover:bg-[#0f0f0f] transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Active Customers</CardTitle>
             <div className="p-2 bg-green-500/10 rounded-full">
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 shadow-sm">
+        <Card className="bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl hover:bg-[#0f0f0f] transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Service Partners</CardTitle>
             <div className="p-2 bg-orange-500/10 rounded-full">
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Chart */}
-        <Card className="col-span-1 lg:col-span-2 border-border/50 shadow-sm">
+        <Card className="col-span-1 lg:col-span-2 bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Top Partners Leaderboard */}
-        <Card className="border-border/50 shadow-sm">
+        <Card className="bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Medal className="w-5 h-5 text-yellow-500" />
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-4">
               {topPartners?.map((partner: any, idx: number) => (
-                <div key={partner.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                <div key={partner.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                       idx === 0 ? 'bg-yellow-100 text-yellow-700' : 
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Operations Queue */}
-      <Card className="border-border/50 shadow-sm">
+      <Card className="bg-[#0A0A0A]/60 backdrop-blur-md border-white/5 shadow-xl">
         <CardHeader>
           <CardTitle>Operations & Dispatch</CardTitle>
           <CardDescription>Manage incoming bookings and dispatch partners</CardDescription>

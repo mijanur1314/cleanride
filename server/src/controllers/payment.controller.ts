@@ -100,7 +100,7 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
   const { booking } = result;
 
   if (booking && booking.user) {
-    await sendEmail({
+    sendEmail({
       to: booking.user.email,
       subject: 'CleanRide - Payment Received & Booking Confirmed',
       html: `
@@ -111,7 +111,7 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
         <br/>
         <p>Thank you for choosing CleanRide!</p>
       `
-    });
+    }).catch(err => console.error('Failed to send email:', err));
   }
 
   res.status(200).json({

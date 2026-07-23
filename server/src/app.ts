@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
+import cookieParser from 'cookie-parser';
 import { env } from './utils/env';
 import prisma from './utils/prisma';
 import redisClient from './utils/redis';
@@ -35,8 +36,10 @@ const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
 import { logger } from './utils/logger';
 
 // API Rate Limiters
@@ -46,6 +49,11 @@ const authLimiter = rateLimit({
   message: 'Too many login attempts from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
+  ...(redisClient && {
+    store: new RedisStore({
+      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
+    }),
+  }),
 });
 
 const apiLimiter = rateLimit({
@@ -53,6 +61,11 @@ const apiLimiter = rateLimit({
   max: 1000, // standard API limit (increased for development)
   standardHeaders: true,
   legacyHeaders: false,
+  ...(redisClient && {
+    store: new RedisStore({
+      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
+    }),
+  }),
 });
 
 // Request ID Middleware

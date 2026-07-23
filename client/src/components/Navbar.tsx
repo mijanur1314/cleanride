@@ -105,7 +105,7 @@ export default function Navbar() {
       <div className="container flex items-center justify-between mx-auto px-6">
         <Link href="/" className="block group">
           <div className="relative w-24 h-16 md:w-32 md:h-20 transition-all">
-            <Image src="/logo.png" alt="CleanRide Logo" fill className="object-contain object-left drop-shadow-xl" priority />
+            <Image src="/logo.png" alt="CleanRide Logo" fill sizes="150px" className="object-contain object-left drop-shadow-xl" priority />
           </div>
         </Link>
         

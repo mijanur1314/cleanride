@@ -5,6 +5,7 @@ import api from "@/lib/axios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -28,6 +29,16 @@ export default function AdminUsers() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const verifyPartner = async (userId: string, isVerified: boolean) => {
+    try {
+      await api.patch(`/admin/users/${userId}/verify`, { isVerified });
+      toast.success(`Partner ${isVerified ? 'verified' : 'unverified'} successfully`);
+      fetchUsers();
+    } catch (error) {
+      toast.error("Failed to update partner verification status");
+    }
+  };
 
   const customers = users.filter((u) => u.role === 'USER');
   const partners = users.filter((u) => u.role === 'PARTNER');
@@ -104,6 +115,8 @@ export default function AdminUsers() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Joined Date</TableHead>
+                      <TableHead>Verification</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -112,6 +125,20 @@ export default function AdminUsers() {
                         <TableCell className="font-medium">{p.name}</TableCell>
                         <TableCell>{p.email}</TableCell>
                         <TableCell>{format(new Date(p.createdAt), "MMM d, yyyy")}</TableCell>
+                        <TableCell>
+                          {p.isVerified ? (
+                            <Badge variant="outline" className="text-green-500 border-green-200 bg-green-50">Verified</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-yellow-600 border-yellow-200 bg-yellow-50">Pending Approval</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {!p.isVerified ? (
+                            <Button size="sm" onClick={() => verifyPartner(p.id, true)} className="bg-green-600 hover:bg-green-700 text-white">Approve</Button>
+                          ) : (
+                            <Button size="sm" variant="outline" onClick={() => verifyPartner(p.id, false)} className="text-red-500 hover:text-red-600">Revoke</Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

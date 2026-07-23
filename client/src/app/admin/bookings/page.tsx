@@ -1,52 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminBookings() {
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [partners, setPartners] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const fetchData = async () => {
-    try {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['adminBookings', page],
+    queryFn: async () => {
       const [bookingsRes, usersRes] = await Promise.all([
-        api.get("/admin/bookings"),
-        api.get("/admin/users") // To get partners for assignment
+        api.get(`/admin/bookings?page=${page}&limit=${limit}`),
+        api.get("/admin/users")
       ]);
-      setBookings(bookingsRes.data.data.bookings);
-      setPartners(usersRes.data.data.users.filter((u: { role: string }) => u.role === 'PARTNER'));
-    } catch (error) {
-      toast.error("Failed to load bookings");
-    } finally {
-      setLoading(false);
+      return {
+        bookings: bookingsRes.data.data.bookings,
+        pagination: bookingsRes.data.pagination,
+        partners: usersRes.data.data.users.filter((u: any) => u.role === 'PARTNER' && u.isVerified)
+      };
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const bookings = data?.bookings || [];
+  const partners = data?.partners || [];
+  const pagination = data?.pagination;
 
   const assignPartner = async (bookingId: string, partnerId: string) => {
     try {
       await api.patch(`/admin/bookings/${bookingId}/assign`, { partnerId });
       toast.success("Partner assigned successfully");
-      fetchData(); // Refresh list
+      refetch(); // Refresh list
     } catch (error) {
       toast.error("Failed to assign partner");
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -65,9 +65,9 @@ export default function AdminBookings() {
         <TabsList className="mb-4">
           <TabsTrigger value="action-required" className="relative">
             Action Required
-            {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).length > 0 && (
+            {bookings.filter((b: any) => b.status === 'CONFIRMED' && !b.partner).length > 0 && (
               <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).length}
+                {bookings.filter((b: any) => b.status === 'CONFIRMED' && !b.partner).length}
               </span>
             )}
           </TabsTrigger>
@@ -93,7 +93,7 @@ export default function AdminBookings() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).map((booking) => (
+                    {bookings.filter((b: any) => b.status === 'CONFIRMED' && !b.partner).map((booking: any) => (
                       <TableRow key={booking.id}>
                         <TableCell className="font-medium">
                           {booking.user?.name}
@@ -110,7 +110,7 @@ export default function AdminBookings() {
                               <SelectValue placeholder="Assign Partner" />
                             </SelectTrigger>
                             <SelectContent>
-                              {partners.map(p => (
+                              {partners.map((p: any) => (
                                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                               ))}
                             </SelectContent>
@@ -118,7 +118,7 @@ export default function AdminBookings() {
                         </TableCell>
                       </TableRow>
                     ))}
-                    {bookings.filter(b => b.status === 'CONFIRMED' && !b.partner).length === 0 && (
+                    {bookings.filter((b: any) => b.status === 'CONFIRMED' && !b.partner).length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                           <div className="flex flex-col items-center gap-2">
@@ -149,14 +149,14 @@ export default function AdminBookings() {
                 <TableRow>
                   <TableHead>Customer</TableHead>
                   <TableHead>Service</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Date & Tracking</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Partner</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((booking) => (
+                {bookings.map((booking: any) => (
                   <TableRow key={booking.id}>
                     <TableCell className="font-medium">
                       {booking.user?.name}
@@ -170,7 +170,17 @@ export default function AdminBookings() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>{format(new Date(booking.bookingDate), "MMM d, h:mm a")}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span>{format(new Date(booking.bookingDate), "MMM d, h:mm a")}</span>
+                        {booking.arrivalTime && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> In: {format(new Date(booking.arrivalTime), "h:mm a")}</span>
+                        )}
+                        {booking.dischargeTime && (
+                          <span className="text-[10px] text-muted-foreground flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Out: {format(new Date(booking.dischargeTime), "h:mm a")}</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={
                         booking.status === 'COMPLETED' ? 'default' :
@@ -188,7 +198,7 @@ export default function AdminBookings() {
                             <SelectValue placeholder="Assign Partner" />
                           </SelectTrigger>
                           <SelectContent>
-                            {partners.map(p => (
+                            {partners.map((p: any) => (
                               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -208,6 +218,29 @@ export default function AdminBookings() {
             </Table>
           </div>
         </CardContent>
+        {pagination && pagination.pages > 1 && (
+          <CardFooter className="flex justify-between items-center border-t py-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" /> Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {pagination.page} of {pagination.pages}
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
+              disabled={page === pagination.pages}
+            >
+              Next <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </CardFooter>
+        )}
       </Card>
       </TabsContent>
       </Tabs>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Shield, Clock, Zap, ChevronRight, Navigation } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
@@ -79,10 +80,13 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/80 via-[#0A0A0A]/50 to-[#0A0A0A] z-10" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0A] via-[#0A0A0A]/80 to-transparent z-10" />
-          <img 
+          <Image 
             src="https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=2069&auto=format&fit=crop" 
             alt="Luxury Dark Car" 
-            className="w-full h-full object-cover opacity-60 object-center"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover opacity-60 object-center"
           />
         </div>
 
@@ -367,10 +371,12 @@ function PackageCard({ image, title, price, time, type, features, isPopular = fa
       {/* Image Header */}
       <div className="relative h-56 w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent z-10" />
-        <img 
+        <Image 
           src={image} 
           alt={title} 
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
         <div className="absolute bottom-4 left-6 z-20 flex gap-3">
           <span className="px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs text-gray-300 flex items-center gap-1.5">

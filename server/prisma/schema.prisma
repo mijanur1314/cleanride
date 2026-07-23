@@ -32,14 +32,15 @@ enum PaymentStatus {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  phone     String?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  phone      String?
+  role       Role     @default(USER)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
   bookings         Booking[] @relation("UserBookings")
@@ -105,6 +106,8 @@ model Booking {
   beforeImageUrl String?
   afterImageUrl  String?
   couponId       String?
+  arrivalTime    DateTime?
+  dischargeTime  DateTime?
 
   // Relations
   user    User     @relation("UserBookings", fields: [userId], references: [id])
