@@ -45,6 +45,7 @@ describe('Booking Boundaries', () => {
         .send({
           serviceId: '123e4567-e89b-12d3-a456-426614174000',
           vehicleType: 'SEDAN',
+          vehicleImage: 'https://example.com/car.jpg',
           address: '123 Test St',
           latitude: 10,
           longitude: 20,
