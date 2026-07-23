@@ -110,9 +110,9 @@ export default function PartnerDashboard() {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, '_blank');
   };
 
-  const completedBookings = bookings.filter((b: any) => b.status === 'COMPLETED');
-  const activeBookings = bookings.filter((b: any) => b.status !== 'COMPLETED');
-  const lifetimeEarnings = completedBookings.reduce((sum: any, b: any) => sum + (b.totalAmount * 0.7), 0);
+  const completedBookings = useMemo(() => bookings.filter((b: any) => b.status === 'COMPLETED'), [bookings]);
+  const activeBookings = useMemo(() => bookings.filter((b: any) => b.status !== 'COMPLETED'), [bookings]);
+  const lifetimeEarnings = useMemo(() => completedBookings.reduce((sum: any, b: any) => sum + (b.totalAmount * 0.7), 0), [completedBookings]);
 
   const chartData = useMemo(() => {
     const dataMap: Record<string, number> = {};
