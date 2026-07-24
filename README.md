@@ -66,6 +66,8 @@ The platform serves **three distinct user roles**:
 | 👥 **Manual Dispatching** | Assign unassigned bookings to specific available washing partners |
 | 📋 **Service Management** | Beautiful grid-based interface to manage premium wash packages and pricing (₹) |
 | 📈 **Platform Analytics** | High-level dashboard showing total revenue, active users, and booking volume |
+| ⚙️ **Global System Settings** | Configure dynamic tax rates, maintenance modes, and contact details |
+| 🎫 **Customer Support Tickets** | Built-in ticketing system to manage, reply to, and resolve customer issues |
 | 🚘 **Global Management** | Full overview of every customer, partner, and service happening on the platform |
 
 ---
