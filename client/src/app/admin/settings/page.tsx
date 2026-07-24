@@ -21,10 +21,6 @@ export default function SettingsPage() {
     maintenanceMode: false,
   });
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
   const fetchSettings = async () => {
     try {
       const res = await api.get('/settings');
@@ -33,6 +29,10 @@ export default function SettingsPage() {
       toast.error('Failed to load settings');
     }
   };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

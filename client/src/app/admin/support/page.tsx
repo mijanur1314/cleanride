@@ -22,10 +22,6 @@ export default function AdminSupportPage() {
   const [replyMessage, setReplyMessage] = useState('');
   const [isReplying, setIsReplying] = useState(false);
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
-
   const fetchTickets = async () => {
     try {
       setLoading(true);
@@ -37,6 +33,10 @@ export default function AdminSupportPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
   const viewTicket = async (ticket: any) => {
     setActiveTicket(ticket);

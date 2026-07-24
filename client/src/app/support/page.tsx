@@ -28,10 +28,6 @@ export default function SupportPage() {
   const [replyMessage, setReplyMessage] = useState('');
   const [isReplying, setIsReplying] = useState(false);
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
-
   const fetchTickets = async () => {
     try {
       setLoading(true);
@@ -43,6 +39,10 @@ export default function SupportPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
   const createTicket = async (e: React.FormEvent) => {
     e.preventDefault();
