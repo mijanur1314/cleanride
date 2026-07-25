@@ -9,16 +9,16 @@ import { getIO } from '../socket';
 export const handleRazorpayWebhook = async (req: Request, res: Response) => {
   try {
     const signature = req.headers['x-razorpay-signature'] as string;
-    const secret = env.RAZORPAY_KEY_SECRET; // Or your specific Webhook Secret if you have one
+    const secret = env.RAZORPAY_WEBHOOK_SECRET || env.RAZORPAY_KEY_SECRET;
 
-    if (!signature || !secret) {
-      return res.status(400).send('Invalid Signature or Secret');
+    if (!signature || !secret || !req.rawBody) {
+      return res.status(400).send('Invalid Signature, Secret or Raw Body');
     }
 
     // Verify Signature
     const expectedSignature = crypto
       .createHmac('sha256', secret)
-      .update(JSON.stringify(req.body))
+      .update(req.rawBody)
       .digest('hex');
 
     if (expectedSignature !== signature) {
@@ -48,6 +48,14 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
             data: { status: 'CONFIRMED' },
             include: { user: true, service: true }
           });
+          
+          if (booking.partnerId) {
+            await tx.booking.update({
+              where: { id: booking.id },
+              data: { status: 'PARTNER_ASSIGNED' }
+            });
+            booking.status = 'PARTNER_ASSIGNED';
+          }
       
           return { updatedPayment, booking };
         });
@@ -59,6 +67,14 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
             title: 'Payment Confirmed',
             message: 'Your payment was successful and booking is confirmed.',
             type: 'success'
+          });
+        }
+        
+        if (booking.partnerId) {
+          getIO().to(booking.partnerId).emit('notification', {
+            title: 'New Booking Assigned!',
+            message: `You have been selected for a new booking by ${booking.user.name}.`,
+            type: 'info'
           });
         }
 

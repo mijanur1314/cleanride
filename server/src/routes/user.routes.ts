@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { getUsers, getUserById, updateProfile, updateKyc, deleteUser, banUser } from '../controllers/user.controller';
+import { getUsers, getUserById, updateProfile, updateKyc, deleteUser, banUser, getAvailablePartners } from '../controllers/user.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.use(protect);
+
+router.get('/partners/available', getAvailablePartners);
 
 router.get('/', restrictTo('ADMIN'), getUsers);
 

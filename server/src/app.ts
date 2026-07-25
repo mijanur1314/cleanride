@@ -15,6 +15,7 @@ declare global {
   namespace Express {
     interface Request {
       id?: string;
+      rawBody?: Buffer;
     }
   }
 }
@@ -34,7 +35,11 @@ if (env.SENTRY_DSN) {
 
 const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
 
-app.use(express.json());
+app.use(express.json({
+  verify: (req: Request, res: Response, buf: Buffer) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -137,6 +142,7 @@ import adminRoutes from './routes/admin.routes';
 import uploadRoutes from './routes/upload.routes';
 import ticketRoutes from './routes/ticket.routes';
 import settingsRoutes from './routes/settings.routes';
+import webhookRoutes from './routes/webhook.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { AppError } from './utils/AppError';
 
@@ -159,6 +165,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {

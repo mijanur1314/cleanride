@@ -23,6 +23,28 @@ export const getUsers = catchAsync(async (req: Request, res: Response, _next: Ne
     },
   });
 });
+export const getAvailablePartners = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const partners = await prisma.user.findMany({
+    where: {
+      role: 'PARTNER',
+      isBanned: false,
+    },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      createdAt: true,
+    },
+  });
+
+  res.status(200).json({
+    success: true,
+    results: partners.length,
+    data: {
+      partners,
+    },
+  });
+});
 
 export const getUserById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   if (req.user!.role !== 'ADMIN' && req.user!.id !== req.params.id) {

@@ -17,6 +17,7 @@ interface BookingState {
   address: string | null;
   storeId: string | null;
   addonIds: string[];
+  partnerId: string | null;
   step: number;
   setService: (service: Service) => void;
   setVehicleDetails: (category: string, type: string, name?: string, number?: string) => void;
@@ -24,6 +25,7 @@ interface BookingState {
   setBookingDate: (date: Date) => void;
   setLocation: (address: string, storeId?: string) => void;
   toggleAddon: (addonId: string) => void;
+  setPartnerId: (partnerId: string | null) => void;
   nextStep: () => void;
   prevStep: () => void;
   resetBooking: () => void;
@@ -40,6 +42,7 @@ export const useBookingStore = create<BookingState>((set) => ({
   address: null,
   storeId: null,
   addonIds: [],
+  partnerId: null,
   step: 1,
   
   setService: (service) => set({ service }),
@@ -52,6 +55,7 @@ export const useBookingStore = create<BookingState>((set) => ({
       ? state.addonIds.filter(id => id !== addonId) 
       : [...state.addonIds, addonId]
   })),
+  setPartnerId: (partnerId) => set({ partnerId }),
   
   nextStep: () => set((state) => ({ step: state.step + 1 })),
   prevStep: () => set((state) => ({ step: state.step > 1 ? state.step - 1 : 1 })),
@@ -66,6 +70,7 @@ export const useBookingStore = create<BookingState>((set) => ({
     address: null,
     storeId: null,
     addonIds: [],
+    partnerId: null,
     step: 1,
   }),
 }));
