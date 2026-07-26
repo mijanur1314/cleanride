@@ -59,6 +59,20 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
     if (finalAmount < 0) finalAmount = 0;
   }
 
+  // VIP Subscription Check: If user has an active subscription, the base service is free
+  const activeSubscription = await prisma.userSubscription.findFirst({
+    where: {
+      userId: req.user!.id,
+      isActive: true,
+      endDate: { gt: new Date() }
+    }
+  });
+
+  if (activeSubscription) {
+    finalAmount -= service.price;
+    if (finalAmount < 0) finalAmount = 0;
+  }
+
   const booking = await prisma.$transaction(async (tx) => {
     if (redeemPoints) {
       await tx.user.update({
@@ -81,6 +95,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
         totalAmount: finalAmount,
         couponId,
         partnerId,
+        status: finalAmount === 0 ? 'CONFIRMED' : 'PENDING',
         bookingAddons: {
           create: addons.map((addon: { id: string; price: number }) => ({
             addonId: addon.id,

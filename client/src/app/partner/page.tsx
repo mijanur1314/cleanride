@@ -28,6 +28,34 @@ export default function PartnerDashboard() {
   const [activeChat, setActiveChat] = useState<{ bookingId: string, userName: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'jobs' | 'earnings'>('jobs');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+
+  const handleUpdateLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsUpdatingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await api.patch('/users/updateLocation', {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+          toast.success("Location updated successfully!");
+        } catch (error) {
+          toast.error("Failed to update location");
+        } finally {
+          setIsUpdatingLocation(false);
+        }
+      },
+      (error) => {
+        toast.error("Please allow location permissions");
+        setIsUpdatingLocation(false);
+      }
+    );
+  };
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['partnerBookings'],
@@ -298,8 +326,20 @@ export default function PartnerDashboard() {
           </div>
         </div>
 
-        {/* Profile Dropdown */}
-        <DropdownMenu>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleUpdateLocation} 
+            disabled={isUpdatingLocation}
+            className="border-white/20 bg-transparent text-white hover:bg-white/10 hidden sm:flex"
+          >
+            {isUpdatingLocation ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MapPin className="w-4 h-4 mr-2 text-blue-400" />}
+            Update Location
+          </Button>
+
+          {/* Profile Dropdown */}
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="rounded-full border-white/20 bg-transparent text-white hover:bg-white/10 h-12 w-12 shrink-0 hidden sm:flex">
               <User className="w-5 h-5" />
@@ -322,6 +362,7 @@ export default function PartnerDashboard() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">

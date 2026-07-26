@@ -19,42 +19,54 @@ export const getPlans = catchAsync(async (req: Request, res: Response, _next: Ne
   res.status(200).json({ success: true, data: { plans } });
 });
 
-export const createSubscriptionOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const createSubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { planId } = req.body;
   const userId = req.user!.id;
 
   const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
   if (!plan) return next(new AppError('Plan not found', 404));
 
-  if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
-    return next(new AppError('Payment gateway is not configured securely', 500));
+  if (!plan.razorpayPlanId) {
+    return next(new AppError('Razorpay plan ID is not configured for this plan', 400));
   }
 
-  const amountInPaise = Math.round(plan.price * 100);
+  // Check if user already has an active subscription for this plan
+  const existingSubscription = await prisma.userSubscription.findFirst({
+    where: {
+      userId,
+      planId: plan.id,
+      isActive: true,
+      endDate: { gt: new Date() },
+    },
+  });
+
+  if (existingSubscription) {
+    return next(new AppError('You already have an active subscription for this plan', 400));
+  }
 
   const options = {
-    amount: amountInPaise,
-    currency: 'INR',
-    receipt: `sub_${userId.substring(0, 8)}_${Date.now()}`,
+    plan_id: plan.razorpayPlanId,
+    customer_notify: 1,
+    total_count: 120, // 10 years of monthly billing, can be cancelled anytime
   };
 
-  const order = await razorpay.orders.create(options);
+  const subscription = await razorpay.subscriptions.create(options);
 
   res.status(200).json({
     success: true,
-    data: { order, plan }
+    data: { subscription, plan }
   });
 });
 
 export const verifySubscription = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
+  const { razorpay_subscription_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
   const userId = req.user!.id;
 
   if (!env.RAZORPAY_KEY_SECRET) {
     return next(new AppError('Payment gateway is not configured securely', 500));
   }
 
-  const body = razorpay_order_id + '|' + razorpay_payment_id;
+  const body = razorpay_payment_id + '|' + razorpay_subscription_id;
 
   const expectedSignature = crypto
     .createHmac('sha256', env.RAZORPAY_KEY_SECRET)
@@ -82,7 +94,8 @@ export const verifySubscription = catchAsync(async (req: Request, res: Response,
       userId,
       planId,
       endDate,
-      isActive: true
+      isActive: true,
+      razorpaySubscriptionId: razorpay_subscription_id,
     }
   });
 

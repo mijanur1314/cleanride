@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Car, CheckCircle2, Upload, Image as ImageIcon, UserCircle2 } from "lucide-react";
+import { Loader2, Car, CheckCircle2, Upload, Image as ImageIcon, UserCircle2, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const VEHICLE_CATEGORIES: Record<string, string[]> = {
@@ -33,6 +33,7 @@ export default function BookingPage() {
   const [addons, setAddons] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingPartners, setIsFetchingPartners] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +55,41 @@ export default function BookingPage() {
     }
   };
 
+  const handleFetchPartners = () => {
+    setIsFetchingPartners(true);
+    nextStep();
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const res = await api.get(`/users/partners/available?lat=${position.coords.latitude}&lng=${position.coords.longitude}`);
+            setPartners(res.data.data.partners);
+          } catch (error) {
+            toast.error("Failed to load nearby partners");
+          } finally {
+            setIsFetchingPartners(false);
+          }
+        },
+        async (error) => {
+          // If denied or error, fetch without location
+          try {
+            const res = await api.get("/users/partners/available");
+            setPartners(res.data.data.partners);
+          } finally {
+            setIsFetchingPartners(false);
+          }
+        }
+      );
+    } else {
+      // Fetch without location
+      api.get("/users/partners/available").then(res => {
+        setPartners(res.data.data.partners);
+        setIsFetchingPartners(false);
+      });
+    }
+  };
+
   useEffect(() => {
     if (!_hasHydrated) return;
     if (!user) {
@@ -64,16 +100,14 @@ export default function BookingPage() {
 
     const fetchData = async () => {
       try {
-        const [servRes, vehRes, addonRes, partnerRes] = await Promise.all([
+        const [servRes, vehRes, addonRes] = await Promise.all([
           api.get("/services"),
           api.get("/vehicles/my-vehicles").catch(() => ({ data: { data: { vehicles: [] } } })),
-          api.get("/addons").catch(() => ({ data: { data: { addons: [] } } })),
-          api.get("/users/partners/available").catch(() => ({ data: { data: { partners: [] } } }))
+          api.get("/addons").catch(() => ({ data: { data: { addons: [] } } }))
         ]);
         setServices(servRes.data.data.services);
         setVehicles(vehRes.data.data.vehicles);
         setAddons(addonRes.data.data.addons);
-        setPartners(partnerRes.data.data.partners);
       } catch (error) {
         toast.error("Failed to load data");
       } finally {
@@ -305,7 +339,7 @@ export default function BookingPage() {
               </Card>
               <div className="mt-8 flex justify-between gap-4">
                 <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
-                <Button onClick={nextStep} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Partner Selection</Button>
+                <Button onClick={handleFetchPartners} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Partner Selection</Button>
               </div>
             </motion.div>
           )}
@@ -319,27 +353,41 @@ export default function BookingPage() {
                   <CardDescription className="text-gray-400 font-light">Choose your preferred washing expert, or skip to let us assign the best one for you.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-8 relative z-10">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {partners.length === 0 ? (
-                      <p className="text-gray-400 font-light col-span-2">No partners are currently available. You can skip this step and we will assign one later.</p>
-                    ) : (
-                      partners.map(p => (
-                        <div 
-                          key={p.id} 
-                          onClick={() => useBookingStore.getState().setPartnerId(p.id)}
-                          className={`p-5 rounded-2xl cursor-pointer flex items-center gap-4 transition-all border ${useBookingStore.getState().partnerId === p.id ? 'border-white/40 bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'border-white/10 hover:bg-white/[0.02]'}`}
-                        >
-                          <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                            <UserCircle2 className="w-7 h-7 text-white/50" />
+                  {isFetchingPartners ? (
+                    <div className="flex flex-col items-center justify-center py-10">
+                      <Loader2 className="w-8 h-8 animate-spin text-white/50 mb-4" />
+                      <p className="text-gray-400 font-light">Finding nearby partners...</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {partners.length === 0 ? (
+                        <p className="text-gray-400 font-light col-span-2">No partners are currently available. You can skip this step and we will assign one later.</p>
+                      ) : (
+                        partners.map(p => (
+                          <div 
+                            key={p.id} 
+                            onClick={() => useBookingStore.getState().setPartnerId(p.id)}
+                            className={`p-5 rounded-2xl cursor-pointer flex items-center gap-4 transition-all border ${useBookingStore.getState().partnerId === p.id ? 'border-white/40 bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'border-white/10 hover:bg-white/[0.02]'}`}
+                          >
+                            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+                              <UserCircle2 className="w-7 h-7 text-white/50" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-white text-sm">{p.name}</p>
+                              {p.distance !== undefined && p.distance !== null ? (
+                                <p className="text-xs font-light text-gray-400 mt-1 flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-blue-400" /> 
+                                  {p.distance === Infinity ? 'Distance unknown' : `${p.distance.toFixed(1)} km away`}
+                                </p>
+                              ) : (
+                                <p className="text-xs font-light text-green-400 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Available</p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-white text-sm">{p.name}</p>
-                            <p className="text-xs font-light text-green-400 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Available</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
               <div className="mt-8 flex justify-between gap-4">
@@ -427,6 +475,13 @@ function PaymentStep({ availableAddons, partners }: { availableAddons: { id: str
       });
       
       const bookingId = bookingRes.data.data.booking.id;
+
+      if (calculateFinalPrice() === 0) {
+        toast.success("Booking confirmed successfully! (100% Covered)");
+        resetBooking();
+        router.push("/dashboard");
+        return;
+      }
 
       // 2. Create Razorpay order
       const orderRes = await api.post("/payments/create-order", { bookingId });

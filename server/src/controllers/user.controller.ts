@@ -23,8 +23,36 @@ export const getUsers = catchAsync(async (req: Request, res: Response, _next: Ne
     },
   });
 });
+export const updateLocation = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { latitude, longitude } = req.body;
+  
+  if (latitude === undefined || longitude === undefined) {
+    return next(new AppError('Please provide latitude and longitude', 400));
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { latitude, longitude },
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      user: {
+        id: updatedUser.id,
+        latitude: updatedUser.latitude,
+        longitude: updatedUser.longitude
+      }
+    }
+  });
+});
+
 export const getAvailablePartners = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const partners = await prisma.user.findMany({
+  const { lat, lng } = req.query;
+  const userLat = lat ? parseFloat(lat as string) : null;
+  const userLng = lng ? parseFloat(lng as string) : null;
+
+  let partners = await prisma.user.findMany({
     where: {
       role: 'PARTNER',
       isBanned: false,
@@ -33,9 +61,39 @@ export const getAvailablePartners = catchAsync(async (req: Request, res: Respons
       id: true,
       name: true,
       phone: true,
+      latitude: true,
+      longitude: true,
       createdAt: true,
     },
   });
+
+  // Calculate distance if user location is provided
+  if (userLat !== null && userLng !== null) {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371; // Earth's radius in km
+
+    partners = partners.map(partner => {
+      if (partner.latitude === null || partner.longitude === null) {
+        return { ...partner, distance: Infinity };
+      }
+
+      const dLat = toRad(partner.latitude - userLat);
+      const dLon = toRad(partner.longitude - userLng);
+      const lat1 = toRad(userLat);
+      const lat2 = toRad(partner.latitude);
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+
+      return { ...partner, distance };
+    })
+    // Filter out partners further than 30km and sort by distance
+    .filter((p: any) => p.distance <= 30)
+    .sort((a: any, b: any) => a.distance - b.distance);
+  }
 
   res.status(200).json({
     success: true,

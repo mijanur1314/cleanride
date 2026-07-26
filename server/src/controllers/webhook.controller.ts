@@ -94,6 +94,32 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
           }).catch(err => logger.error('Failed to send webhook confirmation email:', err));
         }
       }
+    } else if (event === 'subscription.charged') {
+      const subscriptionEntity = req.body.payload.subscription.entity;
+      const razorpaySubscriptionId = subscriptionEntity.id;
+
+      const userSubscription = await prisma.userSubscription.findUnique({
+        where: { razorpaySubscriptionId },
+        include: { plan: true, user: true }
+      });
+
+      if (userSubscription) {
+        // If the subscription is already expired, base the new end date on today.
+        // If it's still active, extend it by the duration.
+        const baseDate = userSubscription.endDate < new Date() ? new Date() : new Date(userSubscription.endDate);
+        baseDate.setDate(baseDate.getDate() + userSubscription.plan.durationDays);
+
+        await prisma.userSubscription.update({
+          where: { id: userSubscription.id },
+          data: { endDate: baseDate, isActive: true }
+        });
+
+        getIO().to(userSubscription.userId).emit('notification', {
+          title: 'Subscription Renewed',
+          message: `Your ${userSubscription.plan.name} subscription has been renewed successfully.`,
+          type: 'success'
+        });
+      }
     }
 
     res.status(200).json({ status: 'ok' });

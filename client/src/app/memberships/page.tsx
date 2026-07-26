@@ -44,9 +44,9 @@ export default function MembershipsPage() {
 
     setSubscribing(planId);
     try {
-      // 1. Create Subscription Order
-      const orderRes = await api.post('/subscriptions/create-order', { planId });
-      const { order, plan } = orderRes.data.data;
+      // 1. Create Subscription
+      const res = await api.post('/subscriptions/create-subscription', { planId });
+      const { subscription, plan } = res.data.data;
 
       // 2. Initialize Razorpay Checkout
       const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
@@ -58,16 +58,14 @@ export default function MembershipsPage() {
 
       const options = {
         key: rzpKey,
-        amount: order.amount,
-        currency: order.currency,
+        subscription_id: subscription.id,
         name: "CleanRide Premium",
         description: `Subscription to ${plan.name} Plan`,
-        order_id: order.id,
         handler: async function (response: unknown) {
           try {
-            const rzp = response as { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string; };
+            const rzp = response as { razorpay_subscription_id: string; razorpay_payment_id: string; razorpay_signature: string; };
             await api.post("/subscriptions/verify", {
-              razorpay_order_id: rzp.razorpay_order_id,
+              razorpay_subscription_id: rzp.razorpay_subscription_id,
               razorpay_payment_id: rzp.razorpay_payment_id,
               razorpay_signature: rzp.razorpay_signature,
               planId
