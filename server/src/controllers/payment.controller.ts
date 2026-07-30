@@ -54,6 +54,9 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
   res.status(200).json({
     success: true,
     data: { order },
+  });
+});
+
 export const verifyPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, _bookingId } = req.body;
 

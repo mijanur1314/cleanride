@@ -46,7 +46,7 @@ export const createSubscription = catchAsync(async (req: Request, res: Response,
 
   const options = {
     plan_id: plan.razorpayPlanId,
-    customer_notify: 1,
+    customer_notify: 1 as 1,
     total_count: 120, // 10 years of monthly billing, can be cancelled anytime
   };
 
