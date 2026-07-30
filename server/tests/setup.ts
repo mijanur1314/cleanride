@@ -32,6 +32,12 @@ jest.mock('../src/utils/prisma', () => ({
       update: jest.fn(),
       findFirst: jest.fn()
     },
+    userSubscription: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      updateMany: jest.fn()
+    },
     $transaction: jest.fn()
   }
 }));
