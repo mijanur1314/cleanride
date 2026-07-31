@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,9 +42,8 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", data);
       const { user } = response.data.data;
-      const { token } = response.data;
       
-      login(user, token);
+      login(user);
       toast.success("Welcome back!");
       
       if (user.role === "ADMIN") router.push("/admin");
@@ -61,10 +61,11 @@ export default function LoginPage() {
       {/* Aesthetic Background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent z-10" />
-        <img 
+        <Image 
           src="https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=2069&auto=format&fit=crop" 
           alt="Background" 
-          className="w-full h-full object-cover opacity-20 blur-sm"
+          fill
+          className="object-cover opacity-20 blur-sm"
         />
       </div>
 

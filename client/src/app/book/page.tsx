@@ -9,6 +9,8 @@ import api from "@/lib/axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -354,7 +356,7 @@ export default function BookingPage() {
                     <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left max-w-xl mx-auto backdrop-blur-sm">
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10">
-                          <img src={vehicleImageUrl || ''} className="w-full h-full object-cover" alt="Uploaded car" />
+                          <Image src={vehicleImageUrl || ''} width={100} height={100} className="w-full h-full object-cover" alt="Uploaded car" />
                         </div>
                         <div>
                           <p className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">AI Recommendation</p>
@@ -534,7 +536,7 @@ export default function BookingPage() {
                       ) : vehicleImageUrl ? (
                         <div className="flex flex-col items-center space-y-3 relative z-10">
                           <div className="w-full max-w-[200px] aspect-video rounded-lg overflow-hidden border border-white/10 relative">
-                            <img src={vehicleImageUrl} alt="Vehicle" className="w-full h-full object-cover" />
+                            <Image src={vehicleImageUrl} width={200} height={200} alt="Vehicle" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                               <p className="text-xs font-bold uppercase tracking-widest text-white flex items-center gap-2"><Upload className="w-4 h-4" /> Change Image</p>
                             </div>

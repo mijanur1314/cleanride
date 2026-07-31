@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import api from "@/lib/axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -418,7 +419,7 @@ export default function UserDashboard() {
                               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl z-10 flex items-end p-3">
                                 <span className="text-[10px] font-bold text-white uppercase tracking-widest">Before Wash</span>
                               </div>
-                              <img src={booking.beforeImageUrl} alt="Before" className="w-full h-40 object-cover rounded-xl border border-white/10 group-hover:border-white/30 transition-colors" />
+                              <Image src={booking.beforeImageUrl} alt="Before" width={500} height={300} className="w-full h-40 object-cover rounded-xl border border-white/10 group-hover:border-white/30 transition-colors" />
                             </div>
                           )}
                           {booking.afterImageUrl && (
@@ -426,7 +427,7 @@ export default function UserDashboard() {
                               <div className="absolute inset-0 bg-gradient-to-t from-green-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl z-10 flex items-end p-3">
                                 <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">After Wash</span>
                               </div>
-                              <img src={booking.afterImageUrl} alt="After" className="w-full h-40 object-cover rounded-xl border-2 border-green-500/30 group-hover:border-green-500/60 transition-colors" />
+                              <Image src={booking.afterImageUrl} alt="After" width={500} height={300} className="w-full h-40 object-cover rounded-xl border-2 border-green-500/30 group-hover:border-green-500/60 transition-colors" />
                             </div>
                           )}
                         </div>

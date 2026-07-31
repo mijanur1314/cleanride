@@ -35,13 +35,13 @@ function RecenterAutomatically({ lat, lng }: { lat: number; lng: number }) {
 export function LiveMap({ bookingId, initialLat = 20.5937, initialLng = 78.9629 }: { bookingId: string, initialLat?: number, initialLng?: number }) {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
-  const { token, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (isAuthenticated) {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
       const newSocket = io(backendUrl, {
-        auth: { token }
+        withCredentials: true
       });
       setSocket(newSocket);
 
@@ -57,7 +57,7 @@ export function LiveMap({ bookingId, initialLat = 20.5937, initialLng = 78.9629 
         newSocket.disconnect();
       };
     }
-  }, [isAuthenticated, token, bookingId]);
+  }, [isAuthenticated, bookingId]);
 
   if (!position) {
     return (

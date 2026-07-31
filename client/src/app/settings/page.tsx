@@ -13,7 +13,7 @@ import { Loader2, User, Mail, Phone, Shield, Save, Bell } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SettingsPage() {
-  const { user, login, isAuthenticated, _hasHydrated, token } = useAuthStore();
+  const { user, login, isAuthenticated, _hasHydrated } = useAuthStore();
   const router = useRouter();
   
   const [name, setName] = useState("");
@@ -82,7 +82,7 @@ export default function SettingsPage() {
     setIsSaving(true);
     try {
       const res = await api.patch("/users/updateMe", { name, phone });
-      login(res.data.data.user, token!); // Update zustand store
+      login(res.data.data.user); // Update zustand store
       toast.success("Profile updated successfully");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update profile");

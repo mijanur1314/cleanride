@@ -4,6 +4,7 @@ import { Server as HttpServer } from 'http';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import prisma from './utils/prisma';
 import { Socket } from 'socket.io';
+const cookie = require('cookie');
 
 interface AuthenticatedSocket extends Socket {
   user: { id: string; role: string; [key: string]: unknown };
@@ -15,12 +16,19 @@ export const initSocket = (server: HttpServer, frontendUrl: string) => {
   io = new SocketIOServer(server, {
     cors: {
       origin: frontendUrl,
-      methods: ['GET', 'POST', 'PATCH', 'DELETE']
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      credentials: true
     }
   });
 
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+    let token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+    
+    if (!token && socket.handshake.headers.cookie) {
+      const parsedCookies = cookie.parse(socket.handshake.headers.cookie);
+      token = parsedCookies.token;
+    }
+
     if (!token) return next(new Error('Authentication error: No token provided'));
     const secret = env.JWT_SECRET;
     if (!secret) return next(new Error('Server configuration error'));

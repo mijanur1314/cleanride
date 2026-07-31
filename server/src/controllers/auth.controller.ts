@@ -35,7 +35,6 @@ const createSendToken = (user: User, statusCode: number, res: Response) => {
 
   res.status(statusCode).json({
     success: true,
-    token, // Kept for backward compatibility while migrating
     data: {
       user: userWithoutPassword,
     },

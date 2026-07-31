@@ -21,7 +21,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recha
 const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
 export default function PartnerDashboard() {
-  const { user, token, isAuthenticated, _hasHydrated, logout, login } = useAuthStore();
+  const { user, isAuthenticated, _hasHydrated, logout, login } = useAuthStore();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [images, setImages] = useState<{ [key: string]: { before: File | null, after: File | null, beforePreview?: string, afterPreview?: string } }>({});
@@ -34,15 +34,15 @@ export default function PartnerDashboard() {
 
   // Initialize Socket.io
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (isAuthenticated) {
       const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
       const newSocket = io(backendUrl, {
-        auth: { token }
+        withCredentials: true
       });
       setSocket(newSocket);
       return () => { newSocket.disconnect(); };
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated]);
 
   const handleUpdateLocation = () => {
     if (!navigator.geolocation) {
@@ -133,7 +133,7 @@ export default function PartnerDashboard() {
         try {
           const res = await api.get('/auth/me');
           if (res.data.data.user.isVerified) {
-            login(res.data.data.user, token || undefined);
+            login(res.data.data.user);
             toast.success("Account verified! Welcome to the Partner Hub.");
           }
         } catch (error) {
@@ -146,7 +146,7 @@ export default function PartnerDashboard() {
       const interval = setInterval(checkStatus, 10000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, user?.isVerified, token, login]);
+  }, [isAuthenticated, user?.isVerified, login]);
 
   const updateStatus = async (id: string, status: string) => {
     try {
