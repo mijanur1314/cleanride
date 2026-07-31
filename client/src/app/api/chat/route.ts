@@ -60,7 +60,6 @@ export async function POST(req: Request) {
       messages: coreMessages,
       onError: ({ error }) => {
         console.error('streamText error:', error);
-        require('fs').writeFileSync('chat-error.log', String(error) + '\n' + JSON.stringify(error));
       }
     });
 
