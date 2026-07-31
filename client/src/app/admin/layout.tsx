@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -15,7 +15,9 @@ import {
   Ticket,
   MapPin,
   BadgeCent,
-  Blocks
+  Blocks,
+  Menu,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +38,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isAuthenticated, _hasHydrated, logout } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -49,15 +57,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="dark flex h-screen bg-[#050505] text-gray-100 selection:bg-white/20 font-sans">
+    <div className="dark flex h-screen bg-[#050505] text-gray-100 selection:bg-white/20 font-sans overflow-hidden">
+      
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl absolute top-0 w-full z-20">
+        <Link href="/admin">
+          <h2 className="text-xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+            Admin Portal
+          </h2>
+        </Link>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-gray-300 hover:text-white">
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Sidebar Overlay (Mobile) */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-30 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0A0A0A]/80 backdrop-blur-xl border-r border-white/10 flex flex-col hidden md:flex z-10">
-        <div className="p-6 border-b border-white/5">
+      <aside className={cn(
+        "w-64 bg-[#0A0A0A]/95 backdrop-blur-xl border-r border-white/10 flex flex-col z-40 transition-transform duration-300 absolute md:relative h-full",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}>
+        <div className="p-6 border-b border-white/5 hidden md:block">
           <Link href="/admin">
             <h2 className="text-2xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
               Admin Portal
             </h2>
           </Link>
+        </div>
+        
+        {/* Mobile Sidebar Close Button */}
+        <div className="md:hidden p-4 border-b border-white/5 flex justify-end">
+          <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-gray-400 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
         </div>
         
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -97,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#050505]">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 bg-[#050505]">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>
