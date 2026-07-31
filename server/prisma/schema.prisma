@@ -42,6 +42,7 @@ model User {
   kycDocumentUrl String?
   kycSelfieUrl   String?
   isBanned       Boolean  @default(false)
+  pushSubscription Json?
   latitude       Float?
   longitude      Float?
   createdAt      DateTime @default(now())

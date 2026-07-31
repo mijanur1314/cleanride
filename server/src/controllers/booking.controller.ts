@@ -5,6 +5,7 @@ import prisma from '../utils/prisma';
 import { z } from 'zod';
 import { getIO } from '../socket';
 import { sendEmail } from '../utils/mailer';
+import { sendPushNotification } from '../utils/push';
 
 const bookingSchema = z.object({
   serviceId: z.string().uuid(),
@@ -116,7 +117,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
      <p>You have successfully booked <strong>${booking.service.name}</strong> for ${new Date(booking.bookingDate).toLocaleString()}.</p>
      <p>Total Amount: $${booking.totalAmount}</p>
      <p>We will assign a partner to you shortly.</p>`
-  );
+  ).catch(err => console.error('Failed to send email:', err));
 
   res.status(201).json({ success: true, data: { booking } });
 });
@@ -233,6 +234,19 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
       type: 'info'
     });
 
+    const u = updatedBooking.user as any;
+    if (u && u.pushSubscription) {
+      await sendPushNotification(
+        u.pushSubscription, 
+        JSON.stringify({
+          title: 'Booking Status Updated',
+          body: `Your booking is now ${status.replace(/_/g, ' ')}.`,
+          icon: '/icon512_maskable.png',
+          url: '/dashboard'
+        })
+      );
+    }
+
     if (status === 'COMPLETED' && updatedBooking.user) {
       // Award loyalty points (1 point per $1 spent)
       const pointsEarned = Math.floor(updatedBooking.totalAmount);
@@ -249,7 +263,7 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
          <p>Your vehicle wash service has been marked as <strong>COMPLETED</strong>.</p>
          <p>We hope you enjoy your clean ride. Please log in to your dashboard to leave a review!</p>
          <p>Thanks for choosing CleanRide.</p>`
-      );
+      ).catch(err => console.error('Failed to send email:', err));
     }
   }
 
@@ -298,7 +312,7 @@ export const assignPartner = catchAsync(async (req: Request, res: Response, next
          <p>Hi ${booking.user.name},</p>
          <p><strong>${booking.partner?.name || 'A partner'}</strong> has been assigned to your booking and will be arriving at your location.</p>
          <p>If you need to contact them, please reach out via the platform.</p>`
-      );
+      ).catch(err => console.error('Failed to send email:', err));
     }
   }
 

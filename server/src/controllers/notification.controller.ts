@@ -28,3 +28,18 @@ export const markAllAsRead = catchAsync(async (req: Request, res: Response, _nex
   });
   res.status(200).json({ success: true });
 });
+
+export const subscribeToPush = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, message: 'Invalid subscription object' });
+  }
+
+  // Cast subscription to any to bypass TS cache issues with Prisma
+  await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { pushSubscription: subscription } as any
+  });
+
+  res.status(200).json({ success: true, message: 'Subscribed to push notifications' });
+});

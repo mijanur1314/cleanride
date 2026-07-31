@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, User, Mail, Phone, Shield, Save } from "lucide-react";
+import { Loader2, User, Mail, Phone, Shield, Save, Bell } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SettingsPage() {
@@ -19,6 +19,51 @@ export default function SettingsPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const handleSubscribeToPush = async () => {
+    setIsSubscribing(true);
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        toast.error("Push notifications are not supported in this browser.");
+        return;
+      }
+      
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        toast.error("Permission for notifications was denied.");
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) throw new Error("VAPID key is missing");
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey)
+      });
+
+      await api.post("/notifications/subscribe", subscription);
+      toast.success("Successfully subscribed to real-time notifications!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to subscribe to notifications");
+      console.error(error);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -65,6 +110,9 @@ export default function SettingsPage() {
             </TabsTrigger>
             <TabsTrigger value="security" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left">
               <Shield className="w-4 h-4" /> Security
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left">
+              <Bell className="w-4 h-4" /> Notifications
             </TabsTrigger>
           </TabsList>
 
@@ -144,6 +192,32 @@ export default function SettingsPage() {
                     </div>
                     <Button variant="outline" className="border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white rounded-xl h-12 px-6 cursor-pointer" onClick={() => toast.info("Password update feature coming soon!")}>
                       Request Password Reset
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="notifications" className="m-0 focus-visible:outline-none">
+              <Card className="border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <CardHeader className="relative z-10 border-b border-white/5 pb-6">
+                  <CardTitle className="font-heading text-xl text-white">Push Notifications</CardTitle>
+                  <CardDescription className="text-gray-400 font-light">Receive real-time updates when your booking status changes.</CardDescription>
+                </CardHeader>
+                <CardContent className="relative z-10 pt-8 space-y-8">
+                  <div className="flex items-center justify-between p-6 bg-white/5 rounded-2xl border border-white/10">
+                    <div>
+                      <h4 className="text-white font-bold mb-1">Booking Updates</h4>
+                      <p className="text-sm text-gray-400">Get notified when a detailer is on their way, or when your wash is complete.</p>
+                    </div>
+                    <Button 
+                      onClick={handleSubscribeToPush} 
+                      disabled={isSubscribing}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide rounded-xl h-12 px-6"
+                    >
+                      {isSubscribing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
+                      Enable Push
                     </Button>
                   </div>
                 </CardContent>

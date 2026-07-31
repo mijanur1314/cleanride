@@ -16,7 +16,7 @@
 
 **An enterprise-grade, PWA-enabled vehicle washing platform built with Next.js 15 App Router, Express, Prisma ORM, Redis, WebSockets, and a complete multi-role dashboard for Customers, Partners, and Admins.**
 
-[Features](#-features) · [Tech Stack](#-tech-stack) · [Architecture](#-architecture) · [Getting Started](#-getting-started) · [API Reference](#-api-reference)
+[Features](#-features) · [Tech Stack](#-tech-stack) · [Architecture](#-architecture) · [Getting Started](#-getting-started)
 
 </div>
 
@@ -24,12 +24,14 @@
 
 ## 📌 Project Overview
 
-CleanRide is a **full-stack, premium vehicle washing and detailing platform** that allows customers to effortlessly book car and bike wash services. The platform supports both doorstep services and offline store appointments. It is built for massive scalability, utilizing a modern decoupled architecture featuring sub-10ms Redis caching, real-time WebSocket notifications, cloud object storage, and a Progressive Web App (PWA) client.
+CleanRide is a **full-stack, premium vehicle washing and detailing platform** that allows customers to effortlessly book car and bike wash services. The platform supports both doorstep services and offline physical store appointments across multiple branch locations. 
+
+It is built for massive scalability, utilizing a modern decoupled architecture featuring sub-10ms Redis caching, real-time WebSocket notifications, server-to-server Razorpay webhooks, and a Progressive Web App (PWA) client with native Web Push Notifications.
 
 The platform serves **three distinct user roles**:
-- 👤 **Users** — book wash services, subscribe to premium memberships, track real-time status, and leave reviews
-- 🧽 **Partners (Washers)** — view assigned bookings, update status, and upload before/after service proof images
-- 🛡️ **Admins** — oversee the platform, assign bookings to partners, and monitor revenue analytics
+- 👤 **Users** — book wash services, purchase premium subscriptions, redeem loyalty points, apply coupons, track real-time status, and leave reviews.
+- 🧽 **Partners (Washers)** — view assigned bookings, update status, and upload before/after service visual proof.
+- 🛡️ **Admins** — oversee the platform, assign bookings, manage subscriptions, create add-ons, distribute coupons, and monitor revenue analytics.
 
 ---
 
@@ -38,39 +40,38 @@ The platform serves **three distinct user roles**:
 ### 🚀 Advanced Tech Capabilities
 | Feature | Description |
 |---|---|
-| 📡 **Real-Time WebSockets** | Powered by `Socket.io`, users receive instant UI updates when a partner is assigned without refreshing the page. |
-| ⚡ **Redis Caching** | High-traffic endpoints like services and subscription plans are cached via `ioredis` for lightning-fast sub-10ms responses. |
-| 📱 **PWA (Progressive Web App)** | Installable directly to mobile home screens for a native app feel on iOS and Android. |
-| 💳 **Razorpay Integration** | Secure payment gateways for standard bookings and tiered Premium Memberships. |
-| 📧 **Automated Emails** | `Nodemailer` integration instantly emails customers and partners upon booking confirmations and assignments. |
-| ☁️ **Cloud Storage** | `Supabase Storage` and `Multer` securely handle multipart/form-data for image uploads (no local disk bloat). |
-| 🐳 **Dockerized CI/CD** | Fully containerized with `docker-compose` and automated GitHub Actions deployment pipelines. |
+| 📡 **Real-Time WebSockets** | Powered by `Socket.io`, users receive instant UI updates when a partner is assigned or a booking status changes. |
+| ⚡ **Redis Caching** | High-traffic endpoints like services, subscription plans, and stores are cached via `ioredis` for lightning-fast sub-10ms responses. |
+| 📱 **PWA + Web Push** | Installable directly to mobile home screens with native Web Push Notifications via standard VAPID protocols. |
+| 🛡️ **Secure Webhooks** | Automated server-to-server Razorpay webhooks guarantee payments are captured and subscriptions renewed securely in the background. |
+| 📧 **Asynchronous Emails** | Non-blocking `Nodemailer` integration instantly emails customers and partners without slowing down HTTP responses. |
+| ☁️ **Cloud Storage** | Securely handle multipart/form-data for image uploads without local disk bloat. |
+| 🐳 **Dockerized CI/CD** | Fully containerized with `docker-compose` and automated deployment pipelines. |
 
 ### 👤 Users
 | Feature | Description |
 |---|---|
-| 📅 **Dynamic Multi-Step Booking** | Seamless flow: Select Service → Vehicle Details → Schedule → Secure Checkout |
-| 💎 **Premium Subscriptions** | Purchase multi-tier membership plans via Razorpay for exclusive discounts. |
-| 📸 **Service Verification** | View before and after images uploaded by the assigned washing partner |
-| ⭐ **Review System** | Leave 5-star ratings and written reviews for completed washes |
+| 📅 **Dynamic Checkout Flow** | Seamless booking flow: Select Service → Choose Location/Doorstep → Apply Add-ons → Secure Checkout. |
+| 💎 **Premium Subscriptions** | Purchase multi-tier membership plans (Weekly, Monthly, Yearly) via Razorpay for exclusive discounts. |
+| 🪙 **CleanCoins (Loyalty System)** | Automatically earn loyalty points for every completed booking and redeem them for discounts at checkout. |
+| 🎟️ **Promotional Coupons** | Apply percentage or flat-rate discount codes directly at checkout. |
+| ➕ **Service Add-ons** | Dynamically attach optional extras (e.g., "Engine Bay Cleaning", "Odor Removal") to a primary booking. |
 
 ### 🧽 Washing Partners
 | Feature | Description |
 |---|---|
-| 📋 **Assignment Dashboard** | View a dedicated feed of all bookings assigned by the Admin |
-| 🔄 **Status Updates** | Update live booking statuses (`CONFIRMED`, `EN_ROUTE`, `WASH_IN_PROGRESS`, `COMPLETED`) |
-| 🗺️ **Google Maps Integration** | "Accept & Navigate" button instantly opens turn-by-turn driving directions to the customer's vehicle |
-| 📷 **Visual Proof Uploads** | Directly upload images to verify wash completion |
+| 📋 **Assignment Dashboard** | View a dedicated feed of all bookings assigned by the Admin. |
+| 🔄 **Live Status Updates** | Update live booking statuses (`EN_ROUTE`, `WASH_IN_PROGRESS`, `COMPLETED`). |
+| 📷 **Visual Proof Uploads** | Directly upload Before & After images to verify wash completion via cloud storage. |
 
 ### 🛡️ Admins
 | Feature | Description |
 |---|---|
-| 👥 **Manual Dispatching** | Assign unassigned bookings to specific available washing partners |
-| 📋 **Service Management** | Beautiful grid-based interface to manage premium wash packages and pricing (₹) |
-| 📈 **Platform Analytics** | High-level dashboard showing total revenue, active users, and booking volume |
-| ⚙️ **Global System Settings** | Configure dynamic tax rates, maintenance modes, and contact details |
-| 🎫 **Customer Support Tickets** | Built-in ticketing system to manage, reply to, and resolve customer issues |
-| 🚘 **Global Management** | Full overview of every customer, partner, and service happening on the platform |
+| 🏪 **Location Management** | Manage physical washing store branches, enabling users to book in-store rather than at their doorstep. |
+| 🎁 **Coupon & Promotion Engine** | Create, manage, and expire custom discount codes with minimum order values and total usage limits. |
+| 🛍️ **Up-sell Management** | Build and manage Service Add-ons and Premium Subscription Plans directly synced to Razorpay. |
+| 👥 **Manual Dispatching & Scalability** | Assign bookings to partners through a highly-scalable, paginated dashboard designed to handle tens of thousands of records smoothly. |
+| 📈 **Platform Analytics** | High-level dashboard showing total revenue, active users, and service distribution graphs. |
 
 ---
 
@@ -78,17 +79,15 @@ The platform serves **three distinct user roles**:
 
 | Category | Technology |
 |---|---|
-| **Frontend Framework** | Next.js 15 (App Router) + PWA |
+| **Frontend Framework** | Next.js 15 (App Router) + PWA + Service Workers |
 | **Backend Framework** | Node.js + Express.js |
 | **Language** | TypeScript (Strict) |
 | **Styling** | Tailwind CSS v4 + ShadCN UI + Framer Motion |
-| **State Management** | Zustand (Persistent Storage) |
-| **Database** | PostgreSQL (Supabase / Neon) |
+| **State Management** | Zustand (Persistent Storage) + React Query |
+| **Database** | PostgreSQL |
 | **Cache & Real-Time** | Redis + Socket.io |
 | **ORM** | Prisma |
-| **Payments** | Razorpay SDK |
-| **Authentication** | Custom JWT + bcryptjs |
-| **DevOps** | Docker + GitHub Actions |
+| **Payments** | Razorpay SDK + Server-to-Server Webhooks |
 
 ---
 
@@ -103,10 +102,12 @@ graph TD
     subgraph "Frontend (Next.js 15)"
     NextJS[App Router]
     SocketClient[Socket.io Client]
+    ServiceWorker[Web Push SW]
     end
 
     subgraph "Backend API (Express.js)"
     Controllers[Route Controllers]
+    Webhooks[Razorpay Webhook Handlers]
     SocketServer[Socket.io Server]
     RedisCache[Redis Middleware]
     end
@@ -114,7 +115,7 @@ graph TD
     subgraph "Infrastructure"
     PostgreSQL[(PostgreSQL DB)]
     Redis[(Redis Cluster)]
-    SupabaseStorage[Cloud Object Storage]
+    External[Razorpay APIs]
     end
 
     UserClient <-->|REST API| NextJS
@@ -124,7 +125,8 @@ graph TD
     Controllers <--> RedisCache
     RedisCache <--> Redis
     Controllers <--> PostgreSQL
-    Controllers --> SupabaseStorage
+    
+    Webhooks <--> External
 ```
 
 ---
@@ -136,7 +138,8 @@ graph TD
 - Docker Desktop (optional but recommended)
 - PostgreSQL Database URL
 - Redis URL
-- Razorpay API Keys
+- Razorpay API Keys & Webhook Secret
+- VAPID Keys (for push notifications)
 
 ---
 
@@ -174,10 +177,11 @@ DATABASE_URL="postgresql://user:pass@host:6543/postgres"
 JWT_SECRET="your_secret_key"
 RAZORPAY_KEY_ID="rzp_test_xxx"
 RAZORPAY_KEY_SECRET="xxx"
+RAZORPAY_WEBHOOK_SECRET="xxx"
 SMTP_HOST="smtp.ethereal.email"
 REDIS_URL="redis://localhost:6379"
-SUPABASE_URL="https://xxx.supabase.co"
-SUPABASE_KEY="xxx"
+VAPID_PUBLIC_KEY="xxx"
+VAPID_PRIVATE_KEY="xxx"
 ```
 
 Start the backend:
@@ -196,7 +200,7 @@ npm install
 Create `client/.env.local`:
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:5000/api"
-NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_test_xxx"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="xxx"
 ```
 
 Start the frontend:

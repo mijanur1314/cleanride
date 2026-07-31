@@ -136,43 +136,63 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
 });
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      createdAt: true,
-      loyaltyPoints: true,
-      isVerified: true,
-      kycDocumentUrl: true,
-      kycSelfieUrl: true,
-      isBanned: true
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  const [users, total] = await Promise.all([
+    prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        loyaltyPoints: true,
+        isVerified: true,
+        kycDocumentUrl: true,
+        kycSelfieUrl: true,
+        isBanned: true
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.user.count()
+  ]);
 
   res.status(200).json({
     success: true,
     results: users.length,
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
     data: { users }
   });
 });
 
 export const getAllBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
-  const bookings = await prisma.booking.findMany({
-    include: {
-      user: { select: { name: true, email: true } },
-      partner: { select: { name: true, email: true } },
-      service: { select: { name: true, price: true } },
-      bookingAddons: { select: { addon: { select: { name: true, price: true } } } }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  const [bookings, total] = await Promise.all([
+    prisma.booking.findMany({
+      include: {
+        user: { select: { name: true, email: true } },
+        partner: { select: { name: true, email: true } },
+        service: { select: { name: true, price: true } },
+        bookingAddons: { select: { addon: { select: { name: true, price: true } } } }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.booking.count()
+  ]);
 
   res.status(200).json({
     success: true,
     results: bookings.length,
+    pagination: { total, page, limit, pages: Math.ceil(total / limit) },
     data: { bookings }
   });
 });
@@ -206,7 +226,7 @@ export const assignPartnerToBooking = catchAsync(async (req: Request, res: Respo
 
   // Notify User
   if (booking.user) {
-    await sendEmail({
+    sendEmail({
       to: booking.user.email,
       subject: 'CleanRide - Partner Assigned to Your Booking',
       html: `
@@ -217,12 +237,12 @@ export const assignPartnerToBooking = catchAsync(async (req: Request, res: Respo
         <br/>
         <p>Thank you for choosing CleanRide!</p>
       `
-    });
+    }).catch(err => console.error('Failed to send email:', err));
   }
 
   // Notify Partner
   if (booking.partner) {
-    await sendEmail({
+    sendEmail({
       to: booking.partner.email,
       subject: 'CleanRide - New Booking Assigned to You',
       html: `
@@ -233,7 +253,7 @@ export const assignPartnerToBooking = catchAsync(async (req: Request, res: Respo
         <br/>
         <p>Best,<br/>CleanRide Admin</p>
       `
-    });
+    }).catch(err => console.error('Failed to send email:', err));
   }
 
   // Emit WebSocket Event to the User's personal room to trigger UI update

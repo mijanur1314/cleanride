@@ -114,7 +114,7 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
     }).catch(err => console.error('Failed to send email:', err));
   }
 
-  res.status(200).json({
+    res.status(200).json({
     success: true,
     message: 'Payment verified successfully',
   });

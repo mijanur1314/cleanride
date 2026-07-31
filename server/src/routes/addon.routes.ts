@@ -1,11 +1,15 @@
 import express from 'express';
-import { getAddons, createAddon } from '../controllers/addon.controller';
+import { getAddons, createAddon, updateAddon, deleteAddon } from '../controllers/addon.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
 
 const router = express.Router();
 
 router.get('/', getAddons);
 
-router.post('/', protect, restrictTo('ADMIN'), createAddon);
+router.use(protect, restrictTo('ADMIN'));
+
+router.post('/', createAddon);
+router.patch('/:id', updateAddon);
+router.delete('/:id', deleteAddon);
 
 export default router;

@@ -119,3 +119,86 @@ export const getMySubscription = catchAsync(async (req: Request, res: Response, 
 
   res.status(200).json({ success: true, data: { subscription } });
 });
+
+// --- ADMIN ROUTES ---
+
+export const getAllPlans = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const plans = await prisma.subscriptionPlan.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+  res.status(200).json({ success: true, data: { plans } });
+});
+
+export const createPlan = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { name, price, durationDays, benefits } = req.body;
+
+  if (!name || !price || !durationDays) {
+    return next(new AppError('Please provide name, price, and durationDays', 400));
+  }
+
+  // Create plan on Razorpay
+  let period: "daily" | "weekly" | "monthly" | "yearly" = 'daily';
+  let interval = parseInt(durationDays);
+
+  if (interval === 30) {
+    period = 'monthly';
+    interval = 1;
+  } else if (interval === 365) {
+    period = 'yearly';
+    interval = 1;
+  } else if (interval === 7) {
+    period = 'weekly';
+    interval = 1;
+  }
+
+  const rzpyPlan = await razorpay.plans.create({
+    period: period,
+    interval: interval,
+    item: {
+      name: name,
+      amount: parseInt(price) * 100, // Convert to paise
+      currency: "INR",
+      description: `CleanRide Subscription: ${name}`
+    }
+  }) as any;
+
+  if (!rzpyPlan || !rzpyPlan.id) {
+    return next(new AppError('Failed to generate plan in payment gateway', 500));
+  }
+
+  // Save to DB
+  const plan = await prisma.subscriptionPlan.create({
+    data: {
+      name,
+      price: parseFloat(price),
+      durationDays: parseInt(durationDays),
+      benefits: benefits || [],
+      razorpayPlanId: rzpyPlan.id
+    }
+  });
+
+  res.status(201).json({ success: true, data: { plan } });
+});
+
+export const updatePlan = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const { isActive, benefits, name } = req.body;
+  
+  const data: any = {};
+  if (isActive !== undefined) data.isActive = isActive;
+  if (benefits) data.benefits = benefits;
+  if (name) data.name = name;
+
+  const plan = await prisma.subscriptionPlan.update({
+    where: { id: req.params.id as string },
+    data
+  });
+
+  res.status(200).json({ success: true, data: { plan } });
+});
+
+export const deletePlan = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  await prisma.subscriptionPlan.delete({
+    where: { id: req.params.id as string }
+  });
+  res.status(204).json({ success: true, data: null });
+});

@@ -1,0 +1,240 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import api from "@/lib/axios";
+import { toast } from "sonner";
+import { Loader2, Plus, Trash2, Blocks, Search, Power, IndianRupee } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+
+export default function AdminAddonsPage() {
+  const [addons, setAddons] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  
+  // Create Form State
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+
+  const fetchAddons = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get("/addons");
+      setAddons(res.data.data.addons);
+    } catch (error) {
+      toast.error("Failed to load add-ons");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAddons();
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !price) {
+      toast.error("Please fill in required fields");
+      return;
+    }
+    
+    setIsCreating(true);
+    try {
+      await api.post("/addons", { name, description, price: Number(price) });
+      toast.success("Add-on created successfully");
+      setIsCreateOpen(false);
+      setName(""); setDescription(""); setPrice("");
+      fetchAddons();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to create add-on");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      await api.patch(`/addons/${id}`, { isActive: !currentStatus });
+      setAddons(addons.map(a => a.id === id ? { ...a, isActive: !currentStatus } : a));
+      toast.success(currentStatus ? "Add-on deactivated" : "Add-on activated");
+    } catch (error) {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this add-on?")) return;
+    try {
+      await api.delete(`/addons/${id}`);
+      setAddons(addons.filter(a => a.id !== id));
+      toast.success("Add-on deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete add-on");
+    }
+  };
+
+  const filteredAddons = addons.filter(a => 
+    a.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-heading font-bold text-white tracking-tight flex items-center gap-3">
+            <Blocks className="w-8 h-8 text-blue-500" />
+            Service Add-ons
+          </h1>
+          <p className="text-gray-400 mt-1">Manage optional up-sells like Interior Polish or Odor Removal.</p>
+        </div>
+
+        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-11 px-6 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+              <Plus className="w-4 h-4 mr-2" /> New Add-on
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-[#141414] border-white/10 text-white sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-heading text-xl">Create Add-on</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Offer optional extras to customers during booking.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreate} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Add-on Name <span className="text-red-500">*</span></Label>
+                <div className="relative">
+                  <Blocks className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input 
+                    value={name} 
+                    onChange={e => setName(e.target.value)} 
+                    placeholder="e.g. Interior Polish" 
+                    className="bg-black/50 border-white/10 pl-10 h-11" 
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Description (Optional)</Label>
+                <Input 
+                  value={description} 
+                  onChange={e => setDescription(e.target.value)} 
+                  placeholder="Deep clean and shine for the dashboard" 
+                  className="bg-black/50 border-white/10 h-11" 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Price (₹) <span className="text-red-500">*</span></Label>
+                <div className="relative">
+                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                  <Input 
+                    type="number" 
+                    value={price} 
+                    onChange={e => setPrice(e.target.value)} 
+                    placeholder="250" 
+                    className="bg-black/50 border-white/10 pl-10 h-11" 
+                  />
+                </div>
+              </div>
+
+              <DialogFooter className="mt-6">
+                <Button type="submit" disabled={isCreating} className="w-full h-11 bg-white text-black hover:bg-gray-200">
+                  {isCreating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Create Add-on
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card className="bg-[#141414] border-white/5 shadow-xl rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-white/5 bg-black/20 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Input 
+              placeholder="Search add-ons..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-black/40 border-white/10 pl-9 rounded-xl h-10 w-full"
+            />
+          </div>
+        </div>
+        
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-24">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+            </div>
+          ) : filteredAddons.length === 0 ? (
+            <div className="text-center py-24 text-gray-500 flex flex-col items-center">
+              <Blocks className="w-12 h-12 mb-4 text-gray-600" />
+              <p className="text-lg">No add-ons found</p>
+              <p className="text-sm">Create an up-sell to increase booking revenue.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left text-gray-300">
+                <thead className="text-xs uppercase bg-black/40 text-gray-500 border-b border-white/5">
+                  <tr>
+                    <th className="px-6 py-4 font-semibold">Name & Description</th>
+                    <th className="px-6 py-4 font-semibold">Price</th>
+                    <th className="px-6 py-4 font-semibold text-center">Status</th>
+                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {filteredAddons.map((addon) => (
+                    <tr key={addon.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-white text-base">{addon.name}</div>
+                        <div className="text-xs text-gray-500 mt-1 max-w-sm">{addon.description || "No description"}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-green-400 text-base">₹{addon.price}</div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => toggleStatus(addon.id, addon.isActive)}
+                          className={`p-2 rounded-full transition-all ${
+                            addon.isActive
+                              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                          }`}
+                          title={addon.isActive ? "Deactivate" : "Activate"}
+                        >
+                          <Power className="w-4 h-4" />
+                        </button>
+                        <div className="text-[10px] mt-1 font-medium uppercase tracking-wider">
+                           {addon.isActive ? <span className="text-green-500">Active</span> : <span className="text-red-500">Disabled</span>}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleDelete(addon.id)}
+                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

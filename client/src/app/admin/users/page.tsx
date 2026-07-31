@@ -14,11 +14,16 @@ import { format } from "date-fns";
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<any>(null);
+  const limit = 10;
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get("/admin/users");
+      setLoading(true);
+      const res = await api.get(`/admin/users?page=${page}&limit=${limit}`);
       setUsers(res.data.data.users);
+      setPagination(res.data.pagination);
     } catch (error) {
       toast.error("Failed to load users");
     } finally {
@@ -28,7 +33,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [page]);
 
   const verifyPartner = async (userId: string, isVerified: boolean) => {
     try {
@@ -210,6 +215,30 @@ export default function AdminUsers() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {pagination && pagination.pages > 1 && (
+        <div className="flex justify-between items-center bg-card border rounded-lg p-4 mt-6">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.pages}
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
+            disabled={page === pagination.pages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -29,3 +29,54 @@ export const getActiveCoupons = catchAsync(async (req: Request, res: Response, _
 
   res.status(200).json({ success: true, results: coupons.length, data: { coupons } });
 });
+
+export const getAllCoupons = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const coupons = await prisma.coupon.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+  res.status(200).json({ success: true, results: coupons.length, data: { coupons } });
+});
+
+export const createCoupon = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { code, discountPercentage, maxDiscount, validUntil } = req.body;
+  if (!code || !discountPercentage || !validUntil) {
+    return next(new AppError('Please provide code, discount percentage, and expiry date', 400));
+  }
+
+  const existing = await prisma.coupon.findUnique({ where: { code: code.toUpperCase() } });
+  if (existing) return next(new AppError('Coupon code already exists', 400));
+
+  const coupon = await prisma.coupon.create({
+    data: {
+      code: code.toUpperCase(),
+      discountPercentage: parseFloat(discountPercentage),
+      maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
+      validUntil: new Date(validUntil)
+    }
+  });
+
+  res.status(201).json({ success: true, data: { coupon } });
+});
+
+export const updateCoupon = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const { isActive, validUntil } = req.body;
+  
+  const data: any = {};
+  if (isActive !== undefined) data.isActive = isActive;
+  if (validUntil) data.validUntil = new Date(validUntil);
+
+  const coupon = await prisma.coupon.update({
+    where: { id: req.params.id as string },
+    data
+  });
+
+  res.status(200).json({ success: true, data: { coupon } });
+});
+
+export const deleteCoupon = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  await prisma.coupon.delete({
+    where: { id: req.params.id as string }
+  });
+
+  res.status(204).json({ success: true, data: null });
+});
