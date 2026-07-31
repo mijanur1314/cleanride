@@ -12,15 +12,15 @@ self.addEventListener('push', function (event: any) {
         url: data.url || '/'
       }
     };
-    event.waitUntil(self.registration.showNotification(data.title, options));
+    event.waitUntil((self as any).registration.showNotification(data.title, options));
   }
 });
 
 self.addEventListener('notificationclick', function (event: any) {
   event.notification.close();
   if (event.notification.data && event.notification.data.url) {
-    event.waitUntil(clients.openWindow(event.notification.data.url));
+    event.waitUntil((self as any).clients.openWindow(event.notification.data.url));
   } else {
-    event.waitUntil(clients.openWindow('/dashboard'));
+    event.waitUntil((self as any).clients.openWindow('/dashboard'));
   }
 });
