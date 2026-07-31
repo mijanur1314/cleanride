@@ -41,6 +41,7 @@ The platform serves **three distinct user roles**:
 | Feature | Description |
 |---|---|
 | 📡 **Real-Time WebSockets** | Powered by `Socket.io`, users receive instant UI updates when a partner is assigned or a booking status changes. |
+| 🤖 **AI Support Assistant** | Integrated Google Gemini Generative AI provides intelligent, context-aware 24/7 customer support via streaming chat. |
 | ⚡ **Redis Caching** | High-traffic endpoints like services, subscription plans, and stores are cached via `ioredis` for lightning-fast sub-10ms responses. |
 | 📱 **PWA + Web Push** | Installable directly to mobile home screens with native Web Push Notifications via standard VAPID protocols. |
 | 🛡️ **Secure Webhooks** | Automated server-to-server Razorpay webhooks guarantee payments are captured and subscriptions renewed securely in the background. |
@@ -56,6 +57,7 @@ The platform serves **three distinct user roles**:
 | 🪙 **CleanCoins (Loyalty System)** | Automatically earn loyalty points for every completed booking and redeem them for discounts at checkout. |
 | 🎟️ **Promotional Coupons** | Apply percentage or flat-rate discount codes directly at checkout. |
 | ➕ **Service Add-ons** | Dynamically attach optional extras (e.g., "Engine Bay Cleaning", "Odor Removal") to a primary booking. |
+| 💬 **AI Customer Support** | Chat with a smart AI assistant to answer questions about packages, pricing, or locations. |
 
 ### 🧽 Washing Partners
 | Feature | Description |
@@ -86,6 +88,7 @@ The platform serves **three distinct user roles**:
 | **State Management** | Zustand (Persistent Storage) + React Query |
 | **Database** | PostgreSQL |
 | **Cache & Real-Time** | Redis + Socket.io |
+| **Artificial Intelligence** | @ai-sdk/google (Gemini 2.5 Flash) |
 | **ORM** | Prisma |
 | **Payments** | Razorpay SDK + Server-to-Server Webhooks |
 
@@ -201,6 +204,7 @@ Create `client/.env.local`:
 ```env
 NEXT_PUBLIC_API_URL="http://localhost:5000/api"
 NEXT_PUBLIC_VAPID_PUBLIC_KEY="xxx"
+GEMINI_API_KEY="xxx"
 ```
 
 Start the frontend:
