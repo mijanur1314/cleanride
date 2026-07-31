@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 
 export default function Home() {
   const router = useRouter();
@@ -93,27 +94,20 @@ export default function Home() {
 
         <div className="container px-6 mx-auto relative z-20 flex flex-col items-center text-center">
           <div className="max-w-4xl flex flex-col items-center mt-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-block mb-8"
-            >
-              <span className="px-5 py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-md text-sm font-bold tracking-widest uppercase text-gray-300 shadow-xl">
-                Premium Doorstep Detailing
-              </span>
-            </motion.div>
-            
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-6xl md:text-8xl font-extrabold tracking-tighter leading-[1.1] mb-8"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Showroom <br className="md:hidden" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-500">Perfection.</span>
-            </motion.h1>
+
+            <div className="relative">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-white/5 rounded-[100%] blur-[100px] pointer-events-none" />
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-6xl md:text-8xl font-extrabold tracking-tighter leading-[1.1] mb-8 relative z-10"
+                style={{ fontFamily: 'var(--font-heading)' }}
+              >
+                Showroom <br className="md:hidden" />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-600 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]">Perfection.</span>
+              </motion.h1>
+            </div>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -227,26 +221,65 @@ export default function Home() {
 
       {/* Brand Trust Section */}
       <section className="py-12 border-y border-white/5 bg-[#0A0A0A]">
-        <div className="container mx-auto px-6 text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="container mx-auto px-6 text-center"
+        >
           <p className="text-sm font-semibold tracking-widest text-gray-600 uppercase mb-8">Trusted by owners of</p>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-40 grayscale">
-            {/* Using text for brands to maintain aesthetic without needing external SVGs */}
             <h3 className="text-2xl font-bold tracking-tighter" style={{ fontFamily: 'var(--font-heading)' }}>PORSCHE</h3>
             <h3 className="text-2xl font-bold tracking-widest">TESLA</h3>
             <h3 className="text-2xl font-serif italic">Mercedes-Benz</h3>
             <h3 className="text-3xl font-black tracking-tighter">BMW</h3>
             <h3 className="text-2xl font-bold tracking-widest">AUDI</h3>
           </div>
+        </motion.div>
+      </section>
+
+      {/* Interactive Showcase Section */}
+      <section className="py-32 relative bg-[#0A0A0A] overflow-hidden">
+        {/* Glow effect */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="container px-6 mx-auto relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4" style={{ fontFamily: 'var(--font-heading)' }}>See The <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-600">Difference.</span></h2>
+            <p className="text-gray-400 text-lg md:text-xl font-light max-w-2xl mx-auto">Slide to reveal the showroom perfection. We strip away months of grime and protect your investment.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <BeforeAfterSlider />
+          </motion.div>
         </div>
       </section>
 
       {/* Services/Packages Section (Car Rental Card Style) */}
       <section className="py-32 relative bg-[#0A0A0A]">
         <div className="container px-6 mx-auto">
-          <div className="flex justify-between items-end mb-16">
+          <motion.div 
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="flex justify-between items-end mb-16"
+          >
             <div>
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4" style={{ fontFamily: 'var(--font-heading)' }}>Elite Packages</h2>
-              <p className="text-gray-400 text-lg">Select the tier that matches your vehicle's needs.</p>
+              <p className="text-gray-400 text-lg font-light">Select the tier that matches your vehicle's needs.</p>
             </div>
             <div className="hidden md:flex gap-4">
               <button className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors">
@@ -256,7 +289,7 @@ export default function Home() {
                 <ChevronRight className="w-6 h-6" />
               </button>
             </div>
-          </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <PackageCard 
@@ -305,15 +338,15 @@ export default function Home() {
                 onClick={() => {
                   import('sonner').then((mod) => mod.toast.info("Our iOS and Android apps are launching soon! Stay tuned."));
                 }}
-                className="bg-white text-black hover:bg-gray-200 rounded-full px-8 h-14 text-lg font-bold"
+                className="cursor-pointer bg-white text-black hover:bg-gray-200 rounded-full px-8 h-14 text-lg font-bold"
               >
                 Download App
               </Button>
               <Button 
                 size="lg" 
                 variant="outline" 
-                onClick={() => router.push('/dashboard')}
-                className="border-white/20 hover:bg-white/5 rounded-full px-8 h-14 text-lg bg-transparent text-white"
+                onClick={() => router.push('/memberships')}
+                className="cursor-pointer border-white/20 hover:bg-white/5 rounded-full px-8 h-14 text-lg bg-transparent text-white"
               >
                 View Membership
               </Button>

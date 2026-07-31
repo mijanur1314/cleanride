@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -21,8 +22,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { SocketProvider } from "@/components/SocketProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import ConditionalFooter from "@/components/ConditionalFooter";
 import { Toaster } from "sonner";
+import AIChatbot from "@/components/AIChatbot";
 
 export default function RootLayout({
   children,
@@ -46,11 +48,13 @@ export default function RootLayout({
             <SocketProvider>
               <Navbar />
               <main className="flex-1">{children}</main>
-              <Footer />
+              <ConditionalFooter />
               <Toaster theme="dark" position="top-center" />
+              <AIChatbot />
             </SocketProvider>
           </QueryProvider>
         </ThemeProvider>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       </body>
     </html>
   );

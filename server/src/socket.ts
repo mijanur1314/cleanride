@@ -74,6 +74,27 @@ export const initSocket = (server: HttpServer, frontendUrl: string) => {
       }
     });
 
+    socket.on('update-location', async (data: { bookingId: string, lat: number, lng: number }) => {
+      try {
+        const booking = await prisma.booking.findUnique({ where: { id: data.bookingId } });
+        if (!booking) return socket.emit('error', { message: 'Booking not found' });
+        // Only the assigned partner can update their location
+        if (booking.partnerId !== user.id) {
+          return socket.emit('error', { message: 'Unauthorized to update location for this booking' });
+        }
+        
+        // Broadcast the location to the booking room
+        io.to(`booking_${data.bookingId}`).emit('location-updated', {
+          bookingId: data.bookingId,
+          lat: data.lat,
+          lng: data.lng,
+          timestamp: new Date().toISOString()
+        });
+      } catch(err) {
+        console.error('Error updating location:', err);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: User ${user.id}`);
     });

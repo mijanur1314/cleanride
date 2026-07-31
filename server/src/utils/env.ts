@@ -23,6 +23,7 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_KEY: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),
+  GEMINI_API_KEY: z.string().optional(), // Optional for users who don't configure AI yet
 });
 
 const _env = envSchema.safeParse(process.env);

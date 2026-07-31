@@ -28,6 +28,7 @@ interface BookingState {
   setPartnerId: (partnerId: string | null) => void;
   nextStep: () => void;
   prevStep: () => void;
+  setStep: (step: number) => void;
   resetBooking: () => void;
 }
 
@@ -59,6 +60,7 @@ export const useBookingStore = create<BookingState>((set) => ({
   
   nextStep: () => set((state) => ({ step: state.step + 1 })),
   prevStep: () => set((state) => ({ step: state.step > 1 ? state.step - 1 : 1 })),
+  setStep: (step) => set({ step }),
   resetBooking: () => set({
     service: null,
     vehicleCategory: null,

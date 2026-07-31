@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,13 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialRole = searchParams.get('role') === 'PARTNER' ? 'PARTNER' : 'USER';
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
-  const [role, setRole] = useState<"USER" | "PARTNER">("USER");
+  const [role, setRole] = useState<"USER" | "PARTNER">(initialRole);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -186,5 +188,13 @@ export default function RegisterPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

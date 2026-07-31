@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Car, CheckCircle2, Upload, Image as ImageIcon, UserCircle2, MapPin } from "lucide-react";
+import { Loader2, Car, CheckCircle2, Upload, Image as ImageIcon, UserCircle2, MapPin, Sparkles, Mic, MicOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const VEHICLE_CATEGORIES: Record<string, string[]> = {
@@ -26,7 +26,7 @@ const VEHICLE_CATEGORIES: Record<string, string[]> = {
 export default function BookingPage() {
   const router = useRouter();
   const { user, _hasHydrated } = useAuthStore();
-  const { step, nextStep, prevStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
+  const { step, nextStep, prevStep, setStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
   
   const [services, setServices] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -35,8 +35,122 @@ export default function BookingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingPartners, setIsFetchingPartners] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isAiAssessing, setIsAiAssessing] = useState(false);
+  const [aiRecommendation, setAiRecommendation] = useState<{ dirtLevel: string; recommendedPackage: string; reason: string } | null>(null);
+  
+  // Voice Booking State
+  const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [isVoiceParsing, setIsVoiceParsing] = useState(false);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const startVoiceBooking = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice Booking is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => {
+      setIsListening(true);
+      setVoiceTranscript("Listening to your request...");
+    };
+    
+    recognition.onresult = async (event: any) => {
+      const text = event.results[0][0].transcript;
+      setVoiceTranscript(`Parsing: "${text}"`);
+      setIsVoiceParsing(true);
+      
+      try {
+        const res = await fetch('/api/ai/parse-booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: text })
+        });
+        
+        if (!res.ok) throw new Error("Failed to parse");
+        
+        const data = await res.json();
+        
+        toast.success("Voice command understood!");
+        
+        // Auto fill & Auto Advance Logic
+        let targetStep = 1;
+
+        if (data.serviceName && services.length > 0) {
+           const normalizedAI = data.serviceName.toLowerCase().replace(/[^a-z0-9]/g, '');
+           const found = services.find(s => {
+             const normalizedDB = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+             return normalizedDB.includes(normalizedAI) || normalizedAI.includes(normalizedDB) || normalizedAI.includes('deepclean') && normalizedDB.includes('signaturedetail') || normalizedAI.includes('basic') && normalizedDB.includes('express');
+           });
+           if (found) {
+             setService(found);
+             targetStep = 2; // Jump to Vehicle step
+           }
+        }
+        
+        if (data.vehicleType) {
+           let foundCat = "";
+           let foundType = data.vehicleType;
+           const searchType = data.vehicleType.toLowerCase().replace(/s$/, ''); // remove trailing s for matching
+           
+           for (const [cat, types] of Object.entries(VEHICLE_CATEGORIES)) {
+             const match = types.find(t => t.toLowerCase().includes(searchType) || searchType.includes(t.toLowerCase().replace(/s$/, '')));
+             if (match) {
+               foundCat = cat;
+               foundType = match;
+             }
+           }
+           if (foundCat) {
+             setVehicleDetails(foundCat, foundType, vehicleName || "", vehicleNumber || undefined);
+             if (targetStep === 2) targetStep = 3; // If service was also found, jump to Schedule
+           }
+        }
+        
+        if (data.date) {
+           setBookingDate(new Date(data.date));
+           if (targetStep === 3) targetStep = 4; // If previous info is present, jump to Partner
+        }
+        
+        if (data.address) {
+           setLocation(data.address);
+        }
+        
+        // Auto-advance the user based on how much the AI understood
+        if (targetStep > 1) {
+          setStep(targetStep);
+          setTimeout(() => {
+             toast.info("Magic! We auto-filled and skipped steps for you.", { duration: 4000 });
+          }, 500);
+        }
+        
+        setVoiceTranscript(`Success! Found: ${data.serviceName || 'Any Service'}, ${data.vehicleType || 'Any Vehicle'}`);
+        setTimeout(() => setVoiceTranscript(""), 4000);
+      } catch (err) {
+        toast.error("Could not parse voice request.");
+        setVoiceTranscript("");
+      } finally {
+        setIsVoiceParsing(false);
+      }
+    };
+    
+    recognition.onerror = (event: any) => {
+      setIsListening(false);
+      setVoiceTranscript("");
+      toast.error("Microphone error. Please try again.");
+    };
+    
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+    
+    recognition.start();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fromStep1 = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -46,12 +160,46 @@ export default function BookingPage() {
 
     try {
       const res = await api.post("/upload", formData);
-      useBookingStore.getState().setVehicleImage(res.data.data.url);
-      toast.success("Vehicle image uploaded successfully!");
+      const uploadedUrl = res.data.data.url;
+      useBookingStore.getState().setVehicleImage(uploadedUrl);
+      
+      if (fromStep1) {
+        toast.success("Image uploaded! AI is analyzing your vehicle...");
+        await runAiAssessment(uploadedUrl);
+      } else {
+        toast.success("Vehicle image uploaded successfully!");
+      }
     } catch (error) {
       toast.error("Failed to upload image. Please try again.");
     } finally {
       setIsUploadingImage(false);
+    }
+  };
+
+  const runAiAssessment = async (imageUrl: string) => {
+    setIsAiAssessing(true);
+    try {
+      const res = await fetch('/api/ai/assess-vehicle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl })
+      });
+      
+      if (!res.ok) throw new Error("Assessment failed");
+      
+      const data = await res.json();
+      setAiRecommendation(data);
+      toast.success(`AI recommends: ${data.recommendedPackage}`);
+      
+      // Auto-select the recommended service if it exists
+      const recommendedService = services.find(s => s.name.toLowerCase() === data.recommendedPackage.toLowerCase());
+      if (recommendedService) {
+        setService(recommendedService);
+      }
+    } catch (error) {
+      toast.error("AI Assessment failed, but you can still choose manually.");
+    } finally {
+      setIsAiAssessing(false);
     }
   };
 
@@ -140,6 +288,100 @@ export default function BookingPage() {
           <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              
+              {/* Voice Booking Section */}
+              <div className="mb-6 relative overflow-hidden rounded-3xl border border-white/10 bg-[#141414] p-6 text-center shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                  <Mic className="w-24 h-24 text-white" />
+                </div>
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-gray-400" />
+                    <span className="text-xs font-bold uppercase tracking-widest text-gray-400">AI Voice Booking</span>
+                  </div>
+                  <p className="text-sm text-gray-300 mb-4 max-w-sm font-light">Tap the microphone and tell us what you need. <br/> <span className="opacity-70">"I need a Deep Clean for my SUV tomorrow at 10 AM..."</span></p>
+                  
+                  <button 
+                    onClick={startVoiceBooking}
+                    disabled={isListening || isVoiceParsing}
+                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] ${
+                      isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.5)]' : 
+                      isVoiceParsing ? 'bg-white/50 text-black cursor-not-allowed opacity-80' : 
+                      'bg-white text-black hover:bg-gray-200 hover:scale-110 hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]'
+                    }`}
+                  >
+                    {isVoiceParsing ? <Loader2 className="w-6 h-6 animate-spin" /> : 
+                     isListening ? <Mic className="w-6 h-6" /> : 
+                     <Mic className="w-6 h-6" />}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {voiceTranscript && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className="mt-4 px-4 py-2 bg-black/40 border border-white/10 rounded-xl max-w-md mx-auto backdrop-blur-md"
+                      >
+                        <p className="text-sm font-medium text-white">
+                          {isListening && <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse mr-2" />}
+                          {voiceTranscript}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* AI Smart Assessment Section */}
+              <div className="mb-10 relative overflow-hidden rounded-3xl border border-white/10 bg-[#141414] p-8 text-center shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <Sparkles className="w-24 h-24 text-white" />
+                </div>
+                <div className="relative z-10">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white/5 text-gray-300 mb-4 border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-heading font-bold text-white mb-2">AI Smart Assessment</h3>
+                  <p className="text-gray-400 mb-6 max-w-lg mx-auto font-light">Not sure which package you need? Upload a photo of your car, and our Gemini AI will analyze the dirt level and recommend the perfect wash.</p>
+                  
+                  {isAiAssessing ? (
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <Loader2 className="w-8 h-8 animate-spin text-gray-300 mb-3" />
+                      <p className="text-gray-300 font-medium animate-pulse">Gemini AI is analyzing your vehicle...</p>
+                    </div>
+                  ) : aiRecommendation ? (
+                    <div className="bg-black/40 border border-white/10 rounded-2xl p-6 text-left max-w-xl mx-auto backdrop-blur-sm">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                          <img src={vehicleImageUrl || ''} className="w-full h-full object-cover" alt="Uploaded car" />
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-1">AI Recommendation</p>
+                          <p className="text-xl font-bold text-white mb-1">{aiRecommendation.recommendedPackage}</p>
+                          <p className="text-sm text-gray-300"><span className="opacity-60">Dirt Level:</span> {aiRecommendation.dirtLevel}</p>
+                          <p className="text-sm text-gray-400 mt-2 font-light border-l-2 border-white/20 pl-3 italic">"{aiRecommendation.reason}"</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative inline-block group">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, true)}
+                        disabled={isUploadingImage}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
+                      />
+                      <Button disabled={isUploadingImage} className="bg-white text-black hover:bg-gray-200 font-bold px-8 h-12 rounded-full pointer-events-none transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] group-hover:scale-105">
+                        {isUploadingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                        {isUploadingImage ? "Uploading..." : "Upload Photo for AI Recommendation"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {services.map((s) => (
                   <Card 
@@ -279,7 +521,7 @@ export default function BookingPage() {
                       <input 
                         type="file" 
                         accept="image/*"
-                        onChange={handleImageUpload}
+                        onChange={(e) => handleImageUpload(e, false)}
                         disabled={isUploadingImage}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
                       />
@@ -586,7 +828,7 @@ function PaymentStep({ availableAddons, partners }: { availableAddons: { id: str
           
           <div className="pt-8 border-t border-white/5">
             <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block mb-2">Coupon Code</Label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Input 
                 placeholder="Enter promo code" 
                 value={couponCode} 
@@ -605,7 +847,7 @@ function PaymentStep({ availableAddons, partners }: { availableAddons: { id: str
             <div className="pt-8 border-t border-white/5">
               <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 block mb-2">Redeem Loyalty Points</Label>
               <p className="text-xs font-light text-gray-400 mb-4">You have <strong className="text-white">{user.loyaltyPoints}</strong> points available (10 points = ₹1)</p>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <Input 
                   type="number"
                   min={0}

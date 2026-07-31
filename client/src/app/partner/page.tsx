@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import io, { Socket } from "socket.io-client";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
@@ -29,6 +30,19 @@ export default function PartnerDashboard() {
   const [activeTab, setActiveTab] = useState<'jobs' | 'earnings'>('jobs');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  // Initialize Socket.io
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+      const newSocket = io(backendUrl, {
+        auth: { token }
+      });
+      setSocket(newSocket);
+      return () => { newSocket.disconnect(); };
+    }
+  }, [isAuthenticated, token]);
 
   const handleUpdateLocation = () => {
     if (!navigator.geolocation) {
@@ -66,13 +80,49 @@ export default function PartnerDashboard() {
     enabled: isAuthenticated && user?.role === 'PARTNER',
   });
 
+  const activeBookings = useMemo(() => bookings.filter((b: any) => b.status !== 'COMPLETED'), [bookings]);
+
+  // Live Map Tracking: Broadcast Location when EN_ROUTE
+  useEffect(() => {
+    let watchId: number;
+    const activeEnRoute = activeBookings.find((b: any) => b.status === 'EN_ROUTE');
+    
+    if (activeEnRoute && socket && navigator.geolocation) {
+      console.log(`Starting live tracking for booking: ${activeEnRoute.id}`);
+      
+      // We must explicitly join the booking room to emit to it properly if backend expects it
+      // though our backend 'update-location' only needs the bookingId.
+      socket.emit('join-booking', activeEnRoute.id);
+      
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          socket.emit('update-location', {
+            bookingId: activeEnRoute.id,
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Live tracking error:", error);
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      );
+    }
+
+    return () => {
+      if (watchId && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [activeBookings, socket]);
+
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {
-      router.push("/login");
+      router.replace("/login");
     }
     
     if (user && user.role !== 'PARTNER') {
-      router.push("/");
+      router.replace("/");
     }
   }, [isAuthenticated, user, router, _hasHydrated]);
 
@@ -162,7 +212,6 @@ export default function PartnerDashboard() {
   };
 
   const completedBookings = useMemo(() => bookings.filter((b: any) => b.status === 'COMPLETED'), [bookings]);
-  const activeBookings = useMemo(() => bookings.filter((b: any) => b.status !== 'COMPLETED'), [bookings]);
   const lifetimeEarnings = useMemo(() => completedBookings.reduce((sum: any, b: any) => sum + (b.totalAmount * 0.7), 0), [completedBookings]);
 
   const chartData = useMemo(() => {

@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Users, CalendarCheck, DollarSign, Activity, Loader2, AlertCircle, TrendingUp, Medal, CheckCircle2 } from "lucide-react";
 import { format, isPast, addHours } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Car, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AIReviewSummary } from "@/components/AIReviewSummary";
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
@@ -60,7 +62,9 @@ export default function AdminDashboard() {
 
   if (!data) return null;
 
-  const { stats, recentBookings, revenueByDay, topPartners, assignmentQueue, availablePartners } = data;
+  const { stats, recentBookings, revenueByDay, topPartners, assignmentQueue, availablePartners, vehicleDistribution, serviceDistribution } = data;
+
+  const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'];
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -206,8 +210,79 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Operations Queue */}
-      <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Vehicle Distribution Chart */}
+        <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Car className="w-5 h-5 text-indigo-400" />
+              Vehicle Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={vehicleDistribution || []}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {(vehicleDistribution || []).map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Service Package Popularity */}
+        <Card className="bg-white/5 backdrop-blur-md border-white/10 shadow-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="w-5 h-5 text-amber-400" />
+              Top Services
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={serviceDistribution || []} layout="vertical" margin={{ left: 50 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.1} />
+                  <XAxis type="number" axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} width={100} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}
+                    cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                  />
+                  <Bar dataKey="value" fill="#ec4899" radius={[0, 4, 4, 0]}>
+                    {(serviceDistribution || []).map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      {/* Operations & AI Insights */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Operations Queue */}
+        <Card className="col-span-1 lg:col-span-2 bg-white/5 backdrop-blur-md border-white/10 shadow-xl">
         <CardHeader>
           <CardTitle>Operations & Dispatch</CardTitle>
           <CardDescription>Manage incoming bookings and dispatch partners</CardDescription>
@@ -338,6 +413,12 @@ export default function AdminDashboard() {
           </Tabs>
         </CardContent>
       </Card>
+
+        {/* AI Review Summary */}
+        <div className="col-span-1">
+          <AIReviewSummary />
+        </div>
+      </div>
     </div>
   );
 }

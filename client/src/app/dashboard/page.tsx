@@ -17,6 +17,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Plus, MessageCircle, Clock, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChatBox } from "@/components/ChatBox";
+import dynamic from "next/dynamic";
+
+const LiveMap = dynamic(() => import("@/components/LiveMap").then(mod => mod.LiveMap), { ssr: false });
 
 export default function UserDashboard() {
   const { user, isAuthenticated, _hasHydrated } = useAuthStore();
@@ -77,7 +80,7 @@ export default function UserDashboard() {
     if (!_hasHydrated) return;
     
     if (!isAuthenticated) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 
@@ -236,6 +239,30 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* Loyalty Rewards Banner */}
+        <Link href="/rewards" className="block mt-6 group">
+          <Card className="border-yellow-500/30 bg-gradient-to-br from-[#141414] to-yellow-900/10 rounded-3xl relative overflow-hidden transition-all duration-300 hover:shadow-[0_0_30px_rgba(234,179,8,0.15)] hover:scale-[1.02]">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Star className="w-20 h-20 text-yellow-500 fill-yellow-500" />
+            </div>
+            <CardHeader className="pb-2 border-b border-white/5 relative z-10">
+              <CardTitle className="text-sm uppercase tracking-widest font-bold text-yellow-500 flex items-center gap-2">
+                <Star className="w-4 h-4 fill-yellow-500" />
+                CleanRide Rewards
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 relative z-10">
+              <p className="text-2xl font-bold text-white mb-1 flex items-baseline gap-2">
+                {user?.loyaltyPoints || 0} <span className="text-sm font-medium text-gray-400 uppercase tracking-widest">PTS</span>
+              </p>
+              <p className="text-sm text-gray-400 font-light mb-4">View your tier, unlock perks, and earn more points.</p>
+              <div className="text-xs font-bold uppercase tracking-widest text-yellow-500 flex items-center gap-1 group-hover:gap-2 transition-all">
+                View Rewards <span className="text-lg leading-none">→</span>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
         </div>
 
         {/* Right Column: Content */}
@@ -333,36 +360,44 @@ export default function UserDashboard() {
                       )}
                     </div>
                   </div>
-                  <div className="bg-black/40 p-6 rounded-3xl border border-white/5 w-full lg:w-72 lg:shrink-0 flex flex-col items-center justify-center shadow-lg">
-                    <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2 text-center">Total Amount</p>
-                    <p className="text-4xl font-black font-heading text-white text-center">₹{booking.totalAmount}</p>
-                    {booking.coupon && (
-                      <Badge variant="outline" className="mt-2 text-[10px] text-green-400 border-green-500/20 bg-green-500/10 tracking-widest uppercase">
-                        Coupon Applied
+                  <div className="flex flex-col gap-4 w-full lg:w-72 lg:shrink-0">
+                    <div className="bg-black/40 p-6 rounded-3xl border border-white/5 flex flex-col items-center justify-center shadow-lg">
+                      <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2 text-center">Total Amount</p>
+                      <p className="text-4xl font-black font-heading text-white text-center">₹{booking.totalAmount}</p>
+                      {booking.coupon && (
+                        <Badge variant="outline" className="mt-2 text-[10px] text-green-400 border-green-500/20 bg-green-500/10 tracking-widest uppercase">
+                          Coupon Applied
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className={`mt-3 mb-6 text-[10px] tracking-widest uppercase ${
+                        (booking.payment?.status || 'PENDING') === 'COMPLETED' 
+                          ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                          : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                      }`}>
+                        Payment: {booking.payment?.status || 'PENDING'}
                       </Badge>
-                    )}
-                    <Badge variant="outline" className={`mt-3 mb-6 text-[10px] tracking-widest uppercase ${
-                      (booking.payment?.status || 'PENDING') === 'COMPLETED' 
-                        ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                        : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                    }`}>
-                      Payment: {booking.payment?.status || 'PENDING'}
-                    </Badge>
-                    {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
-                      <Button variant="outline" className="w-full gap-2 border-white/10 text-gray-300 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl mb-3 h-12" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
-                        <MessageCircle className="w-4 h-4" />
-                        Message Detailer
-                      </Button>
-                    ) : null}
-                    
-                    {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
-                      <div className="w-full flex gap-2">
-                        <Button variant="outline" className="flex-1 text-red-400 border-red-500/20 bg-red-500/5 hover:bg-red-500/10 hover:text-red-300 rounded-xl h-10 text-xs tracking-widest uppercase font-bold" onClick={() => setCancelModal(booking.id)}>
-                          Cancel
+                      {booking.status === 'CONFIRMED' || booking.status === 'PARTNER_ASSIGNED' || booking.status === 'EN_ROUTE' || booking.status === 'WASH_IN_PROGRESS' || booking.status === 'REVIEW_PENDING' ? (
+                        <Button variant="outline" className="w-full gap-2 border-white/10 text-gray-300 bg-white/5 hover:bg-white/10 hover:text-white rounded-xl mb-3 h-12" onClick={() => setActiveChat({ bookingId: booking.id, partnerName: booking.partner?.name || 'Partner' })}>
+                          <MessageCircle className="w-4 h-4" />
+                          Message Detailer
                         </Button>
-                        <Button variant="outline" className="flex-1 text-white border-white/10 bg-white/5 hover:bg-white/10 rounded-xl h-10 text-xs tracking-widest uppercase font-bold" onClick={() => setRescheduleModal(booking.id)}>
-                          Move
-                        </Button>
+                      ) : null}
+                      
+                      {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
+                        <div className="w-full flex gap-2">
+                          <Button variant="outline" className="flex-1 text-red-400 border-red-500/20 bg-red-500/5 hover:bg-red-500/10 hover:text-red-300 rounded-xl h-10 text-xs tracking-widest uppercase font-bold" onClick={() => setCancelModal(booking.id)}>
+                            Cancel
+                          </Button>
+                          <Button variant="outline" className="flex-1 text-white border-white/10 bg-white/5 hover:bg-white/10 rounded-xl h-10 text-xs tracking-widest uppercase font-bold" onClick={() => setRescheduleModal(booking.id)}>
+                            Move
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    {/* Live Tracking Map for EN_ROUTE */}
+                    {booking.status === 'EN_ROUTE' && (
+                      <div className="h-64 w-full">
+                        <LiveMap bookingId={booking.id} />
                       </div>
                     )}
                   </div>
@@ -377,7 +412,7 @@ export default function UserDashboard() {
                         <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2">
                           <Camera className="w-4 h-4" /> Service Images
                         </h4>
-                        <div className="flex gap-4">
+                        <div className="flex flex-col md:flex-row gap-4">
                           {booking.beforeImageUrl && (
                             <div className="flex-1 group relative">
                               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl z-10 flex items-end p-3">

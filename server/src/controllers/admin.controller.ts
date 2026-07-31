@@ -91,6 +91,30 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
     }
   });
 
+  // Vehicle Distribution
+  const vehicleGroups = await prisma.booking.groupBy({
+    by: ['vehicleType'],
+    _count: { id: true }
+  });
+  const vehicleDistribution = vehicleGroups.map(v => ({
+    name: v.vehicleType,
+    value: v._count.id
+  }));
+
+  // Service Distribution
+  const serviceGroups = await prisma.booking.groupBy({
+    by: ['serviceId'],
+    _count: { id: true }
+  });
+  
+  // Need to get service names
+  const allServices = await prisma.service.findMany({ select: { id: true, name: true } });
+  const serviceMap = new Map(allServices.map(s => [s.id, s.name]));
+  const serviceDistribution = serviceGroups.map(s => ({
+    name: serviceMap.get(s.serviceId) || 'Unknown',
+    value: s._count.id
+  }));
+
   res.status(200).json({
     success: true,
     data: {
@@ -104,7 +128,9 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
       revenueByDay,
       topPartners,
       assignmentQueue,
-      availablePartners: allPartners
+      availablePartners: allPartners,
+      vehicleDistribution,
+      serviceDistribution
     }
   });
 });

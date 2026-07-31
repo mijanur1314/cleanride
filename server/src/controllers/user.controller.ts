@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
+import { verifyKYCDocument } from '../utils/ai';
 
 export const getUsers = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const users = await prisma.user.findMany({
@@ -169,19 +170,27 @@ export const updateKyc = catchAsync(async (req: Request, res: Response, next: Ne
     return next(new AppError('Please provide both KYC document URL and Selfie URL.', 400));
   }
 
+  // AI Verification
+  const verificationResult = await verifyKYCDocument(kycDocumentUrl);
+  const isVerified = verificationResult.isValid && verificationResult.confidence > 0.8;
+
   const updatedUser = await prisma.user.update({
     where: { id: req.user!.id },
     data: {
       kycDocumentUrl,
       kycSelfieUrl,
+      isVerified,
     },
   });
 
   res.status(200).json({
     success: true,
-    message: 'KYC Document submitted successfully',
+    message: isVerified 
+      ? `KYC Document verified successfully automatically! (Confidence: ${(verificationResult.confidence * 100).toFixed(1)}%)` 
+      : 'KYC Document submitted and is pending manual review.',
     data: {
       user: updatedUser,
+      verificationResult
     },
   });
 });
