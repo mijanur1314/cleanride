@@ -72,13 +72,5 @@ jest.mock('../src/utils/email', () => ({
 }));
 
 afterAll(async () => {
-  // Disconnect any potentially open handles
-  try {
-    const redis = await import('../src/utils/redis');
-    if (redis.default) {
-      await redis.default.quit();
-    }
-  } catch (e) {
-    // ignore
-  }
+  // Setup is mocked fully
 });

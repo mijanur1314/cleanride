@@ -247,8 +247,8 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
       type: 'info'
     });
 
-    if (updatedBooking.user && (updatedBooking.user as { pushSubscription?: unknown }).pushSubscription) {
-      const pushSubscription = (updatedBooking.user as { pushSubscription: string }).pushSubscription;
+    if (updatedBooking.user && (updatedBooking.user as any).pushSubscription) {
+      const pushSubscription = (updatedBooking.user as any).pushSubscription;
       await sendPushNotification(
         pushSubscription, 
         JSON.stringify({
@@ -384,9 +384,9 @@ export const cancelMyBooking = catchAsync(async (req: Request, res: Response, ne
       data: { status: 'CANCELLED' }
     });
 
-    if (booking.payment && booking.payment.status === 'COMPLETED' && booking.payment.razorpayPaymentId) {
+    if (booking.payment && booking.payment.status === 'COMPLETED' && booking.payment.razorpayId) {
       try {
-        await razorpay.payments.refund(booking.payment.razorpayPaymentId);
+        await razorpay.payments.refund(booking.payment.razorpayId, { speed: 'normal' });
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         throw new AppError(`Failed to process refund: ${errorMessage}`, 500);
