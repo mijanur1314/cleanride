@@ -49,8 +49,8 @@ export const createCoupon = catchAsync(async (req: Request, res: Response, next:
   const coupon = await prisma.coupon.create({
     data: {
       code: code.toUpperCase(),
-      discountPercentage: parseFloat(discountPercentage),
-      maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
+      discountPercentage: parseInt(discountPercentage, 10),
+      maxDiscount: maxDiscount ? parseInt(maxDiscount, 10) : null,
       validUntil: new Date(validUntil)
     }
   });
@@ -61,7 +61,7 @@ export const createCoupon = catchAsync(async (req: Request, res: Response, next:
 export const updateCoupon = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const { isActive, validUntil } = req.body;
   
-  const data: any = {};
+  const data: Record<string, unknown> = {};
   if (isActive !== undefined) data.isActive = isActive;
   if (validUntil) data.validUntil = new Date(validUntil);
 

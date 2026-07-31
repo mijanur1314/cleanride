@@ -5,6 +5,13 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://dummy:dummy@localhost:5432/dummy';
 process.env.RAZORPAY_KEY_ID = 'test_key_id';
 process.env.RAZORPAY_KEY_SECRET = 'test_key_secret';
+delete process.env.REDIS_URL;
+
+jest.mock('../src/utils/redis', () => ({
+  __esModule: true,
+  default: null,
+  cacheRoute: jest.fn(() => (req: any, res: any, next: any) => next())
+}));
 
 jest.mock('../src/utils/prisma', () => ({
   __esModule: true,
@@ -46,7 +53,11 @@ jest.mock('razorpay', () => {
   return jest.fn().mockImplementation(() => {
     return {
       orders: {
-        create: jest.fn().mockResolvedValue({ id: 'order_test123' })
+        create: jest.fn().mockResolvedValue({ id: 'order_test123' }),
+        fetch: jest.fn().mockResolvedValue({ id: 'order_test123', status: 'paid', amount: 50000 })
+      },
+      payments: {
+        refund: jest.fn().mockResolvedValue({ id: 'refund_test123' })
       }
     };
   });
@@ -59,3 +70,15 @@ jest.mock('../src/utils/mailer', () => ({
 jest.mock('../src/utils/email', () => ({
   sendEmail: jest.fn().mockResolvedValue(true)
 }));
+
+afterAll(async () => {
+  // Disconnect any potentially open handles
+  try {
+    const redis = await import('../src/utils/redis');
+    if (redis.default) {
+      await redis.default.quit();
+    }
+  } catch (e) {
+    // ignore
+  }
+});

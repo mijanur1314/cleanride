@@ -38,6 +38,7 @@ export const subscribeToPush = catchAsync(async (req: Request, res: Response, _n
   // Cast subscription to any to bypass TS cache issues with Prisma
   await prisma.user.update({
     where: { id: req.user!.id },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: { pushSubscription: subscription } as any
   });
 

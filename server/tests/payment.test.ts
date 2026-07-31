@@ -72,7 +72,9 @@ describe('Payment Boundaries', () => {
       (prisma.payment.findFirst as jest.Mock).mockResolvedValueOnce({
         id: 'pay-db-123',
         bookingId: 'booking-123',
-        amount: 50
+        amount: 500,
+        booking: { userId: 'dummy-user' },
+        status: 'PENDING'
       });
       (prisma.$transaction as jest.Mock).mockResolvedValueOnce({
         booking: { id: 'booking-123', user: { email: 'test@example.com', name: 'Test User' }, service: { name: 'Basic Wash' } }

@@ -56,7 +56,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   ...(redisClient && {
     store: new RedisStore({
-      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
+      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as unknown as Promise<unknown>,
     }),
   }),
 });
@@ -68,7 +68,7 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   ...(redisClient && {
     store: new RedisStore({
-      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
+      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as unknown as Promise<unknown>,
     }),
   }),
 });

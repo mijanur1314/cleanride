@@ -4,6 +4,7 @@ import { Server as HttpServer } from 'http';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import prisma from './utils/prisma';
 import { Socket } from 'socket.io';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const cookie = require('cookie');
 
 interface AuthenticatedSocket extends Socket {

@@ -46,7 +46,7 @@ export const createSubscription = catchAsync(async (req: Request, res: Response,
 
   const options = {
     plan_id: plan.razorpayPlanId,
-    customer_notify: 1 as 1,
+    customer_notify: 1 as const,
     total_count: 120, // 10 years of monthly billing, can be cancelled anytime
   };
 
@@ -160,7 +160,7 @@ export const createPlan = catchAsync(async (req: Request, res: Response, next: N
       currency: "INR",
       description: `CleanRide Subscription: ${name}`
     }
-  }) as any;
+  }) as { id: string };
 
   if (!rzpyPlan || !rzpyPlan.id) {
     return next(new AppError('Failed to generate plan in payment gateway', 500));
@@ -183,7 +183,7 @@ export const createPlan = catchAsync(async (req: Request, res: Response, next: N
 export const updatePlan = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const { isActive, benefits, name } = req.body;
   
-  const data: any = {};
+  const data: Record<string, unknown> = {};
   if (isActive !== undefined) data.isActive = isActive;
   if (benefits) data.benefits = benefits;
   if (name) data.name = name;

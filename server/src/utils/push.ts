@@ -12,17 +12,19 @@ if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
   console.warn('⚠️ Web Push VAPID keys are missing. Push notifications will not work.');
 }
 
-export const sendPushNotification = async (subscription: any, payload: string) => {
+export const sendPushNotification = async (subscription: webpush.PushSubscription, payload: string) => {
   if (!subscription) return false;
   
   try {
     await webpush.sendNotification(subscription, payload);
     return true;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error sending push notification:', error);
     // If the subscription is no longer valid (e.g. user revoked permission)
-    if (error.statusCode === 410 || error.statusCode === 404) {
-      return 'INVALID_SUBSCRIPTION';
+    if (typeof error === 'object' && error !== null && 'statusCode' in error) {
+      if ((error as { statusCode: number }).statusCode === 410 || (error as { statusCode: number }).statusCode === 404) {
+        return 'INVALID_SUBSCRIPTION';
+      }
     }
     return false;
   }

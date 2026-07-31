@@ -3,14 +3,9 @@ import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
-import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import { sendEmail } from '../utils/email';
-
-const razorpay = new Razorpay({
-  key_id: env.RAZORPAY_KEY_ID,
-  key_secret: env.RAZORPAY_KEY_SECRET,
-});
+import { razorpay } from '../utils/razorpay';
 
 export const createOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { bookingId } = req.body;
@@ -76,10 +71,29 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
   // Update payment status
   const payment = await prisma.payment.findFirst({
     where: { razorpayId: razorpay_order_id },
+    include: { booking: true }
   });
 
   if (!payment) {
     return next(new AppError('Payment record not found', 404));
+  }
+
+  if (payment.status === 'COMPLETED') {
+    return res.status(200).json({ success: true, message: 'Payment already verified' });
+  }
+
+  if (payment.booking.userId !== req.user!.id) {
+    return next(new AppError('Unauthorized access to this booking payment', 403));
+  }
+
+  const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
+  if (rzpOrder.status !== 'paid') {
+    return next(new AppError('Order is not marked as paid in Razorpay', 400));
+  }
+  
+  const expectedAmountInPaise = Math.round(payment.amount * 100);
+  if (rzpOrder.amount !== expectedAmountInPaise) {
+    return next(new AppError('Amount mismatch between order and database', 400));
   }
 
   const result = await prisma.$transaction(async (tx) => {

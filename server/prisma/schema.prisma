@@ -71,7 +71,7 @@ model Service {
   id          String   @id @default(uuid())
   name        String
   description String
-  price       Float
+  price       Int
   duration    Int      // Duration in minutes
   imageUrl    String?
   isActive    Boolean  @default(true)
@@ -107,7 +107,7 @@ model Booking {
   address       String?       // Address for doorstep service
   bookingDate   DateTime
   status        BookingStatus @default(PENDING)
-  totalAmount   Float
+  totalAmount   Int
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -133,7 +133,7 @@ model Booking {
 model Payment {
   id            String        @id @default(uuid())
   bookingId     String        @unique
-  amount        Float
+  amount        Int
   status        PaymentStatus @default(PENDING)
   razorpayId    String?       // Razorpay payment/order ID
   createdAt     DateTime      @default(now())
@@ -158,8 +158,8 @@ model Review {
 model Coupon {
   id                 String   @id @default(uuid())
   code               String   @unique
-  discountPercentage Float
-  maxDiscount        Float?
+  discountPercentage Int
+  maxDiscount        Int?
   validUntil         DateTime
   isActive           Boolean  @default(true)
   createdAt          DateTime @default(now())
@@ -171,7 +171,7 @@ model Coupon {
 model SubscriptionPlan {
   id           String   @id @default(uuid())
   name         String
-  price        Float
+  price        Int
   durationDays Int
   benefits     String[]
   isActive     Boolean  @default(true)
@@ -227,7 +227,7 @@ model Addon {
   id          String   @id @default(uuid())
   name        String
   description String?
-  price       Float
+  price       Int
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -239,7 +239,7 @@ model BookingAddon {
   id        String   @id @default(uuid())
   bookingId String
   addonId   String
-  price     Float    // Store price at time of booking
+  price     Int    // Store price at time of booking
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

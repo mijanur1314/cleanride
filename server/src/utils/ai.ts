@@ -1,7 +1,9 @@
 import { env } from './env';
 
 // We have to use dynamic import because @google/genai is an ESM-only module
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let aiClient: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let aiType: any = null;
 
 const initAI = async () => {

@@ -20,19 +20,19 @@ export const createAddon = catchAsync(async (req: Request, res: Response, next: 
   }
 
   const addon = await prisma.addon.create({
-    data: { name, description, price: parseFloat(price) }
+    data: { name, description, price: parseInt(price, 10) }
   });
 
   res.status(201).json({ success: true, data: { addon } });
 });
 
-export const updateAddon = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const updateAddon = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const { name, description, price, isActive } = req.body;
   
-  const data: any = {};
+  const data: Record<string, unknown> = {};
   if (name) data.name = name;
   if (description !== undefined) data.description = description;
-  if (price !== undefined) data.price = parseFloat(price);
+  if (price !== undefined) data.price = parseInt(price, 10);
   if (isActive !== undefined) data.isActive = isActive;
 
   const addon = await prisma.addon.update({
@@ -43,7 +43,7 @@ export const updateAddon = catchAsync(async (req: Request, res: Response, next: 
   res.status(200).json({ success: true, data: { addon } });
 });
 
-export const deleteAddon = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const deleteAddon = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   await prisma.addon.delete({
     where: { id: req.params.id as string }
   });

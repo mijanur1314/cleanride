@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { getIO } from '../socket';
 import { sendEmail } from '../utils/mailer';
 import { sendPushNotification } from '../utils/push';
+import { razorpay } from '../utils/razorpay';
 
 const bookingSchema = z.object({
   serviceId: z.string().uuid(),
@@ -18,7 +19,6 @@ const bookingSchema = z.object({
   bookingDate: z.string().datetime(),
   couponId: z.string().uuid().optional(),
   addonIds: z.array(z.string().uuid()).optional(),
-  partnerId: z.string().uuid().optional(),
   redeemPoints: z.number().int().min(0).optional(),
 });
 
@@ -26,7 +26,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
   const parsed = bookingSchema.safeParse(req.body);
   if (!parsed.success) return next(new AppError('Invalid input data', 400));
 
-  const { serviceId, storeId, vehicleType, vehicleName, vehicleNumber, vehicleImage, address, bookingDate, couponId, addonIds, partnerId, redeemPoints } = parsed.data;
+  const { serviceId, storeId, vehicleType, vehicleName, vehicleNumber, vehicleImage, address, bookingDate, couponId, addonIds, redeemPoints } = parsed.data;
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
   if (!service) return next(new AppError('Service not found', 404));
@@ -45,20 +45,23 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
   if (couponId) {
     const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
     if (coupon && coupon.isActive && new Date(coupon.validUntil) >= new Date()) {
+      // Check if user already used this coupon
+      const previousUsage = await prisma.booking.findFirst({
+        where: { userId: req.user!.id, couponId: coupon.id, status: { not: 'CANCELLED' } }
+      });
+      
+      if (previousUsage) {
+        return next(new AppError('You have already used this coupon', 400));
+      }
+
       const discount = (service.price * coupon.discountPercentage) / 100;
       finalAmount -= coupon.maxDiscount ? Math.min(discount, coupon.maxDiscount) : discount;
+    } else {
+      return next(new AppError('Invalid or expired coupon', 400));
     }
   }
 
-  if (redeemPoints) {
-    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
-    if (!user || user.loyaltyPoints < redeemPoints) {
-      return next(new AppError('Insufficient loyalty points', 400));
-    }
-    const discount = redeemPoints * 0.1;
-    finalAmount -= discount;
-    if (finalAmount < 0) finalAmount = 0;
-  }
+  // We will check and decrement loyalty points atomically in the transaction
 
   // VIP Subscription Check: If user has an active subscription, the base service is free
   const activeSubscription = await prisma.userSubscription.findFirst({
@@ -76,11 +79,22 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 
   const booking = await prisma.$transaction(async (tx) => {
     if (redeemPoints) {
+      const user = await tx.user.findUnique({ where: { id: req.user!.id } });
+      if (!user || user.loyaltyPoints < redeemPoints) {
+        throw new AppError('Insufficient loyalty points', 400);
+      }
+      
+      const discount = redeemPoints * 0.1;
+      finalAmount -= discount;
+      if (finalAmount < 0) finalAmount = 0;
+
       await tx.user.update({
         where: { id: req.user!.id },
         data: { loyaltyPoints: { decrement: redeemPoints } }
       });
     }
+
+    finalAmount = Math.round(finalAmount);
 
     return await tx.booking.create({
       data: {
@@ -95,7 +109,6 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
         bookingDate: new Date(bookingDate),
         totalAmount: finalAmount,
         couponId,
-        partnerId,
         status: finalAmount === 0 ? 'CONFIRMED' : 'PENDING',
         bookingAddons: {
           create: addons.map((addon: { id: string; price: number }) => ({
@@ -214,7 +227,7 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
     return next(new AppError('You are not authorized to update this booking', 403));
   }
 
-  const updateData: any = { status };
+  const updateData: Record<string, unknown> = { status };
   if (status === 'WASH_IN_PROGRESS') {
     updateData.arrivalTime = new Date();
   } else if (status === 'COMPLETED') {
@@ -234,10 +247,10 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
       type: 'info'
     });
 
-    const u = updatedBooking.user as any;
-    if (u && u.pushSubscription) {
+    if (updatedBooking.user && (updatedBooking.user as { pushSubscription?: unknown }).pushSubscription) {
+      const pushSubscription = (updatedBooking.user as { pushSubscription: string }).pushSubscription;
       await sendPushNotification(
-        u.pushSubscription, 
+        pushSubscription, 
         JSON.stringify({
           title: 'Booking Status Updated',
           body: `Your booking is now ${status.replace(/_/g, ' ')}.`,
@@ -371,7 +384,13 @@ export const cancelMyBooking = catchAsync(async (req: Request, res: Response, ne
       data: { status: 'CANCELLED' }
     });
 
-    if (booking.payment && booking.payment.status === 'COMPLETED') {
+    if (booking.payment && booking.payment.status === 'COMPLETED' && booking.payment.razorpayPaymentId) {
+      try {
+        await razorpay.payments.refund(booking.payment.razorpayPaymentId);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        throw new AppError(`Failed to process refund: ${errorMessage}`, 500);
+      }
       await tx.payment.update({
         where: { id: booking.payment.id },
         data: { status: 'REFUNDED' }

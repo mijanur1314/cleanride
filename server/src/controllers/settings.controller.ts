@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
-import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 
 export const getSettings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
@@ -22,7 +21,7 @@ export const getSettings = catchAsync(async (req: Request, res: Response, _next:
   });
 });
 
-export const updateSettings = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const updateSettings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const { siteName, supportEmail, contactPhone, taxRate, enableNotifications, maintenanceMode } = req.body;
 
   const settings = await prisma.systemSetting.upsert({

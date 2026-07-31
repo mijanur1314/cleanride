@@ -92,8 +92,8 @@ export const getAvailablePartners = catchAsync(async (req: Request, res: Respons
       return { ...partner, distance };
     })
     // Filter out partners further than 30km and sort by distance
-    .filter((p: any) => p.distance <= 30)
-    .sort((a: any, b: any) => a.distance - b.distance);
+    .filter((p: { distance: number }) => p.distance <= 30)
+    .sort((a: { distance: number }, b: { distance: number }) => a.distance - b.distance);
   }
 
   res.status(200).json({
