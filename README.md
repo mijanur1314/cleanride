@@ -1,4 +1,4 @@
-# 🚗 CleanRide — Premium Full-Stack Vehicle Washing Platform
+# 🚗 CleanRide — Premium AI-Powered Full-Stack Vehicle Washing Platform
 
 <div align="center">
 
@@ -24,9 +24,9 @@
 
 ## 📌 Project Overview
 
-CleanRide is a **full-stack, premium vehicle washing and detailing platform** that allows customers to effortlessly book car and bike wash services. The platform supports both doorstep services and offline physical store appointments across multiple branch locations. 
+CleanRide is a **full-stack, premium AI-powered vehicle washing and detailing platform** that allows customers to effortlessly book car and bike wash services. The platform supports both doorstep services and offline physical store appointments across multiple branch locations. 
 
-It is built for massive scalability, utilizing a modern decoupled architecture featuring sub-10ms Redis caching, real-time WebSocket notifications, server-to-server Razorpay webhooks, and a Progressive Web App (PWA) client with native Web Push Notifications.
+It is built for massive scalability, utilizing a modern decoupled architecture featuring sub-10ms Redis caching, real-time WebSocket notifications, server-to-server Razorpay webhooks, and a Progressive Web App (PWA) client with native Web Push Notifications. Additionally, a built-in **Generative AI Assistant** (powered by Google Gemini) provides users with instant, context-aware customer support.
 
 The platform serves **three distinct user roles**:
 - 👤 **Users** — book wash services, purchase premium subscriptions, redeem loyalty points, apply coupons, track real-time status, and leave reviews.
