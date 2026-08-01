@@ -303,6 +303,7 @@ export default function UserDashboard() {
                     <h3 className="font-bold text-2xl font-heading text-white">{booking.service?.name}</h3>
                     <Badge variant="outline" className={`text-[10px] uppercase tracking-widest px-2.5 py-1 ${
                       booking.status === 'COMPLETED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                      booking.status === 'CANCELLED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
                       booking.status === 'PENDING' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
                       'bg-blue-500/10 text-blue-400 border-blue-500/20'
                     }`}>

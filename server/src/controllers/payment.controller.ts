@@ -32,7 +32,8 @@ export const createOrder = catchAsync(async (req: Request, res: Response, next: 
     order = await razorpay.orders.create(options);
   } catch (error: any) {
     console.error('Razorpay Error:', error);
-    return next(new AppError(error.description || error.message || 'Failed to create payment order with Razorpay', 500));
+    const msg = error.error?.description || error.description || error.message || 'Failed to create payment order with Razorpay';
+    return next(new AppError(msg, 400));
   }
 
   // Create or update payment record

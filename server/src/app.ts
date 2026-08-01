@@ -55,10 +55,11 @@ const authLimiter = rateLimit({
   message: 'Too many login attempts from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   ...(redisClient && {
     store: new RedisStore({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
+      sendCommand: (...args: string[]) => redisClient!.status === 'ready' ? (redisClient!.call(args[0], ...args.slice(1)) as any) : Promise.reject(new Error('Redis is not ready')),
     }),
   }),
 });
@@ -68,10 +69,11 @@ const apiLimiter = rateLimit({
   max: 1000, // standard API limit (increased for development)
   standardHeaders: true,
   legacyHeaders: false,
+  passOnStoreError: true,
   ...(redisClient && {
     store: new RedisStore({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
+      sendCommand: (...args: string[]) => redisClient!.status === 'ready' ? (redisClient!.call(args[0], ...args.slice(1)) as any) : Promise.reject(new Error('Redis is not ready')),
     }),
   }),
 });

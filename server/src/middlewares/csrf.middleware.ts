@@ -29,11 +29,17 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
   }
 
   // For mutating methods, verify the token matches the header
-  // For mutating methods, verify the token matches the header
   const headerToken = req.headers['x-xsrf-token'];
-  console.log('CSRF Check:', { method: req.method, path: req.path, cookie: req.cookies['XSRF-TOKEN'], header: headerToken });
   if (!headerToken || headerToken !== csrfToken) {
-    return next(new AppError('Invalid CSRF token', 403));
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid CSRF token Debug',
+      debug: {
+        cookies: req.cookies,
+        csrfTokenInCookie: csrfToken,
+        headerToken: headerToken
+      }
+    });
   }
 
   next();

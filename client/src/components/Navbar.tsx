@@ -8,7 +8,7 @@ import { Menu, Bell, Star, Sun, Moon, User, LayoutDashboard, LogOut, Settings, X
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from './ui/dropdown-menu';
 import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -113,6 +113,7 @@ export default function Navbar() {
         
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-10 text-sm font-semibold tracking-wide text-gray-300 uppercase">
+          <Link href="/" className="hover:text-white transition-colors">Home</Link>
           <Link href="/services" className="hover:text-white transition-colors">Packages</Link>
           <Link href="/memberships" className="hover:text-white transition-colors flex items-center gap-1">
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /> VIP
@@ -170,6 +171,16 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-[#1A1A1A] border-white/10 text-white shadow-2xl rounded-xl z-[100]">
+                  <DropdownMenuLabel className="font-normal px-4 py-3">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none text-white">{user.name}</p>
+                      <p className="text-xs leading-none text-gray-400">{user.email}</p>
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-blue-400 mt-2 border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 rounded-full w-fit">
+                        {user.role}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/10 mx-2" />
                   <DropdownMenuItem className="py-3 px-4 focus:bg-white/10 cursor-pointer" asChild>
                     <Link href={user.role === 'ADMIN' ? '/admin' : user.role === 'PARTNER' ? '/partner' : '/dashboard'} className="flex items-center w-full">
                       <LayoutDashboard className="w-4 h-4 mr-3 text-gray-400" />
@@ -210,6 +221,7 @@ export default function Navbar() {
       {/* Mobile Menu Overlay */}
       <div className={`fixed inset-0 bg-[#0A0A0A]/95 backdrop-blur-2xl z-40 transition-all duration-300 md:hidden flex flex-col pt-24 px-6 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="flex flex-col gap-6 text-xl font-heading font-medium tracking-wide text-white mb-8">
+          <Link href="/" onClick={() => setMobileMenuOpen(false)} className="border-b border-white/10 pb-4">Home</Link>
           <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="border-b border-white/10 pb-4">Packages</Link>
           <Link href="/memberships" onClick={() => setMobileMenuOpen(false)} className="border-b border-white/10 pb-4 flex items-center gap-2">
             VIP Memberships <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -231,6 +243,13 @@ export default function Navbar() {
 
         {user && (
           <div className="flex flex-col gap-4 mt-auto mb-12">
+            <div className="flex flex-col mb-4 px-5 py-4 bg-white/5 rounded-2xl border border-white/10">
+              <span className="font-bold text-white text-xl">{user.name}</span>
+              <span className="text-sm text-gray-400 font-sans mt-1">{user.email}</span>
+              <span className="text-xs font-bold font-sans text-blue-400 uppercase tracking-widest mt-3 border border-blue-500/30 bg-blue-500/10 px-3 py-1 rounded-full w-fit">
+                {user.role}
+              </span>
+            </div>
             <Link href={user.role === 'ADMIN' ? '/admin' : user.role === 'PARTNER' ? '/partner' : '/dashboard'} onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full bg-white text-black hover:bg-gray-200 h-12 rounded-xl text-lg font-bold">Dashboard</Button>
             </Link>

@@ -6,11 +6,14 @@ import { MessageCircle, X, Send, Bot, User as UserIcon } from 'lucide-react';
 import { DefaultChatTransport } from 'ai';
 import ReactMarkdown from 'react-markdown';
 import { useAuthStore } from '../store/useAuthStore';
+import { motion, useAnimation, PanInfo } from 'framer-motion';
 
 export default function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLeft, setIsLeft] = useState(false);
   const { user } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const controls = useAnimation();
 
   const [input, setInput] = useState('');
 
@@ -46,19 +49,36 @@ export default function AIChatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const screenWidth = document.documentElement.clientWidth;
+    if (info.point.x < screenWidth / 2) {
+      setIsLeft(true);
+      controls.start({ x: -(screenWidth - 108), transition: { type: 'spring', stiffness: 300, damping: 25 } });
+    } else {
+      setIsLeft(false);
+      controls.start({ x: 0, transition: { type: 'spring', stiffness: 300, damping: 25 } });
+    }
+  };
+
   return (
     <>
       {/* Floating Button */}
-      <button
+      <motion.button
+        drag
+        dragConstraints={{ top: -800, bottom: 0 }}
+        dragElastic={0.1}
+        dragMomentum={false}
+        animate={controls}
+        onDragEnd={handleDragEnd}
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 rounded-full bg-zinc-900 border border-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:bg-black hover:scale-105 transition-all duration-300 z-50 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'} cursor-pointer`}
+        className={`fixed bottom-6 right-6 p-4 rounded-full bg-zinc-900 border border-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:bg-black transition-colors duration-300 z-50 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'} cursor-grab active:cursor-grabbing`}
       >
         <MessageCircle size={28} />
-      </button>
+      </motion.button>
 
       {/* Chat Window */}
       <div
-        className={`fixed bottom-6 right-6 w-80 sm:w-96 bg-zinc-950/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 flex flex-col z-50 transition-all duration-300 origin-bottom-right ${
+        className={`fixed bottom-6 ${isLeft ? 'left-6 origin-bottom-left' : 'right-6 origin-bottom-right'} w-80 sm:w-96 bg-zinc-950/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 flex flex-col z-50 transition-all duration-300 ${
           isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
         }`}
         style={{ height: '500px', maxHeight: '80vh' }}

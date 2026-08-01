@@ -123,7 +123,7 @@ export default function ContactLocationsPage() {
               support@cleanride.com
             </a>
             <a href="tel:1800123456" className="bg-[#141414] border border-white/10 px-8 py-4 rounded-full flex items-center gap-3 hover:bg-white hover:text-black transition-colors font-bold">
-              <Phone className="w-5 h-5" /> 1-800-CLEANRIDE
+              <Phone className="w-5 h-5" /> +91 6969696969
             </a>
           </div>
         </motion.div>
