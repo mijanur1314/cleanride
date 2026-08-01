@@ -3,6 +3,8 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 import { verifyKYCDocument } from '../utils/ai';
+import bcrypt from 'bcryptjs';
+
 
 export const getUsers = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
   const users = await prisma.user.findMany({
@@ -222,5 +224,39 @@ export const banUser = catchAsync(async (req: Request, res: Response, next: Next
     success: true,
     message: updatedUser.isBanned ? 'User banned successfully' : 'User unbanned successfully',
     data: { user: updatedUser }
+  });
+});
+
+export const updatePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return next(new AppError('Please provide both current and new password', 400));
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+  });
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  // Check if current password is correct
+  if (!(await bcrypt.compare(currentPassword, user.password))) {
+    return next(new AppError('Incorrect current password', 401));
+  }
+
+  // Hash new password
+  const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+  await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { password: hashedNewPassword },
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Password updated successfully',
   });
 });

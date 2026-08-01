@@ -28,11 +28,6 @@ router.patch('/:id/assign', restrictTo('ADMIN'), assignPartner);
 router.patch('/:id/admin-cancel', restrictTo('ADMIN'), adminCancelBooking);
 router.patch('/:id/cancel', cancelMyBooking);
 router.patch('/:id/reschedule', rescheduleMyBooking);
-import { upload } from '../middlewares/upload.middleware';
-
-router.patch('/:id/images', restrictTo('PARTNER'), upload.fields([
-  { name: 'beforeImage', maxCount: 1 },
-  { name: 'afterImage', maxCount: 1 }
-]), updateImages);
+router.patch('/:id/images', restrictTo('PARTNER'), updateImages);
 
 export default router;

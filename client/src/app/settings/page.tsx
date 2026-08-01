@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, User, Mail, Phone, Shield, Save, Bell } from "lucide-react";
+import { Loader2, User, Mail, Phone, Shield, Save, Bell, Lock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SettingsPage() {
@@ -20,6 +20,11 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -91,6 +96,31 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    
+    setIsUpdatingPassword(true);
+    try {
+      await api.patch("/users/updatePassword", { currentPassword, newPassword });
+      toast.success("Password updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update password");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   if (!_hasHydrated || !isAuthenticated) {
     return <div className="flex h-screen items-center justify-center bg-[#0A0A0A]"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>;
   }
@@ -104,14 +134,14 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="profile" className="w-full flex flex-col md:flex-row gap-8">
-          <TabsList className="flex md:flex-col bg-transparent justify-start items-start w-full md:w-64 h-auto gap-2 p-0 rounded-none border-b md:border-b-0 md:border-r border-white/10 pb-4 md:pb-0 md:pr-4 overflow-x-auto custom-scrollbar">
-            <TabsTrigger value="profile" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left">
+          <TabsList className="flex md:flex-col bg-transparent justify-start items-start w-full md:w-64 !h-auto gap-2 p-0 rounded-none border-b md:border-b-0 md:border-r border-white/10 pb-4 md:pb-0 md:pr-4 overflow-x-auto md:overflow-visible custom-scrollbar">
+            <TabsTrigger value="profile" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left !h-auto">
               <User className="w-4 h-4" /> Profile Details
             </TabsTrigger>
-            <TabsTrigger value="security" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left">
+            <TabsTrigger value="security" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left !h-auto">
               <Shield className="w-4 h-4" /> Security
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left">
+            <TabsTrigger value="notifications" className="w-full justify-start gap-3 data-[state=active]:bg-[#141414] data-[state=active]:text-white text-gray-400 rounded-xl py-3 px-4 font-medium transition-all text-left !h-auto">
               <Bell className="w-4 h-4" /> Notifications
             </TabsTrigger>
           </TabsList>
@@ -185,14 +215,70 @@ export default function SettingsPage() {
                     <p className="text-xs text-gray-500 font-light mt-2 ml-1">Email address cannot be changed currently.</p>
                   </div>
 
-                  <div className="pt-6 border-t border-white/5 space-y-4">
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Change Password</h4>
-                      <p className="text-xs text-gray-400 font-light mt-1">To update your password, please contact support or use the forgot password flow on the login page.</p>
-                    </div>
-                    <Button variant="outline" className="border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white rounded-xl h-12 px-6 cursor-pointer" onClick={() => toast.info("Password update feature coming soon!")}>
-                      Request Password Reset
-                    </Button>
+                  <div className="pt-6 border-t border-white/5">
+                    <form onSubmit={handleUpdatePassword} className="space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Change Password</h4>
+                        <p className="text-xs text-gray-400 font-light mt-1">Update your password to keep your account secure.</p>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="currentPassword" className="text-xs font-bold uppercase tracking-widest text-gray-500">Current Password</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <Input 
+                              id="currentPassword"
+                              type="password"
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              className="bg-black/50 border-white/10 rounded-xl h-14 pl-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" 
+                              placeholder="Enter current password"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword" className="text-xs font-bold uppercase tracking-widest text-gray-500">New Password</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <Input 
+                              id="newPassword"
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              className="bg-black/50 border-white/10 rounded-xl h-14 pl-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" 
+                              placeholder="Enter new password"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword" className="text-xs font-bold uppercase tracking-widest text-gray-500">Confirm New Password</Label>
+                          <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <Input 
+                              id="confirmPassword"
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              className="bg-black/50 border-white/10 rounded-xl h-14 pl-12 text-white placeholder:text-gray-600 focus-visible:ring-white/20" 
+                              placeholder="Confirm new password"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex justify-end">
+                        <Button type="submit" disabled={isUpdatingPassword || !currentPassword || !newPassword || !confirmPassword} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-12 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] cursor-pointer">
+                          {isUpdatingPassword ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
+                          Update Password
+                        </Button>
+                      </div>
+                    </form>
                   </div>
                 </CardContent>
               </Card>

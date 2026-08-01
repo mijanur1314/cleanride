@@ -80,6 +80,16 @@ export const verifySubscription = catchAsync(async (req: Request, res: Response,
   const plan = await prisma.subscriptionPlan.findUnique({ where: { id: planId } });
   if (!plan) return next(new AppError('Plan not found', 404));
 
+  // Fetch subscription from Razorpay to ensure it is authentic and active
+  const rzpySub = await razorpay.subscriptions.fetch(razorpay_subscription_id);
+  if (rzpySub.status !== 'active' && rzpySub.status !== 'authenticated') {
+    return next(new AppError(`Subscription is not active (status: ${rzpySub.status})`, 400));
+  }
+  
+  if (rzpySub.plan_id !== plan.razorpayPlanId) {
+    return next(new AppError('Subscription plan mismatch', 400));
+  }
+
   // Deactivate existing active subscriptions for this user
   await prisma.userSubscription.updateMany({
     where: { userId, isActive: true },

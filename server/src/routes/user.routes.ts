@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getUsers, getUserById, updateProfile, updateKyc, deleteUser, banUser, getAvailablePartners, updateLocation } from '../controllers/user.controller';
+import { getUsers, getUserById, updateProfile, updateKyc, deleteUser, banUser, getAvailablePartners, updateLocation, updatePassword } from '../controllers/user.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -12,6 +12,7 @@ router.get('/partners/available', getAvailablePartners);
 router.get('/', restrictTo('ADMIN'), getUsers);
 
 router.patch('/updateMe', updateProfile);
+router.patch('/updatePassword', updatePassword);
 router.patch('/kyc', updateKyc);
 
 router

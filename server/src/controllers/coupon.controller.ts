@@ -16,6 +16,17 @@ export const validateCoupon = catchAsync(async (req: Request, res: Response, nex
   if (!coupon.isActive) return next(new AppError('This coupon is no longer active', 400));
   if (new Date(coupon.validUntil) < new Date()) return next(new AppError('This coupon has expired', 400));
 
+  // Check if user has already used this coupon
+  const userId = req.user?.id;
+  if (userId) {
+    const existingRedemption = await prisma.couponRedemption.findUnique({
+      where: { couponId_userId: { couponId: coupon.id, userId } }
+    });
+    if (existingRedemption) {
+      return next(new AppError('You have already used this coupon', 400));
+    }
+  }
+
   res.status(200).json({ success: true, data: { coupon } });
 });
 

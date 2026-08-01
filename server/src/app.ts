@@ -50,12 +50,13 @@ import { logger } from './utils/logger';
 // API Rate Limiters
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 requests per windowMs
+  max: 200, // increased for development
   message: 'Too many login attempts from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
   ...(redisClient && {
     store: new RedisStore({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
     }),
   }),
@@ -68,6 +69,7 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   ...(redisClient && {
     store: new RedisStore({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any,
     }),
   }),
@@ -145,9 +147,18 @@ import settingsRoutes from './routes/settings.routes';
 import webhookRoutes from './routes/webhook.routes';
 import { errorHandler } from './middlewares/error.middleware';
 import { AppError } from './utils/AppError';
+import { csrfProtection } from './middlewares/csrf.middleware';
 
 // API Routes
 app.use('/api', apiLimiter); // Apply standard limit to all API routes
+
+// Apply CSRF to all API routes except webhooks
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+  if (req.path.startsWith('/webhooks')) {
+    return next();
+  }
+  csrfProtection(req, res, next);
+});
 app.use('/api/auth', authLimiter, authRoutes); // Apply strict limit to Auth routes
 app.use('/api/users', userRoutes);
 app.use('/api/services', serviceRoutes);

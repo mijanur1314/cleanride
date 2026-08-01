@@ -181,14 +181,26 @@ export default function PartnerDashboard() {
     
     setUploadingImages(id);
     try {
-      const formData = new FormData();
-      if (files.before) formData.append('beforeImage', files.before);
-      if (files.after) formData.append('afterImage', files.after);
+      let beforeImageUrl;
+      let afterImageUrl;
 
-      await api.patch(`/bookings/${id}/images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      if (files.before) {
+        const formDataBefore = new FormData();
+        formDataBefore.append('file', files.before);
+        const resBefore = await api.post("/upload", formDataBefore);
+        beforeImageUrl = resBefore.data.data.url;
+      }
+      
+      if (files.after) {
+        const formDataAfter = new FormData();
+        formDataAfter.append('file', files.after);
+        const resAfter = await api.post("/upload", formDataAfter);
+        afterImageUrl = resAfter.data.data.url;
+      }
+
+      await api.patch(`/bookings/${id}/images`, {
+        beforeImageUrl,
+        afterImageUrl
       });
       
       toast.success("Images uploaded successfully");

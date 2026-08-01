@@ -11,23 +11,24 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   const totalPartners = await prisma.user.count({ where: { role: 'PARTNER' } });
   const totalBookings = await prisma.booking.count();
   
-  // Calculate total revenue (assuming payments are successful)
-  const bookings = await prisma.booking.findMany({
-    select: { totalAmount: true }
+  // Calculate total revenue from completed payments only
+  const completedPayments = await prisma.payment.findMany({
+    where: { status: 'COMPLETED' },
+    select: { amount: true }
   });
-  const totalRevenue = bookings.reduce((sum: number, booking: { totalAmount: number }) => sum + booking.totalAmount, 0);
+  const totalRevenue = completedPayments.reduce((sum: number, payment: { amount: number }) => sum + payment.amount, 0);
 
   // 7-day revenue trend
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
-  const recentPaidBookings = await prisma.booking.findMany({
+  const recentCompletedPayments = await prisma.payment.findMany({
     where: { 
       createdAt: { gte: sevenDaysAgo },
-      status: { notIn: ['CANCELLED'] }
+      status: 'COMPLETED'
     },
-    select: { createdAt: true, totalAmount: true }
+    select: { createdAt: true, amount: true }
   });
 
   const revenueByDayMap = new Map();
@@ -38,11 +39,11 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
     revenueByDayMap.set(dateStr, { date: dateStr, revenue: 0, bookings: 0 });
   }
 
-  for (const b of recentPaidBookings) {
-    const dateStr = new Date(b.createdAt).toISOString().split('T')[0];
+  for (const p of recentCompletedPayments) {
+    const dateStr = new Date(p.createdAt).toISOString().split('T')[0];
     if (revenueByDayMap.has(dateStr)) {
       const entry = revenueByDayMap.get(dateStr);
-      entry.revenue += b.totalAmount;
+      entry.revenue += p.amount;
       entry.bookings += 1;
     }
   }

@@ -28,7 +28,10 @@ const VEHICLE_CATEGORIES: Record<string, string[]> = {
 export default function BookingPage() {
   const router = useRouter();
   const { user, _hasHydrated } = useAuthStore();
-  const { step, nextStep, prevStep, setStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
+  const { step, setStep, setService, setVehicleDetails, setBookingDate, setLocation, service, vehicleCategory, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, resetBooking } = useBookingStore();
+  
+  const nextStep = () => setStep(Math.min(step + 1, 4));
+  const prevStep = () => setStep(Math.max(step - 1, 1));
   
   const [services, setServices] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -171,8 +174,9 @@ export default function BookingPage() {
       } else {
         toast.success("Vehicle image uploaded successfully!");
       }
-    } catch (error) {
-      toast.error("Failed to upload image. Please try again.");
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.message || "Please try again.";
+      toast.error(`Failed to upload image: ${msg}`);
     } finally {
       setIsUploadingImage(false);
     }
@@ -281,8 +285,7 @@ export default function BookingPage() {
             <span className={step >= 1 ? "text-white" : ""}>Service</span> <span className="opacity-50">&rarr;</span>
             <span className={step >= 2 ? "text-white" : ""}>Vehicle</span> <span className="opacity-50">&rarr;</span>
             <span className={step >= 3 ? "text-white" : ""}>Schedule</span> <span className="opacity-50">&rarr;</span>
-            <span className={step >= 4 ? "text-white" : ""}>Partner</span> <span className="opacity-50">&rarr;</span>
-            <span className={step >= 5 ? "text-white" : ""}>Payment</span>
+            <span className={step >= 4 ? "text-white" : ""}>Checkout</span>
           </div>
         </div>
 
@@ -583,69 +586,14 @@ export default function BookingPage() {
               </Card>
               <div className="mt-8 flex justify-between gap-4">
                 <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
-                <Button onClick={handleFetchPartners} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Partner Selection</Button>
+                <Button onClick={nextStep} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Checkout</Button>
               </div>
             </motion.div>
           )}
 
           {step === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <Card className="border-white/10 bg-[#141414] shadow-2xl rounded-3xl relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-                <CardHeader className="pb-6 relative z-10 border-b border-white/5">
-                  <CardTitle className="font-heading text-2xl text-white">Select a Partner</CardTitle>
-                  <CardDescription className="text-gray-400 font-light">Choose your preferred washing expert, or skip to let us assign the best one for you.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6 pt-8 relative z-10">
-                  {isFetchingPartners ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <Loader2 className="w-8 h-8 animate-spin text-white/50 mb-4" />
-                      <p className="text-gray-400 font-light">Finding nearby partners...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {partners.length === 0 ? (
-                        <p className="text-gray-400 font-light col-span-2">No partners are currently available. You can skip this step and we will assign one later.</p>
-                      ) : (
-                        partners.map(p => (
-                          <div 
-                            key={p.id} 
-                            onClick={() => useBookingStore.getState().setPartnerId(p.id)}
-                            className={`p-5 rounded-2xl cursor-pointer flex items-center gap-4 transition-all border ${useBookingStore.getState().partnerId === p.id ? 'border-white/40 bg-white/5 shadow-[0_0_15px_rgba(255,255,255,0.05)]' : 'border-white/10 hover:bg-white/[0.02]'}`}
-                          >
-                            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-                              <UserCircle2 className="w-7 h-7 text-white/50" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-white text-sm">{p.name}</p>
-                              {p.distance !== undefined && p.distance !== null ? (
-                                <p className="text-xs font-light text-gray-400 mt-1 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3 text-blue-400" /> 
-                                  {p.distance === Infinity ? 'Distance unknown' : `${p.distance.toFixed(1)} km away`}
-                                </p>
-                              ) : (
-                                <p className="text-xs font-light text-green-400 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Available</p>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              <div className="mt-8 flex justify-between gap-4">
-                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
-                <Button onClick={nextStep} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                  {useBookingStore.getState().partnerId ? 'Continue to Payment' : 'Skip & Continue'}
-                </Button>
-              </div>
-            </motion.div>
-          )}
-
-          {step === 5 && (
-            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-               <PaymentStep availableAddons={addons} partners={partners} />
+               <PaymentStep availableAddons={addons} />
             </motion.div>
           )}
           </AnimatePresence>
@@ -655,9 +603,9 @@ export default function BookingPage() {
   );
 }
 
-function PaymentStep({ availableAddons, partners }: { availableAddons: { id: string; name: string; price: number }[], partners: any[] }) {
+function PaymentStep({ availableAddons }: { availableAddons: { id: string; name: string; price: number }[] }) {
   const { user } = useAuthStore();
-  const { service, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, addonIds, partnerId, prevStep, resetBooking } = useBookingStore();
+  const { service, vehicleType, vehicleName, vehicleNumber, vehicleImageUrl, bookingDate, address, addonIds, prevStep, resetBooking } = useBookingStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -714,7 +662,6 @@ function PaymentStep({ availableAddons, partners }: { availableAddons: { id: str
         address,
         couponId: appliedCoupon?.id,
         addonIds,
-        partnerId: partnerId || undefined,
         redeemPoints: redeemPoints > 0 ? redeemPoints : undefined
       });
       
@@ -798,11 +745,6 @@ function PaymentStep({ availableAddons, partners }: { availableAddons: { id: str
               <p className="text-sm font-light text-gray-400">{vehicleName ? `${vehicleName} - ${vehicleType}` : vehicleType}</p>
               <p className="text-sm font-light text-gray-400">{bookingDate?.toLocaleString()}</p>
               <p className="text-sm font-light text-gray-400 mt-2 flex items-start gap-1 max-w-sm"><span className="opacity-50">📍</span> {address}</p>
-              {partnerId && (
-                <p className="text-sm font-light text-green-400 mt-2 flex items-start gap-1 max-w-sm">
-                  <span className="opacity-50">👥</span> {partners.find(p => p.id === partnerId)?.name} (Selected Partner)
-                </p>
-              )}
               {addonIds.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-white/5">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Selected Add-ons</p>

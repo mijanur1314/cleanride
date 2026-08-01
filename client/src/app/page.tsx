@@ -101,7 +101,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="text-6xl md:text-8xl font-extrabold tracking-tighter leading-[1.1] mb-8 relative z-10"
+                className="text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tighter leading-[1.1] mb-8 relative z-10"
                 style={{ fontFamily: 'var(--font-heading)' }}
               >
                 Showroom <br className="md:hidden" />
@@ -332,7 +332,7 @@ export default function Home() {
             <p className="text-xl text-gray-400 mb-10 font-light">
               Track your detailer in real-time, manage bookings, and access exclusive membership perks with the CleanRide app.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button 
                 size="lg" 
                 onClick={() => {
@@ -354,7 +354,7 @@ export default function Home() {
           </div>
           
           {/* Aesthetic UI Mockup Placeholder */}
-          <div className="flex-1 w-full relative">
+          <div className="flex-1 w-full relative mt-12 md:mt-0">
             <div className="relative w-full aspect-square max-w-md mx-auto">
               <div className="absolute inset-0 bg-gradient-to-tr from-gray-800 to-gray-600 rounded-[3rem] shadow-2xl transform rotate-6 border border-white/10" />
               <div className="absolute inset-0 bg-[#1A1A1A] rounded-[3rem] shadow-2xl border border-white/10 overflow-hidden flex flex-col">

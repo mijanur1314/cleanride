@@ -46,8 +46,8 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
     const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
     if (coupon && coupon.isActive && new Date(coupon.validUntil) >= new Date()) {
       // Check if user already used this coupon
-      const previousUsage = await prisma.booking.findFirst({
-        where: { userId: req.user!.id, couponId: coupon.id, status: { not: 'CANCELLED' } }
+      const previousUsage = await prisma.couponRedemption.findUnique({
+        where: { couponId_userId: { couponId: coupon.id, userId: req.user!.id } }
       });
       
       if (previousUsage) {
@@ -96,7 +96,7 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 
     finalAmount = Math.round(finalAmount);
 
-    return await tx.booking.create({
+    const newBooking = await tx.booking.create({
       data: {
         userId: req.user!.id,
         serviceId,
@@ -119,6 +119,18 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
       },
       include: { user: true, service: true, bookingAddons: { include: { addon: true } } }
     });
+
+    if (couponId) {
+      await tx.couponRedemption.create({
+        data: {
+          couponId,
+          userId: req.user!.id,
+          bookingId: newBooking.id
+        }
+      });
+    }
+
+    return newBooking;
   });
 
   // Send confirmation email
@@ -247,7 +259,9 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
       type: 'info'
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (updatedBooking.user && (updatedBooking.user as any).pushSubscription) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const pushSubscription = (updatedBooking.user as any).pushSubscription;
       await sendPushNotification(
         pushSubscription, 
@@ -333,16 +347,14 @@ export const assignPartner = catchAsync(async (req: Request, res: Response, next
 });
 
 export const updateImages = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  
-  let beforeImageUrl;
-  let afterImageUrl;
+  const { beforeImageUrl, afterImageUrl } = req.body;
 
-  if (files?.beforeImage) {
-    beforeImageUrl = `/uploads/${files.beforeImage[0].filename}`;
+  const supabaseUrl = process.env.SUPABASE_URL || '';
+  if (beforeImageUrl && !beforeImageUrl.startsWith(supabaseUrl)) {
+    return next(new AppError('Invalid before image URL', 400));
   }
-  if (files?.afterImage) {
-    afterImageUrl = `/uploads/${files.afterImage[0].filename}`;
+  if (afterImageUrl && !afterImageUrl.startsWith(supabaseUrl)) {
+    return next(new AppError('Invalid after image URL', 400));
   }
 
   const existingBooking = await prisma.booking.findUnique({
@@ -443,7 +455,13 @@ export const adminCancelBooking = catchAsync(async (req: Request, res: Response,
       data: { status: 'CANCELLED' }
     });
 
-    if (booking.payment && booking.payment.status === 'COMPLETED') {
+    if (booking.payment && booking.payment.status === 'COMPLETED' && booking.payment.razorpayId) {
+      try {
+        await razorpay.payments.refund(booking.payment.razorpayId, { speed: 'normal' });
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        throw new AppError(`Failed to process refund: ${errorMessage}`, 500);
+      }
       await tx.payment.update({
         where: { id: booking.payment.id },
         data: { status: 'REFUNDED' }

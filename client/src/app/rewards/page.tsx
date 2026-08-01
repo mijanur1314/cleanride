@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Star, Shield, Crown, Sparkles, ChevronRight, Gift, Coins, Car, Users } from "lucide-react";
+import { Trophy, Star, Shield, Crown, Sparkles, ChevronRight, ChevronLeft, Gift, Coins, Car, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const TIERS = [
   { name: "Bronze", minPoints: 0, color: "from-amber-700 to-amber-900", iconColor: "text-amber-500", glow: "rgba(217, 119, 6, 0.4)" },
@@ -18,6 +19,38 @@ export default function RewardsPage() {
   const { user, _hasHydrated } = useAuthStore();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+
+  const handleInvite = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const code = (user as any)?.referralCode;
+    if (!code) {
+      toast.error("Referral code not found. Please contact support.");
+      return;
+    }
+    const inviteLink = `${window.location.origin}/register?ref=${code}`;
+    
+    const copyToClipboard = (text: string) => {
+      navigator.clipboard.writeText(text).then(() => {
+        toast.success("Invite link copied to clipboard!");
+      }).catch(() => {
+        toast.error("Failed to copy link");
+      });
+    };
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Join CleanRide',
+        text: 'Sign up for CleanRide and get 10% off your first wash!',
+        url: inviteLink
+      }).catch((err) => {
+        if (err.name !== 'AbortError') {
+           copyToClipboard(inviteLink);
+        }
+      });
+    } else {
+      copyToClipboard(inviteLink);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -58,6 +91,19 @@ export default function RewardsPage() {
       
       <div className="container mx-auto px-6 relative z-10 max-w-5xl">
         
+        {/* Back Button */}
+        <div className="absolute left-6 top-0 md:top-2 z-20">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => router.back()} 
+            className="text-gray-400 hover:text-white hover:bg-white/10"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
+        </div>
+
         {/* Header Section */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -228,7 +274,7 @@ export default function RewardsPage() {
                 <h4 className="text-lg font-bold text-white mb-1">Refer a Friend</h4>
                 <p className="text-sm text-gray-400 font-light">Give a friend 10% off and earn 500 points when they book.</p>
               </div>
-              <Button variant="outline" className="rounded-full h-8 text-xs px-4 bg-transparent border-white/20 hover:bg-white/10">Invite</Button>
+              <Button onClick={(e) => { e.stopPropagation(); handleInvite(); }} variant="outline" className="rounded-full h-8 text-xs px-4 bg-transparent border-white/20 hover:bg-white/10">Invite</Button>
             </div>
           </div>
         </motion.div>
