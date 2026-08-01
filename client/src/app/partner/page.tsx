@@ -233,7 +233,7 @@ export default function PartnerDashboard() {
       dataMap[dateStr] = (dataMap[dateStr] || 0) + (b.totalAmount * 0.7);
     });
     // Convert to array and take last 7 distinct dates
-    const dataArray = Object.entries(dataMap).map(([date, amount]) => ({ date, amount }));
+    const dataArray = Object.entries(dataMap).map(([date, amount]) => ({ date, amount: Number(amount.toFixed(2)) }));
     return dataArray.slice(-7);
   }, [completedBookings]);
 
@@ -514,16 +514,17 @@ export default function PartnerDashboard() {
                             )}
 
                             {booking.status === 'EN_ROUTE' && (
-                              <div className="flex gap-3">
+                              <div className="grid grid-cols-2 gap-3">
                                 <Button 
                                   variant="outline"
-                                  className="rounded-xl h-14 w-14 shrink-0 bg-white/5 border-white/10 hover:bg-white/10 hover:text-white"
+                                  className="w-full rounded-xl h-14 bg-white/5 border-white/10 hover:bg-white/10 text-white text-xs tracking-widest uppercase font-bold"
                                   onClick={() => openNavigation(booking.address)}
                                 >
-                                  <Navigation className="w-5 h-5" />
+                                  <Navigation className="w-4 h-4 mr-2 shrink-0" />
+                                  <span className="truncate">Navigate</span>
                                 </Button>
                                 <Button 
-                                  className="w-full rounded-xl h-14 text-sm font-bold tracking-widest uppercase bg-blue-500 hover:bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.2)]" 
+                                  className="w-full rounded-xl h-14 text-xs font-bold tracking-widest uppercase bg-blue-500 hover:bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.2)]" 
                                   onClick={() => updateStatus(booking.id, 'WASH_IN_PROGRESS')}
                                 >
                                   Start Wash
