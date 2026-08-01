@@ -7,9 +7,21 @@ const api = axios.create({
   xsrfHeaderName: 'x-xsrf-token',
 });
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   if (typeof document !== 'undefined') {
-    const match = document.cookie.match(new RegExp('(^| )XSRF-TOKEN=([^;]+)'));
+    let match = document.cookie.match(new RegExp('(^| )XSRF-TOKEN=([^;]+)'));
+    
+    // If we're making a POST/PUT/PATCH/DELETE request and we don't have a CSRF token yet, fetch one
+    if (!match && config.method && config.method.toLowerCase() !== 'get') {
+      try {
+        // Use a simple GET request to any endpoint to receive the CSRF cookie from the middleware
+        await axios.get(`${config.baseURL}/health`, { withCredentials: true });
+        match = document.cookie.match(new RegExp('(^| )XSRF-TOKEN=([^;]+)'));
+      } catch (error) {
+        console.error('Failed to pre-fetch CSRF token:', error);
+      }
+    }
+
     if (match) {
       config.headers['x-xsrf-token'] = match[2];
     }
