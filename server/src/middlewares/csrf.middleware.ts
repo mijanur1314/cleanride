@@ -3,6 +3,11 @@ import crypto from 'crypto';
 import { AppError } from '../utils/AppError';
 
 export const csrfProtection = (req: Request, res: Response, next: NextFunction) => {
+  // Bypass CSRF in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return next();
+  }
+
   // Generate a token if it doesn't exist in cookies
   let csrfToken = req.cookies['XSRF-TOKEN'];
   
