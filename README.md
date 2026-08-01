@@ -47,6 +47,7 @@ The platform serves **three distinct user roles**:
 | 🛡️ **Secure Webhooks** | Automated server-to-server Razorpay webhooks guarantee payments are captured and subscriptions renewed securely in the background. |
 | 📧 **Asynchronous Emails** | Non-blocking `Nodemailer` integration instantly emails customers and partners without slowing down HTTP responses. |
 | ☁️ **Cloud Storage** | Securely handle multipart/form-data for image uploads without local disk bloat. |
+| 📍 **Smart Geolocation** | One-click GPS coordinate extraction and reverse geocoding via OpenStreetMap Nominatim API for automatic address resolution. |
 | 🐳 **Dockerized CI/CD** | Fully containerized with `docker-compose` and automated deployment pipelines. |
 
 ### 👤 Users
