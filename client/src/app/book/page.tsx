@@ -281,7 +281,7 @@ export default function BookingPage() {
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold tracking-tight mb-4 font-heading bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">Book a Service</h1>
-          <div className="flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest text-gray-600">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-600">
             <span className={step >= 1 ? "text-white" : ""}>Service</span> <span className="opacity-50">&rarr;</span>
             <span className={step >= 2 ? "text-white" : ""}>Vehicle</span> <span className="opacity-50">&rarr;</span>
             <span className={step >= 3 ? "text-white" : ""}>Schedule</span> <span className="opacity-50">&rarr;</span>
@@ -435,8 +435,8 @@ export default function BookingPage() {
                 </div>
               )}
 
-              <div className="mt-10 flex justify-end">
-                <Button onClick={nextStep} disabled={!service} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Vehicle Details</Button>
+              <div className="mt-10 flex flex-col-reverse sm:flex-row justify-end gap-4">
+                <Button onClick={nextStep} disabled={!service} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-4 sm:px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto">Continue to Vehicle Details</Button>
               </div>
             </motion.div>
           )}
@@ -558,9 +558,9 @@ export default function BookingPage() {
                   </div>
                 </CardContent>
               </Card>
-              <div className="mt-8 flex justify-between gap-4">
-                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
-                <Button onClick={nextStep} disabled={!vehicleType || !vehicleImageUrl || isUploadingImage} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed">Continue to Schedule</Button>
+              <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between gap-4">
+                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-4 sm:px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors w-full sm:w-auto">Back</Button>
+                <Button onClick={nextStep} disabled={!vehicleType || !vehicleImageUrl || isUploadingImage} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-4 sm:px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Continue to Schedule</Button>
               </div>
             </motion.div>
           )}
@@ -809,10 +809,10 @@ function PaymentStep({ availableAddons }: { availableAddons: { id: string; name:
         </CardContent>
       </Card>
       
-      <div className="mt-8 flex justify-between gap-4">
-        <Button variant="outline" onClick={prevStep} disabled={isProcessing} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
-        <Button onClick={handlePayment} disabled={isProcessing} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-          {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between gap-4">
+        <Button variant="outline" onClick={prevStep} disabled={isProcessing} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-4 sm:px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors w-full sm:w-auto">Back</Button>
+        <Button onClick={handlePayment} disabled={isProcessing} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-4 sm:px-10 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto">
+          {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" /> : null}
           Pay ₹{calculateFinalPrice().toFixed(2)}
         </Button>
       </div>
