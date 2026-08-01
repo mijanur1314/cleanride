@@ -21,6 +21,7 @@ declare global {
 }
 
 const app = express();
+app.set('trust proxy', 1); // Allow secure cookies behind reverse proxies (Render, Heroku, etc.)
 
 if (env.SENTRY_DSN) {
   Sentry.init({
@@ -159,6 +160,12 @@ app.use('/api', (req: Request, res: Response, next: NextFunction) => {
   }
   csrfProtection(req, res, next);
 });
+
+// Dedicated endpoint to fetch CSRF token
+app.get('/api/csrf-token', (req: Request, res: Response) => {
+  res.status(200).json({ success: true, message: 'CSRF token set in cookie' });
+});
+
 app.use('/api/auth', authLimiter, authRoutes); // Apply strict limit to Auth routes
 app.use('/api/users', userRoutes);
 app.use('/api/services', serviceRoutes);

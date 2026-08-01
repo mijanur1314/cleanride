@@ -14,8 +14,8 @@ api.interceptors.request.use(async (config) => {
     // If we're making a POST/PUT/PATCH/DELETE request and we don't have a CSRF token yet, fetch one
     if (!match && config.method && config.method.toLowerCase() !== 'get') {
       try {
-        // Use a simple GET request to any endpoint to receive the CSRF cookie from the middleware
-        await axios.get(`${config.baseURL}/health`, { withCredentials: true });
+        // Use a simple GET request to receive the CSRF cookie from the middleware
+        await axios.get(`${config.baseURL}/csrf-token`, { withCredentials: true });
         match = document.cookie.match(new RegExp('(^| )XSRF-TOKEN=([^;]+)'));
       } catch (error) {
         console.error('Failed to pre-fetch CSRF token:', error);
