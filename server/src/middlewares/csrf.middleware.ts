@@ -12,10 +12,13 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
   let csrfToken = req.cookies['XSRF-TOKEN'];
   
   if (!csrfToken) {
+    const isProd = process.env.NODE_ENV === 'production' || 
+                   (process.env.FRONTEND_URL && !process.env.FRONTEND_URL.includes('localhost'));
+                   
     csrfToken = crypto.randomBytes(32).toString('hex');
     res.cookie('XSRF-TOKEN', csrfToken, {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProd ? true : false,
+      sameSite: isProd ? 'none' : 'lax',
       httpOnly: false // Must be false so Axios can read it
     });
   }
