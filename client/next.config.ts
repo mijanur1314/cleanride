@@ -37,12 +37,14 @@ const nextConfig: NextConfig = {
     // Strip trailing /api if it exists so we can append /api/:path*
     const baseUrl = destination.replace(/\/api\/?$/, '');
 
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${baseUrl}/api/:path*`, // Proxy to Backend
-      },
-    ];
+    return {
+      fallback: [
+        {
+          source: '/api/:path*',
+          destination: `${baseUrl}/api/:path*`, // Proxy to Backend
+        },
+      ]
+    };
   },
 };
 

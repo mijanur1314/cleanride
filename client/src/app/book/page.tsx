@@ -378,9 +378,9 @@ export default function BookingPage() {
                         disabled={isUploadingImage}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-20"
                       />
-                      <Button disabled={isUploadingImage} className="bg-white text-black hover:bg-gray-200 font-bold px-8 h-12 rounded-full pointer-events-none transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] group-hover:scale-105">
-                        {isUploadingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                        {isUploadingImage ? "Uploading..." : "Upload Photo for AI Recommendation"}
+                      <Button disabled={isUploadingImage} className="bg-white text-black hover:bg-gray-200 font-bold px-4 sm:px-8 h-12 rounded-full pointer-events-none transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)] group-hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] group-hover:scale-105 w-full sm:w-auto text-xs sm:text-sm whitespace-nowrap">
+                        {isUploadingImage ? <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" /> : <Upload className="w-4 h-4 mr-2 shrink-0" />}
+                        <span className="truncate">{isUploadingImage ? "Uploading..." : "Upload Photo for AI Recommendation"}</span>
                       </Button>
                     </div>
                   )}
@@ -584,9 +584,9 @@ export default function BookingPage() {
                   </div>
                 </CardContent>
               </Card>
-              <div className="mt-8 flex justify-between gap-4">
-                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors">Back</Button>
-                <Button onClick={nextStep} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">Continue to Checkout</Button>
+              <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between gap-4">
+                <Button variant="outline" onClick={prevStep} className="border-white/10 text-white bg-transparent hover:bg-white/5 h-14 px-4 sm:px-8 rounded-xl font-bold tracking-widest uppercase text-xs transition-colors w-full sm:w-auto">Back</Button>
+                <Button onClick={nextStep} disabled={!bookingDate || !address} className="bg-white text-black hover:bg-gray-200 font-bold tracking-widest uppercase text-xs h-14 px-4 sm:px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] w-full sm:w-auto">Continue to Checkout</Button>
               </div>
             </motion.div>
           )}
