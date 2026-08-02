@@ -167,7 +167,8 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
     return next(new AppError('Please provide a new password.', 400));
   }
 
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const tokenStr = Array.isArray(token) ? token[0] : (token as string);
+  const hashedToken = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
   const user = await prisma.user.findFirst({
     where: {
