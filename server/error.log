@@ -1,36 +1,46 @@
-[2026-08-01T17:53:39.730Z] GET /api/admin/stats
-Error: You do not have permission to perform this action
-Stack: Error: You do not have permission to perform this action
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:59:19
-    at Layer.handleRequest (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\lib\layer.js:152:17)
-    at trimPrefix (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:342:13)
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:297:9
-    at processParams (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:582:12)
-    at next (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:291:5)
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:53:3
+[2026-08-02T06:25:51.167Z] GET /api/subscriptions/my-subscription
+Error: The user belonging to this token does no longer exist.
+Stack: Error: The user belonging to this token does no longer exist.
+    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:45:17
     at processTicksAndRejections (node:internal/process/task_queues:104:5)
 
-[2026-08-01T17:53:39.967Z] GET /api/admin/stats
-Error: You do not have permission to perform this action
-Stack: Error: You do not have permission to perform this action
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:59:19
-    at Layer.handleRequest (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\lib\layer.js:152:17)
-    at trimPrefix (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:342:13)
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:297:9
-    at processParams (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:582:12)
-    at next (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\router\index.js:291:5)
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:53:3
+[2026-08-02T06:25:51.412Z] GET /api/subscriptions/my-subscription
+Error: The user belonging to this token does no longer exist.
+Stack: Error: The user belonging to this token does no longer exist.
+    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:45:17
     at processTicksAndRejections (node:internal/process/task_queues:104:5)
 
-[2026-08-01T18:34:37.929Z] POST /api/subscriptions/create-subscription
+[2026-08-02T06:26:23.997Z] POST /api/subscriptions/create-subscription
 Error: Razorpay plan ID is not configured for this plan
 Stack: Error: Razorpay plan ID is not configured for this plan
     at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\controllers\subscription.controller.ts:30:17
     at processTicksAndRejections (node:internal/process/task_queues:104:5)
 
-[2026-08-01T18:34:49.872Z] POST /api/subscriptions/create-subscription
-Error: Razorpay plan ID is not configured for this plan
-Stack: Error: Razorpay plan ID is not configured for this plan
-    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\controllers\subscription.controller.ts:30:17
-    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+[2026-08-02T06:53:06.493Z] POST /api/upload
+Error: File too large
+Stack: MulterError: File too large
+    at abortWithCode (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\multer\lib\make-middleware.js:107:22)
+    at FileStream.<anonymous> (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\multer\lib\make-middleware.js:221:11)
+    at FileStream.emit (node:events:508:28)
+    at SBMH.ssCb [as _cb] (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\busboy\lib\types\multipart.js:479:32)
+    at feed (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\streamsearch\lib\sbmh.js:248:10)
+    at SBMH.push (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\busboy\lib\types\multipart.js:567:19)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Multipart.Writable.write (node:internal/streams/writable:508:10)
+
+[2026-08-02T06:53:44.517Z] POST /api/upload
+Error: File too large
+Stack: MulterError: File too large
+    at abortWithCode (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\multer\lib\make-middleware.js:107:22)
+    at FileStream.<anonymous> (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\multer\lib\make-middleware.js:221:11)
+    at FileStream.emit (node:events:508:28)
+    at SBMH.ssCb [as _cb] (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\busboy\lib\types\multipart.js:479:32)
+    at feed (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\streamsearch\lib\sbmh.js:248:10)
+    at SBMH.push (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\busboy\lib\types\multipart.js:567:19)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Multipart.Writable.write (node:internal/streams/writable:508:10)
 

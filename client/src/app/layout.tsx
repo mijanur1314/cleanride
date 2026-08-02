@@ -49,7 +49,7 @@ export default function RootLayout({
               <Navbar />
               <main className="flex-1">{children}</main>
               <ConditionalFooter />
-              <Toaster theme="dark" position="top-center" />
+              <Toaster theme="dark" position="bottom-right" />
               <AIChatbot />
             </SocketProvider>
           </QueryProvider>

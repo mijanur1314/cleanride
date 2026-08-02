@@ -6,6 +6,8 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 import { z } from 'zod';
+import crypto from 'crypto';
+import { sendEmail } from '../utils/email';
 
 const signToken = (id: string, role: string) => {
   const secret = env.JWT_SECRET;
@@ -98,6 +100,101 @@ export const signup = catchAsync(async (req: Request, res: Response, next: NextF
   });
 
   createSendToken(newUser, 201, res);
+});
+
+export const forgotPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { email } = req.body;
+  
+  if (!email) {
+    return next(new AppError('Please provide an email address.', 400));
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  
+  if (!user) {
+    return next(new AppError('There is no user with that email address.', 404));
+  }
+
+  // Generate the random reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  
+  // Set expiry to 1 hour from now
+  const passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { email },
+    data: {
+      resetPasswordToken: passwordResetToken,
+      resetPasswordExpires: passwordResetExpires,
+    },
+  });
+
+  const resetURL = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+  const message = `Forgot your password? Submit your new password here: <a href="${resetURL}">${resetURL}</a>. \nIf you didn't forget your password, please ignore this email!`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Your password reset token (valid for 10 min)',
+      html: message,
+    });
+    console.log(`[Email] Password reset link sent: ${resetURL}`);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!',
+    });
+  } catch (err) {
+    // If email fails, clear the tokens
+    await prisma.user.update({
+      where: { email },
+      data: {
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+
+    return next(new AppError('There was an error sending the email. Try again later!', 500));
+  }
+});
+
+export const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return next(new AppError('Please provide a new password.', 400));
+  }
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await prisma.user.findFirst({
+    where: {
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { gt: new Date() },
+    },
+  });
+
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successful',
+  });
 });
 
 const loginSchema = z.object({

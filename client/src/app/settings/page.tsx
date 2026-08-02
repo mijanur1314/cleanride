@@ -51,6 +51,8 @@ export default function SettingsPage() {
         return;
       }
 
+      // Register the service worker to ensure .ready resolves
+      await navigator.serviceWorker.register('/sw.js');
       const registration = await navigator.serviceWorker.ready;
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidKey) throw new Error("VAPID key is missing");

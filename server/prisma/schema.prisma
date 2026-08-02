@@ -41,8 +41,11 @@ model User {
   isVerified     Boolean  @default(false)
   kycDocumentUrl String?
   kycSelfieUrl   String?
+  profilePictureUrl String?
   isBanned       Boolean  @default(false)
   pushSubscription Json?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
   latitude       Float?
   longitude      Float?
   createdAt      DateTime @default(now())

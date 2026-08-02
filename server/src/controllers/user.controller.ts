@@ -148,6 +148,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
     data: {
       name: req.body.name,
       phone: req.body.phone,
+      profilePictureUrl: req.body.profilePictureUrl,
     },
     select: {
       id: true,
@@ -155,6 +156,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response, next
       email: true,
       phone: true,
       role: true,
+      profilePictureUrl: true,
     },
   });
 

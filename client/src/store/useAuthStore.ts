@@ -8,6 +8,7 @@ interface User {
   phone?: string;
   loyaltyPoints?: number;
   referralCode?: string;
+  profilePictureUrl?: string;
   role: 'USER' | 'ADMIN' | 'PARTNER';
   [key: string]: any; // Allow any other properties to prevent TS errors
 }

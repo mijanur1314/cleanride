@@ -20,6 +20,7 @@ const envSchema = z.object({
   SMTP_PORT: z.string().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  SMTP_FROM_EMAIL: z.string().optional(),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_KEY: z.string().optional(),
   SENTRY_DSN: z.string().url().optional(),

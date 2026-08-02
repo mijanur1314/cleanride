@@ -24,7 +24,7 @@ export const sendEmail = async (options: EmailOptions) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: `"CleanRide Support" <${env.SMTP_USER || 'noreply@cleanride.com'}>`,
+      from: `"CleanRide Support" <${env.SMTP_FROM_EMAIL || env.SMTP_USER || 'noreply@cleanride.com'}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
