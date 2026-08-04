@@ -71,7 +71,11 @@ export default function UserDashboard() {
   >({});
 
   const toggleBooking = (id: string) => {
-    setExpandedBookings((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedBookings((prev) => {
+      const isFirstItem = bookings.length > 0 && bookings[0].id === id;
+      const isCurrentlyExpanded = prev[id] || (Object.keys(prev).length === 0 && isFirstItem);
+      return isCurrentlyExpanded ? { [id]: false } : { [id]: true };
+    });
   };
   const [newVehicle, setNewVehicle] = useState({
     type: "",
@@ -101,23 +105,23 @@ export default function UserDashboard() {
       toast.error("Maximum file size is 5MB");
       // Reset input
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
       return;
     }
 
     setIsUploadingAvatar(true);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
-      const uploadRes = await api.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const uploadRes = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       const imageUrl = uploadRes.data.data.url;
 
-      const updateRes = await api.patch('/users/updateMe', {
-        profilePictureUrl: imageUrl
+      const updateRes = await api.patch("/users/updateMe", {
+        profilePictureUrl: imageUrl,
       });
 
       useAuthStore.getState().login(updateRes.data.data.user);
@@ -132,8 +136,8 @@ export default function UserDashboard() {
   const handleRemoveAvatar = async () => {
     setIsUploadingAvatar(true);
     try {
-      const updateRes = await api.patch('/users/updateMe', {
-        profilePictureUrl: null
+      const updateRes = await api.patch("/users/updateMe", {
+        profilePictureUrl: null,
       });
 
       useAuthStore.getState().login(updateRes.data.data.user);
@@ -225,7 +229,7 @@ export default function UserDashboard() {
         setBookings(bookingsRes.data.data.bookings);
         setSubscription(subRes.data.data.subscription);
         setVehicles(vehiclesRes.data.data.vehicles);
-        
+
         if (meRes?.data?.data?.user) {
           useAuthStore.getState().login(meRes.data.data.user);
         }
@@ -346,30 +350,41 @@ export default function UserDashboard() {
           <Card className="border-white/10 bg-[#141414] shadow-[0_10px_40px_rgba(0,0,0,0.5)] rounded-[2.5rem] relative overflow-hidden group">
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none group-hover:bg-white/10 transition-colors duration-700" />
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent pointer-events-none" />
-            
+
             <CardHeader className="pb-6 relative z-10 border-b border-white/5 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs uppercase tracking-[0.2em] font-black text-gray-400">Profile</CardTitle>
-              <Badge variant="outline" className="bg-white/5 text-white border-white/10 uppercase tracking-widest text-[9px] font-bold px-2 py-0.5 rounded-full">
+              <CardTitle className="text-xs uppercase tracking-[0.2em] font-black text-gray-400">
+                Profile
+              </CardTitle>
+              <Badge
+                variant="outline"
+                className="bg-white/5 text-white border-white/10 uppercase tracking-widest text-[9px] font-bold px-2 py-0.5 rounded-full"
+              >
                 {user?.role}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-6 pt-8 relative z-10">
               <div className="flex items-center gap-5">
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/png, image/jpeg, image/jpg, image/webp" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/jpg, image/webp"
                   onChange={handleAvatarUpload}
                 />
-                <div 
+                <div
                   className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-700 to-gray-900 border border-white/10 flex items-center justify-center shadow-inner shrink-0 relative overflow-hidden group/avatar cursor-pointer hover:border-white/30 transition-all duration-300"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {user?.profilePictureUrl ? (
-                    <img src={user.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                    <img
+                      src={user.profilePictureUrl}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="text-2xl font-black text-white capitalize">{user?.name?.charAt(0) || 'U'}</span>
+                    <span className="text-2xl font-black text-white capitalize">
+                      {user?.name?.charAt(0) || "U"}
+                    </span>
                   )}
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
                     {isUploadingAvatar ? (
@@ -380,10 +395,14 @@ export default function UserDashboard() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden">
-                  <p className="font-black text-xl text-white truncate">{user?.name}</p>
-                  <p className="text-sm font-medium text-gray-500 truncate">{user?.email}</p>
+                  <p className="font-black text-xl text-white truncate">
+                    {user?.name}
+                  </p>
+                  <p className="text-sm font-medium text-gray-500 truncate">
+                    {user?.email}
+                  </p>
                   {user?.profilePictureUrl && (
-                    <button 
+                    <button
                       onClick={handleRemoveAvatar}
                       disabled={isUploadingAvatar}
                       className="text-xs text-red-500 hover:text-red-400 font-medium text-left transition-colors w-max mt-1 disabled:opacity-50"
@@ -393,7 +412,7 @@ export default function UserDashboard() {
                   )}
                 </div>
               </div>
-              
+
               <div className="pt-2 flex flex-col gap-3">
                 {user?.loyaltyPoints !== undefined && (
                   <div className="flex items-center justify-between bg-black/40 border border-white/5 rounded-2xl p-4 transition-all duration-300 hover:border-white/10 hover:bg-black/60">
@@ -401,16 +420,24 @@ export default function UserDashboard() {
                       <div className="w-8 h-8 rounded-full bg-yellow-500/10 flex items-center justify-center">
                         <Zap className="w-4 h-4 text-yellow-500" />
                       </div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Points</p>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        Points
+                      </p>
                     </div>
-                    <p className="text-lg font-black text-white">{user.loyaltyPoints}</p>
+                    <p className="text-lg font-black text-white">
+                      {user.loyaltyPoints}
+                    </p>
                   </div>
                 )}
-                
+
                 {user?.referralCode && (
                   <div className="flex items-center justify-between bg-black/40 border border-white/5 rounded-2xl p-4 transition-all duration-300 hover:border-white/10 hover:bg-black/60">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ref Code</p>
-                    <code className="bg-white/5 border border-white/10 px-3 py-1 rounded-lg text-xs font-mono text-white font-bold tracking-wider">{user.referralCode}</code>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                      Ref Code
+                    </p>
+                    <code className="bg-white/5 border border-white/10 px-3 py-1 rounded-lg text-xs font-mono text-white font-bold tracking-wider">
+                      {user.referralCode}
+                    </code>
                   </div>
                 )}
               </div>
@@ -519,8 +546,7 @@ export default function UserDashboard() {
                 </div>
               ) : (
                 bookings.map((booking, index) => {
-                  const isExpanded =
-                    expandedBookings[booking.id] ?? index === 0; // First one expanded by default
+                  const isExpanded = Object.keys(expandedBookings).length === 0 ? index === 0 : !!expandedBookings[booking.id];
                   return (
                     <Card
                       key={booking.id}

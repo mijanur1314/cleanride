@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from './ui/button';
-import { Menu, Bell, Star, Sun, Moon, User, LayoutDashboard, LogOut, Settings, X } from 'lucide-react';
+import { Menu, Bell, Star, Sun, Moon, User, LayoutDashboard, LogOut, Settings, X, Car } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -188,6 +188,12 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="py-3 px-4 focus:bg-white/10 cursor-pointer" asChild>
+                    <Link href="/fleet" className="flex items-center w-full">
+                      <Car className="w-4 h-4 mr-3 text-gray-400" />
+                      Fleet Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="py-3 px-4 focus:bg-white/10 cursor-pointer" asChild>
                     <Link href="/settings" className="flex items-center w-full">
                       <Settings className="w-4 h-4 mr-3 text-gray-400" />
                       Settings
@@ -250,6 +256,12 @@ export default function Navbar() {
                 {user.role}
               </span>
             </div>
+            <Link href="/fleet" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full justify-start bg-transparent border-white/20 text-white hover:bg-white/10 h-12 rounded-xl text-lg font-semibold px-6">
+                <Car className="w-5 h-5 mr-3 text-gray-400" />
+                Fleet Dashboard
+              </Button>
+            </Link>
             <Link href={user.role === 'ADMIN' ? '/admin' : user.role === 'PARTNER' ? '/partner' : '/dashboard'} onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full bg-white text-black hover:bg-gray-200 h-12 rounded-xl text-lg font-bold">Dashboard</Button>
             </Link>

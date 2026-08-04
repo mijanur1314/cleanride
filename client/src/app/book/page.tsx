@@ -1192,7 +1192,47 @@ function PaymentStep({
   const [couponError, setCouponError] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [redeemPoints, setRedeemPoints] = useState<number>(0);
+  const [weatherWarning, setWeatherWarning] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    async function checkWeather() {
+      if (!bookingDate) return;
+      try {
+        let lat, lng;
+        if (locationType === "doorstep" && address) {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+          const data = await res.json();
+          if (data && data[0]) {
+            lat = data[0].lat;
+            lng = data[0].lon;
+          }
+        } else if (locationType === "workshop") {
+          // Default to Mumbai or standard coordinates for workshop
+          lat = 19.0760;
+          lng = 72.8777;
+        }
+
+        if (lat && lng) {
+          const dateStr = bookingDate.toISOString().split("T")[0];
+          const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=precipitation_sum,precipitation_probability_max&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`);
+          const weatherData = await weatherRes.json();
+          
+          if (weatherData.daily) {
+            const rainProb = weatherData.daily.precipitation_probability_max?.[0] || 0;
+            const rainSum = weatherData.daily.precipitation_sum?.[0] || 0;
+            
+            if (rainProb > 40 || rainSum > 0) {
+              setWeatherWarning("🌧️ Rain Forecasted! It looks like rain is expected on your chosen date. We highly recommend adding a protective Ceramic Coating to keep your car shining, or consider rescheduling for a sunny day.");
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch weather", err);
+      }
+    }
+    checkWeather();
+  }, [bookingDate, address, locationType]);
 
   const handleApplyCoupon = async () => {
     try {
@@ -1383,7 +1423,18 @@ function PaymentStep({
                 </div>
               )}
             </div>
-            <div className="md:text-right flex-shrink-0 bg-[#141414] p-5 rounded-xl border border-white/5">
+            
+            <div className="flex flex-col gap-4 w-full md:w-auto">
+              {weatherWarning && (
+                <div className="bg-black/80 border border-white/10 p-4 rounded-xl text-gray-300 text-sm max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_15px_rgba(255,255,255,0.05)] backdrop-blur-md">
+                  <p className="font-bold mb-1 text-white flex items-center gap-2">
+                    <span className="text-xl">🌦️</span> Weather Alert
+                  </p>
+                  <p className="leading-relaxed opacity-90">{weatherWarning.replace("🌧️ ", "")}</p>
+                </div>
+              )}
+              
+              <div className="md:text-right flex-shrink-0 bg-[#141414] p-5 rounded-xl border border-white/5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                 Total to Pay
               </p>
@@ -1401,6 +1452,7 @@ function PaymentStep({
                   ₹{calculateFinalPrice()}
                 </div>
               )}
+            </div>
             </div>
           </div>
 
