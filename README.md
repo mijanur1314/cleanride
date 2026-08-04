@@ -48,6 +48,7 @@ The platform serves **three distinct user roles**:
 | 📧 **Asynchronous Emails** | Non-blocking `Nodemailer` integration instantly emails customers and partners without slowing down HTTP responses. |
 | ☁️ **Cloud Storage** | Securely handle multipart/form-data for image uploads without local disk bloat. |
 | 📍 **Smart Geolocation** | One-click GPS coordinate extraction and reverse geocoding via OpenStreetMap Nominatim API for automatic address resolution. |
+| ⛈️ **Weather-Aware Scheduling** | Automatically checks real-time weather forecasts (Open-Meteo) during booking, warning users about severe rain or storms. |
 | 🐳 **Dockerized CI/CD** | Fully containerized with `docker-compose` and automated deployment pipelines. |
 
 ### 👤 Users
@@ -59,6 +60,7 @@ The platform serves **three distinct user roles**:
 | 🎟️ **Promotional Coupons** | Apply percentage or flat-rate discount codes directly at checkout. |
 | ➕ **Service Add-ons** | Dynamically attach optional extras (e.g., "Engine Bay Cleaning", "Odor Removal") to a primary booking. |
 | 💬 **AI Customer Support** | Chat with a smart AI assistant to answer questions about packages, pricing, or locations. |
+| 🏢 **B2B Fleet Dashboard** | A dedicated workspace for corporate users to manage a roster of multiple fleet vehicles in one place. |
 
 ### 🧽 Washing Partners
 | Feature | Description |
