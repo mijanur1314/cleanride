@@ -44,3 +44,29 @@ Stack: MulterError: File too large
     at _write (node:internal/streams/writable:499:10)
     at Multipart.Writable.write (node:internal/streams/writable:508:10)
 
+[2026-08-04T18:57:50.301Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
