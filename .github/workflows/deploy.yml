@@ -29,7 +29,7 @@ jobs:
       run: |
         npx prisma generate
         npm run build
-        npm test -- --runInBand
+        npm test -- --runInBand --forceExit
       
     - name: Install dependencies (Client)
       working-directory: ./client
