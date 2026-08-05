@@ -7,6 +7,8 @@ import { getIO } from '../socket';
 import { sendEmail } from '../utils/mailer';
 import { sendPushNotification } from '../utils/push';
 import { razorpay } from '../utils/razorpay';
+import { emailQueue } from '../utils/queue';
+import { dispatchQueue } from '../queues/dispatch.queue';
 
 const bookingSchema = z.object({
   serviceId: z.string().uuid(),
@@ -21,13 +23,15 @@ const bookingSchema = z.object({
   partnerId: z.string().uuid().optional(),
   addonIds: z.array(z.string().uuid()).optional(),
   redeemPoints: z.number().int().min(0).optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 export const createBooking = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const parsed = bookingSchema.safeParse(req.body);
   if (!parsed.success) return next(new AppError('Invalid input data', 400));
 
-  const { serviceId, storeId, vehicleType, vehicleName, vehicleNumber, vehicleImage, address, bookingDate, couponId, partnerId, addonIds, redeemPoints } = parsed.data;
+  const { serviceId, storeId, vehicleType, vehicleName, vehicleNumber, vehicleImage, address, bookingDate, couponId, partnerId, addonIds, redeemPoints, latitude, longitude } = parsed.data;
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } });
   if (!service) return next(new AppError('Service not found', 404));
@@ -42,6 +46,19 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
   for (const addon of addons) {
     finalAmount += addon.price;
   }
+
+  // Calculate Surge Pricing
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const activeBookingsCount = await prisma.booking.count({
+    where: {
+      status: { in: ['PENDING', 'CONFIRMED', 'PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS'] },
+      createdAt: { gt: oneHourAgo }
+    }
+  });
+
+  const surgeMultiplier = activeBookingsCount >= 5 ? 1.25 : 1.0;
+  finalAmount = finalAmount * surgeMultiplier;
+
 
   if (couponId) {
     const coupon = await prisma.coupon.findUnique({ where: { id: couponId } });
@@ -97,6 +114,23 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 
     finalAmount = Math.round(finalAmount);
 
+    const bookingStart = new Date(bookingDate);
+    const dischargeTimeDate = new Date(bookingStart.getTime() + service.duration * 60000);
+
+    if (partnerId) {
+      const overlapping = await tx.booking.findFirst({
+        where: {
+          partnerId,
+          status: { notIn: ['CANCELLED', 'COMPLETED'] },
+          bookingDate: { lt: dischargeTimeDate },
+          dischargeTime: { gt: bookingStart }
+        }
+      });
+      if (overlapping) {
+        throw new AppError('The selected time slot is no longer available.', 400);
+      }
+    }
+
     const newBooking = await tx.booking.create({
       data: {
         userId: req.user!.id,
@@ -107,10 +141,14 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
         vehicleNumber,
         beforeImageUrl: vehicleImage,
         address,
-        bookingDate: new Date(bookingDate),
+        bookingDate: bookingStart,
+        dischargeTime: dischargeTimeDate,
         totalAmount: finalAmount,
+        surgeMultiplier,
         couponId,
         partnerId,
+        latitude,
+        longitude,
         status: finalAmount === 0 ? 'CONFIRMED' : 'PENDING',
         bookingAddons: {
           create: addons.map((addon: { id: string; price: number }) => ({
@@ -135,18 +173,45 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
     return newBooking;
   });
 
-  // Send confirmation email
-  sendEmail(
-    booking.user.email,
-    'Booking Confirmed - CleanRide',
-    `<h1>Your booking is confirmed!</h1>
+  // Dispatch confirmation email to background worker
+  emailQueue.add('bookingConfirmation', {
+    to: booking.user.email,
+    subject: 'Booking Confirmed - CleanRide',
+    body: `<h1>Your booking is confirmed!</h1>
      <p>Hi ${booking.user.name},</p>
      <p>You have successfully booked <strong>${booking.service.name}</strong> for ${new Date(booking.bookingDate).toLocaleString()}.</p>
      <p>Total Amount: $${booking.totalAmount}</p>
      <p>We will assign a partner to you shortly.</p>`
-  ).catch(err => console.error('Failed to send email:', err));
+  });
+
+  // Trigger Smart Dispatch Engine asynchronously
+  if (booking.status === 'PENDING' && !booking.partnerId) {
+    dispatchQueue.add('assignPartner', { bookingId: booking.id }, { delay: 5000 });
+  }
 
   res.status(201).json({ success: true, data: { booking } });
+});
+
+export const getSurgeStatus = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const activeBookingsCount = await prisma.booking.count({
+    where: {
+      status: { in: ['PENDING', 'CONFIRMED', 'PARTNER_ASSIGNED', 'EN_ROUTE', 'WASH_IN_PROGRESS'] },
+      createdAt: { gt: oneHourAgo }
+    }
+  });
+
+  const surgeMultiplier = activeBookingsCount >= 5 ? 1.25 : 1.0;
+  const isSurgeActive = surgeMultiplier > 1.0;
+
+  res.status(200).json({ 
+    success: true, 
+    data: { 
+      isSurgeActive, 
+      surgeMultiplier,
+      activeBookingsCount
+    } 
+  });
 });
 
 export const getMyBookings = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
@@ -400,9 +465,14 @@ export const cancelMyBooking = catchAsync(async (req: Request, res: Response, ne
 
     if (booking.payment && booking.payment.status === 'COMPLETED' && booking.payment.razorpayId) {
       try {
-        await razorpay.payments.refund(booking.payment.razorpayId, { speed: 'normal' });
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (!booking.payment.razorpayId.startsWith('fake_')) {
+          await razorpay.payments.refund(booking.payment.razorpayId, { speed: 'normal' });
+        } else {
+          console.log(`Skipped Razorpay refund for fake payment ID: ${booking.payment.razorpayId}`);
+        }
+      } catch (err: any) {
+        const errorMessage = err?.error?.description || err?.message || 'Unknown error';
+        console.error("Razorpay refund error:", errorMessage, err);
         throw new AppError(`Failed to process refund: ${errorMessage}`, 500);
       }
       await tx.payment.update({
@@ -459,9 +529,14 @@ export const adminCancelBooking = catchAsync(async (req: Request, res: Response,
 
     if (booking.payment && booking.payment.status === 'COMPLETED' && booking.payment.razorpayId) {
       try {
-        await razorpay.payments.refund(booking.payment.razorpayId, { speed: 'normal' });
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        if (!booking.payment.razorpayId.startsWith('fake_')) {
+          await razorpay.payments.refund(booking.payment.razorpayId, { speed: 'normal' });
+        } else {
+          console.log(`Skipped Razorpay refund for fake payment ID: ${booking.payment.razorpayId}`);
+        }
+      } catch (err: any) {
+        const errorMessage = err?.error?.description || err?.message || 'Unknown error';
+        console.error("Razorpay refund error:", errorMessage, err);
         throw new AppError(`Failed to process refund: ${errorMessage}`, 500);
       }
       await tx.payment.update({

@@ -5,6 +5,7 @@ import { logger } from './utils/logger';
 import { initSocket } from './socket';
 import prisma from './utils/prisma';
 import redisClient from './utils/redis';
+import { payoutQueue } from './queues/payout.queue';
 
 const PORT = env.PORT || 5000;
 const frontendUrl = env.FRONTEND_URL || 'http://localhost:3000';
@@ -14,8 +15,14 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 initSocket(server, frontendUrl);
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   logger.info(`Server is running on port ${PORT}`);
+  
+  // Schedule Daily Payout Cron Job (runs at 11:59 PM every day)
+  await payoutQueue.add('dailyPayout', {}, {
+    repeat: { pattern: '59 23 * * *' }
+  });
+  logger.info('Daily Payout Cron Job scheduled.');
 });
 
 // Graceful Shutdown Handlers

@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import prisma from '../utils/prisma';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
-import { sendEmail } from '../utils/email';
-import { getIO } from '../socket';
+import { webhookQueue } from '../queues/webhook.queue';
+import { processWebhookSync } from '../services/webhook.service';
 
 export const handleRazorpayWebhook = async (req: Request, res: Response) => {
   try {
@@ -27,101 +26,19 @@ export const handleRazorpayWebhook = async (req: Request, res: Response) => {
     }
 
     const event = req.body.event;
-    
-    if (event === 'payment.captured') {
-      const paymentEntity = req.body.payload.payment.entity;
-      const razorpayOrderId = paymentEntity.order_id;
-      
-      const payment = await prisma.payment.findFirst({
-        where: { razorpayId: razorpayOrderId }
-      });
+    const payload = req.body.payload;
 
-      if (payment && payment.status !== 'COMPLETED') {
-        const result = await prisma.$transaction(async (tx) => {
-          const updatedPayment = await tx.payment.update({
-            where: { id: payment.id },
-            data: { status: 'COMPLETED' },
-          });
-      
-          const booking = await tx.booking.update({
-            where: { id: payment.bookingId },
-            data: { status: 'CONFIRMED' },
-            include: { user: true, service: true }
-          });
-          
-          if (booking.partnerId) {
-            await tx.booking.update({
-              where: { id: booking.id },
-              data: { status: 'PARTNER_ASSIGNED' }
-            });
-            booking.status = 'PARTNER_ASSIGNED';
-          }
-      
-          return { updatedPayment, booking };
-        });
-
-        const { booking } = result;
-
-        if (booking.userId) {
-          getIO().to(booking.userId).emit('notification', {
-            title: 'Payment Confirmed',
-            message: 'Your payment was successful and booking is confirmed.',
-            type: 'success'
-          });
-        }
-        
-        if (booking.partnerId) {
-          getIO().to(booking.partnerId).emit('notification', {
-            title: 'New Booking Assigned!',
-            message: `You have been selected for a new booking by ${booking.user.name}.`,
-            type: 'info'
-          });
-        }
-
-        // Send Email asynchronously (do not await)
-        if (booking && booking.user) {
-          sendEmail({
-            to: booking.user.email,
-            subject: 'CleanRide - Payment Received & Booking Confirmed',
-            html: `
-              <h2>Payment Successful!</h2>
-              <p>Hi ${booking.user.name},</p>
-              <p>We have successfully received your payment of <strong>₹${payment.amount}</strong> for the <strong>${booking.service.name}</strong> service.</p>
-              <p>Your booking (ID: ${booking.id}) is now confirmed. We will assign a service partner shortly.</p>
-              <br/>
-              <p>Thank you for choosing CleanRide!</p>
-            `
-          }).catch(err => logger.error('Failed to send webhook confirmation email:', err));
-        }
-      }
-    } else if (event === 'subscription.charged') {
-      const subscriptionEntity = req.body.payload.subscription.entity;
-      const razorpaySubscriptionId = subscriptionEntity.id;
-
-      const userSubscription = await prisma.userSubscription.findUnique({
-        where: { razorpaySubscriptionId },
-        include: { plan: true, user: true }
-      });
-
-      if (userSubscription) {
-        // If the subscription is already expired, base the new end date on today.
-        // If it's still active, extend it by the duration.
-        const baseDate = userSubscription.endDate < new Date() ? new Date() : new Date(userSubscription.endDate);
-        baseDate.setDate(baseDate.getDate() + userSubscription.plan.durationDays);
-
-        await prisma.userSubscription.update({
-          where: { id: userSubscription.id },
-          data: { endDate: baseDate, isActive: true }
-        });
-
-        getIO().to(userSubscription.userId).emit('notification', {
-          title: 'Subscription Renewed',
-          message: `Your ${userSubscription.plan.name} subscription has been renewed successfully.`,
-          type: 'success'
-        });
-      }
+    if (webhookQueue) {
+      // Offload processing to BullMQ
+      await webhookQueue.add('processWebhook', { event, payload, signature });
+      logger.info(`Webhook event ${event} queued successfully.`);
+    } else {
+      // Fallback if Redis is not configured
+      logger.warn('Webhook Queue unavailable, processing synchronously.');
+      await processWebhookSync(event, payload);
     }
 
+    // Immediately return 200 OK so Razorpay doesn't timeout
     res.status(200).json({ status: 'ok' });
   } catch (error) {
     logger.error('Webhook Error:', error);

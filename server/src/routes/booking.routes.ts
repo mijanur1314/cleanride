@@ -4,6 +4,7 @@ import {
   getMyBookings,
   getPartnerBookings,
   getAllBookings,
+  getSurgeStatus,
   updateBookingStatus,
   assignPartner,
   updateImages,
@@ -24,6 +25,7 @@ router.get('/partner-bookings', restrictTo('PARTNER'), getPartnerBookings);
 router.patch('/:id/status', restrictTo('ADMIN', 'PARTNER'), updateBookingStatus);
 
 router.get('/', restrictTo('ADMIN'), getAllBookings);
+router.get('/surge-status', getSurgeStatus);
 router.patch('/:id/assign', restrictTo('ADMIN'), assignPartner);
 router.patch('/:id/admin-cancel', restrictTo('ADMIN'), adminCancelBooking);
 router.patch('/:id/cancel', cancelMyBooking);

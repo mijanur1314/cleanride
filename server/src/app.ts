@@ -58,6 +58,7 @@ const authLimiter = rateLimit({
   passOnStoreError: true,
   ...(redisClient && {
     store: new RedisStore({
+      prefix: 'rl:auth:',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sendCommand: (...args: string[]) => redisClient!.status === 'ready' ? (redisClient!.call(args[0], ...args.slice(1)) as any) : Promise.reject(new Error('Redis is not ready')),
     }),
@@ -72,6 +73,7 @@ const apiLimiter = rateLimit({
   passOnStoreError: true,
   ...(redisClient && {
     store: new RedisStore({
+      prefix: 'rl:api:',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sendCommand: (...args: string[]) => redisClient!.status === 'ready' ? (redisClient!.call(args[0], ...args.slice(1)) as any) : Promise.reject(new Error('Redis is not ready')),
     }),
@@ -148,7 +150,11 @@ import uploadRoutes from './routes/upload.routes';
 import ticketRoutes from './routes/ticket.routes';
 import settingsRoutes from './routes/settings.routes';
 import webhookRoutes from './routes/webhook.routes';
+import scheduleRoutes from './routes/schedule.routes';
+import walletRoutes from './routes/wallet.routes';
+import inventoryRoutes from './routes/inventory.routes';
 import { errorHandler } from './middlewares/error.middleware';
+import { initializeWorkers } from './workers';
 import { AppError } from './utils/AppError';
 import { csrfProtection } from './middlewares/csrf.middleware';
 
@@ -186,6 +192,12 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/schedule', scheduleRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/inventory', inventoryRoutes);
+
+// Initialize Background Workers
+initializeWorkers();
 
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {

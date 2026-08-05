@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 enum Role {
@@ -32,43 +32,47 @@ enum PaymentStatus {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  name       String
-  email      String   @unique
-  password   String
-  phone      String?
-  role       Role     @default(USER)
-  isVerified     Boolean  @default(false)
-  kycDocumentUrl String?
-  kycSelfieUrl   String?
-  profilePictureUrl String?
-  isBanned       Boolean  @default(false)
-  pushSubscription Json?
-  resetPasswordToken String?
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  password             String
+  phone                String?
+  role                 Role      @default(USER)
+  isVerified           Boolean   @default(false)
+  kycDocumentUrl       String?
+  kycSelfieUrl         String?
+  profilePictureUrl    String?
+  isBanned             Boolean   @default(false)
+  pushSubscription     Json?
+  resetPasswordToken   String?
   resetPasswordExpires DateTime?
-  latitude       Float?
-  longitude      Float?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  latitude             Float?
+  longitude            Float?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   // Relations
-  bookings         Booking[] @relation("UserBookings")
-  assignedBookings Booking[] @relation("PartnerBookings")
-  reviews          Review[]
-  subscriptions    UserSubscription[]
-  notifications    Notification[]
-  vehicles         Vehicle[]
-  messagesSent     Message[]
-  tickets          Ticket[]
-  ticketMessages   TicketMessage[]
+  bookings          Booking[]          @relation("UserBookings")
+  assignedBookings  Booking[]          @relation("PartnerBookings")
+  reviews           Review[]
+  subscriptions     UserSubscription[]
+  notifications     Notification[]
+  vehicles          Vehicle[]
+  messagesSent      Message[]
+  tickets           Ticket[]
+  ticketMessages    TicketMessage[]
   couponRedemptions CouponRedemption[]
-  
+  wallet            Wallet?
+  supplyRequests    SupplyRequest[]
+
   // Referrals and Loyalty
-  loyaltyPoints    Int      @default(0)
-  referralCode     String?  @unique
-  referredById     String?
-  referredBy       User?    @relation("Referrals", fields: [referredById], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  referrals        User[]   @relation("Referrals")
+  loyaltyPoints Int     @default(0)
+  referralCode  String? @unique
+  referredById  String?
+  referredBy    User?   @relation("Referrals", fields: [referredById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  referrals     User[]  @relation("Referrals")
+
+  schedules PartnerSchedule[] @relation("PartnerSchedule")
 
   @@index([role])
 }
@@ -78,7 +82,7 @@ model Service {
   name        String
   description String
   price       Int
-  duration    Int      // Duration in minutes
+  duration    Int // Duration in minutes
   imageUrl    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -106,14 +110,18 @@ model Booking {
   userId        String
   serviceId     String
   partnerId     String?
-  storeId       String?       // Optional if it's a doorstep service
+  storeId       String? // Optional if it's a doorstep service
   vehicleType   String
   vehicleName   String?
   vehicleNumber String?
-  address       String?       // Address for doorstep service
+  address       String? // Address for doorstep service
   bookingDate   DateTime
   status        BookingStatus @default(PENDING)
   totalAmount   Int
+  surgeMultiplier Float       @default(1.0)
+  payoutProcessed Boolean     @default(false)
+  latitude      Float?
+  longitude     Float?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -125,15 +133,15 @@ model Booking {
   dischargeTime  DateTime?
 
   // Relations
-  user    User     @relation("UserBookings", fields: [userId], references: [id])
-  partner User?    @relation("PartnerBookings", fields: [partnerId], references: [id])
-  service Service  @relation(fields: [serviceId], references: [id])
-  store   Store?   @relation(fields: [storeId], references: [id])
-  payment Payment?
-  review  Review?
-  coupon  Coupon?  @relation(fields: [couponId], references: [id])
-  messages      Message[]
-  bookingAddons BookingAddon[]
+  user             User              @relation("UserBookings", fields: [userId], references: [id])
+  partner          User?             @relation("PartnerBookings", fields: [partnerId], references: [id])
+  service          Service           @relation(fields: [serviceId], references: [id])
+  store            Store?            @relation(fields: [storeId], references: [id])
+  payment          Payment?
+  review           Review?
+  coupon           Coupon?           @relation(fields: [couponId], references: [id])
+  messages         Message[]
+  bookingAddons    BookingAddon[]
   couponRedemption CouponRedemption?
 
   @@index([userId])
@@ -143,13 +151,13 @@ model Booking {
 }
 
 model Payment {
-  id            String        @id @default(uuid())
-  bookingId     String        @unique
-  amount        Int
-  status        PaymentStatus @default(PENDING)
-  razorpayId    String?       // Razorpay payment/order ID
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id         String        @id @default(uuid())
+  bookingId  String        @unique
+  amount     Int
+  status     PaymentStatus @default(PENDING)
+  razorpayId String? // Razorpay payment/order ID
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   booking Booking @relation(fields: [bookingId], references: [id])
 
@@ -162,7 +170,7 @@ model Review {
   id        String   @id @default(uuid())
   userId    String
   bookingId String   @unique
-  rating    Int      // 1 to 5
+  rating    Int // 1 to 5
   comment   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,7 +189,7 @@ model Coupon {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  bookings Booking[]
+  bookings    Booking[]
   redemptions CouponRedemption[]
 }
 
@@ -192,8 +200,8 @@ model CouponRedemption {
   bookingId String?  @unique
   createdAt DateTime @default(now())
 
-  coupon  Coupon  @relation(fields: [couponId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
+  coupon  Coupon   @relation(fields: [couponId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
   booking Booking? @relation(fields: [bookingId], references: [id])
 
   @@unique([couponId, userId])
@@ -202,29 +210,29 @@ model CouponRedemption {
 }
 
 model SubscriptionPlan {
-  id           String   @id @default(uuid())
-  name         String
-  price        Int
-  durationDays Int
-  benefits     String[]
-  isActive     Boolean  @default(true)
+  id             String   @id @default(uuid())
+  name           String
+  price          Int
+  durationDays   Int
+  benefits       String[]
+  isActive       Boolean  @default(true)
   razorpayPlanId String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   userSubscriptions UserSubscription[]
 }
 
 model UserSubscription {
-  id        String   @id @default(uuid())
-  userId    String
-  planId    String
-  startDate DateTime @default(now())
-  endDate   DateTime
-  isActive  Boolean  @default(true)
-  razorpaySubscriptionId String? @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  userId                 String
+  planId                 String
+  startDate              DateTime @default(now())
+  endDate                DateTime
+  isActive               Boolean  @default(true)
+  razorpaySubscriptionId String?  @unique
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   user User             @relation(fields: [userId], references: [id])
   plan SubscriptionPlan @relation(fields: [planId], references: [id])
@@ -246,10 +254,10 @@ model Notification {
 model Vehicle {
   id          String   @id @default(uuid())
   userId      String
-  type        String   // SUV, Sedan, Hatchback
-  name        String?  // e.g., Hunter 350, My Daily Driver
-  make        String?  // e.g., Toyota
-  model       String?  // e.g., Camry
+  type        String // SUV, Sedan, Hatchback
+  name        String? // e.g., Hunter 350, My Daily Driver
+  make        String? // e.g., Toyota
+  model       String? // e.g., Camry
   plateNumber String?
   isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -274,7 +282,7 @@ model BookingAddon {
   id        String   @id @default(uuid())
   bookingId String
   addonId   String
-  price     Int    // Store price at time of booking
+  price     Int // Store price at time of booking
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -304,15 +312,15 @@ enum TicketStatus {
 }
 
 model Ticket {
-  id          String        @id @default(uuid())
-  userId      String
-  subject     String
-  status      TicketStatus  @default(OPEN)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String       @id @default(uuid())
+  userId    String
+  subject   String
+  status    TicketStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  user        User          @relation(fields: [userId], references: [id])
-  messages    TicketMessage[]
+  user     User            @relation(fields: [userId], references: [id])
+  messages TicketMessage[]
 
   @@index([userId])
   @@index([status])
@@ -325,8 +333,8 @@ model TicketMessage {
   content   String
   createdAt DateTime @default(now())
 
-  ticket    Ticket   @relation(fields: [ticketId], references: [id])
-  sender    User     @relation(fields: [senderId], references: [id])
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  sender User   @relation(fields: [senderId], references: [id])
 }
 
 model SystemSetting {
@@ -338,4 +346,75 @@ model SystemSetting {
   enableNotifications Boolean  @default(true)
   maintenanceMode     Boolean  @default(false)
   updatedAt           DateTime @updatedAt
+}
+
+model PartnerSchedule {
+  id        String  @id @default(uuid())
+  partnerId String
+  dayOfWeek Int // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime String // e.g., "09:00"
+  endTime   String // e.g., "18:00"
+  isActive  Boolean @default(true)
+
+  partner User @relation("PartnerSchedule", fields: [partnerId], references: [id])
+
+  @@unique([partnerId, dayOfWeek])
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Int      @default(0) // In cents or fiat equivalent
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id])
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String   @id @default(uuid())
+  walletId    String
+  amount      Int      // Positive for credit, negative for debit
+  type        String   // e.g. "REFUND", "LOYALTY_REWARD", "PURCHASE", "TOP_UP"
+  description String?
+  createdAt   DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([walletId])
+}
+
+model SupplyItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  stockLevel  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests    SupplyRequest[]
+}
+
+enum SupplyRequestStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  REJECTED
+}
+
+model SupplyRequest {
+  id        String              @id @default(uuid())
+  partnerId String
+  itemId    String
+  quantity  Int                 @default(1)
+  status    SupplyRequestStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  partner   User       @relation(fields: [partnerId], references: [id])
+  item      SupplyItem @relation(fields: [itemId], references: [id])
+
+  @@index([partnerId])
+  @@index([itemId])
 }

@@ -98,12 +98,16 @@ export default function BookingPage() {
     recommendedPackage: string;
     reason: string;
   } | null>(null);
+
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [locationType, setLocationType] = useState<"doorstep" | "workshop">(
     "doorstep",
   );
   const [stores, setStores] = useState<any[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>("");
+  const [surgeStatus, setSurgeStatus] = useState<{ isSurgeActive: boolean, surgeMultiplier: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
 
   // Voice Booking State
   const [isListening, setIsListening] = useState(false);
@@ -322,6 +326,7 @@ export default function BookingPage() {
           const data = await res.json();
           if (data && data.display_name) {
             setLocation(data.display_name);
+            setUserLocation({ lat: latitude, lng: longitude });
             toast.success("Address found!", { id: "geo-address-toast" });
           } else {
             toast.error("Could not parse address from location.", { id: "geo-address-toast" });
@@ -384,18 +389,25 @@ export default function BookingPage() {
 
     const fetchData = async () => {
       try {
-        const [servRes, vehRes, addonRes, storesRes] = await Promise.all([
+        const [servRes, vehRes, addonRes, storesRes, walletRes, surgeRes] = await Promise.all([
           api.get("/services"),
           api
             .get("/vehicles/my-vehicles")
             .catch(() => ({ data: { data: { vehicles: [] } } })),
           api.get("/addons").catch(() => ({ data: { data: { addons: [] } } })),
           api.get("/stores").catch(() => ({ data: { data: { stores: [] } } })),
+          api.get("/wallet/balance").catch(() => ({ data: { data: null } })),
+          api.get("/bookings/surge-status").catch(() => ({ data: { data: { isSurgeActive: false, surgeMultiplier: 1.0 } } })),
         ]);
         setServices(servRes.data.data.services);
         setVehicles(vehRes.data.data.vehicles);
         setAddons(addonRes.data.data.addons);
+        setStores(storesRes.data.data.stores);
+        setSurgeStatus(surgeRes.data.data);
         setStores(storesRes.data.data.stores || storesRes.data.data || []);
+        if (walletRes.data?.data) {
+          setWalletBalance(walletRes.data.data.balance);
+        }
       } catch (error) {
         toast.error("Failed to load data");
       } finally {
@@ -1149,10 +1161,13 @@ export default function BookingPage() {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <PaymentStep 
-                  availableAddons={addons} 
+                  availableAddons={addons.filter((a) => a.serviceId === service?.id)}
                   locationType={locationType}
                   selectedStoreId={selectedStoreId}
                   selectedPartnerId={selectedPartnerId}
+                  walletBalance={walletBalance}
+                  surgeStatus={surgeStatus}
+                  userLocation={userLocation}
                 />
               </motion.div>
             )}
@@ -1168,11 +1183,17 @@ function PaymentStep({
   locationType,
   selectedStoreId,
   selectedPartnerId,
+  walletBalance,
+  surgeStatus,
+  userLocation,
 }: {
   availableAddons: { id: string; name: string; price: number }[];
   locationType: "doorstep" | "workshop";
   selectedStoreId: string;
   selectedPartnerId: string;
+  walletBalance: number | null;
+  surgeStatus: { isSurgeActive: boolean, surgeMultiplier: number } | null;
+  userLocation: { lat: number, lng: number } | null;
 }) {
   const { user } = useAuthStore();
   const {
@@ -1193,6 +1214,7 @@ function PaymentStep({
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [redeemPoints, setRedeemPoints] = useState<number>(0);
   const [weatherWarning, setWeatherWarning] = useState<string | null>(null);
+  const [useWallet, setUseWallet] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -1273,6 +1295,10 @@ function PaymentStep({
       finalAmount -= redeemPoints * 0.1;
     }
 
+    if (surgeStatus?.isSurgeActive) {
+      finalAmount *= surgeStatus.surgeMultiplier;
+    }
+
     return Math.max(finalAmount, 0);
   };
 
@@ -1293,15 +1319,33 @@ function PaymentStep({
         couponId: appliedCoupon?.id,
         addonIds,
         redeemPoints: redeemPoints > 0 ? redeemPoints : undefined,
+        latitude: userLocation?.lat,
+        longitude: userLocation?.lng,
       });
 
       const bookingId = bookingRes.data.data.booking.id;
+      const finalPrice = calculateFinalPrice();
 
-      if (calculateFinalPrice() === 0) {
+      if (finalPrice === 0) {
         toast.success("Booking confirmed successfully! (100% Covered)");
         resetBooking();
         router.push("/dashboard");
         return;
+      }
+
+      // Wallet Payment Intercept
+      if (useWallet) {
+        try {
+          await api.post("/payments/wallet", { bookingId });
+          toast.success("Payment completed via Wallet!");
+          resetBooking();
+          router.push("/dashboard");
+          return;
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || "Failed to process wallet payment.");
+          setIsProcessing(false);
+          return;
+        }
       }
 
       // 2. Create Razorpay order
@@ -1434,6 +1478,15 @@ function PaymentStep({
                 </div>
               )}
               
+              {surgeStatus?.isSurgeActive && (
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-200 text-sm max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] backdrop-blur-md">
+                  <p className="font-bold mb-1 flex items-center gap-2">
+                    <span className="text-xl animate-pulse">🔥</span> High Demand
+                  </p>
+                  <p className="leading-relaxed opacity-90 text-red-300/80">Prices are slightly higher right now due to increased demand in your area. ({surgeStatus.surgeMultiplier}x multiplier applied)</p>
+                </div>
+              )}
+              
               <div className="md:text-right flex-shrink-0 bg-[#141414] p-5 rounded-xl border border-white/5">
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">
                 Total to Pay
@@ -1517,6 +1570,47 @@ function PaymentStep({
           )}
         </CardContent>
       </Card>
+
+      {walletBalance !== null && (
+        <div 
+          className={`mt-8 flex items-center gap-3 p-4 border rounded-xl ${
+            walletBalance >= calculateFinalPrice() * 100 
+              ? "bg-blue-500/10 border-blue-500/20 cursor-pointer" 
+              : "bg-gray-500/10 border-gray-500/20 opacity-60 cursor-not-allowed"
+          }`} 
+          onClick={() => {
+            if (walletBalance >= calculateFinalPrice() * 100) {
+              setUseWallet(!useWallet);
+            }
+          }}
+        >
+          <div className="flex items-center h-5">
+            <input
+              id="use-wallet"
+              type="checkbox"
+              checked={useWallet}
+              onChange={(e) => {
+                if (walletBalance >= calculateFinalPrice() * 100) {
+                  setUseWallet(e.target.checked);
+                }
+              }}
+              disabled={walletBalance < calculateFinalPrice() * 100}
+              className="w-5 h-5 rounded border-white/20 bg-black/50 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 pointer-events-none disabled:opacity-50"
+            />
+          </div>
+          <div className="text-sm flex-1">
+            <label className="font-bold text-white uppercase tracking-widest text-xs cursor-pointer">
+              Pay with Wallet
+            </label>
+            <p className="text-gray-400 mt-1 flex justify-between items-center">
+              <span>Available Balance: <strong className={walletBalance >= calculateFinalPrice() * 100 ? "text-blue-400" : "text-gray-400"}>₹{(walletBalance / 100).toFixed(2)}</strong></span>
+              {walletBalance < calculateFinalPrice() * 100 && (
+                <span className="text-[10px] text-red-400 uppercase tracking-widest font-bold">Insufficient Balance</span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8 flex flex-col-reverse sm:flex-row justify-between gap-4">
         <Button

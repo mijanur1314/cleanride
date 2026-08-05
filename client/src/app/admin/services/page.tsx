@@ -124,55 +124,65 @@ export default function ServicesPage() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="relative">
+          <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
+          <Loader2 className="relative w-8 h-8 animate-spin text-blue-500" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
+      {/* Background ambient light */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+      <div className="flex justify-between items-center relative z-10">
         <div>
-          <h1 className="text-3xl font-heading font-bold">Services</h1>
-          <p className="text-muted-foreground mt-1">Manage wash packages and pricing</p>
+          <h1 className="text-4xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
+            Services
+          </h1>
+          <p className="text-gray-400 mt-2 font-medium tracking-wide text-sm">Manage wash packages and pricing.</p>
         </div>
         
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button onClick={handleOpenNew} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={handleOpenNew} className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]">
               <Plus className="w-4 h-4 mr-2" /> Add Service
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] bg-[#111] border-white/10 text-white">
             <DialogHeader>
-              <DialogTitle>{editingId ? "Edit Service" : "Add New Service"}</DialogTitle>
+              <DialogTitle className="text-white">{editingId ? "Edit Service" : "Add New Service"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Service Name</Label>
+                <Label htmlFor="name" className="text-gray-300">Service Name</Label>
                 <Input 
                   id="name" 
                   required 
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   placeholder="e.g., Express Wash"
+                  className="bg-black/50 border-white/10 text-white placeholder:text-gray-600"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-gray-300">Description</Label>
                 <Textarea 
                   id="description" 
                   required 
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   placeholder="Describe the wash package..."
+                  className="bg-black/50 border-white/10 text-white placeholder:text-gray-600 min-h-[100px]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price (₹)</Label>
+                  <Label htmlFor="price" className="text-gray-300">Price (₹)</Label>
                   <Input 
                     id="price" 
                     type="number" 
@@ -180,10 +190,11 @@ export default function ServicesPage() {
                     required 
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
+                    className="bg-black/50 border-white/10 text-white"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duration (mins)</Label>
+                  <Label htmlFor="duration" className="text-gray-300">Duration (mins)</Label>
                   <Input 
                     id="duration" 
                     type="number" 
@@ -191,17 +202,19 @@ export default function ServicesPage() {
                     required 
                     value={formData.duration}
                     onChange={(e) => setFormData({...formData, duration: Number(e.target.value)})}
+                    className="bg-black/50 border-white/10 text-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="imageUrl">Image URL (Optional)</Label>
+                <Label htmlFor="imageUrl" className="text-gray-300">Image URL (Optional)</Label>
                 <Input 
                   id="imageUrl" 
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
                   placeholder="https://..."
+                  className="bg-black/50 border-white/10 text-white placeholder:text-gray-600"
                 />
               </div>
 
@@ -211,13 +224,13 @@ export default function ServicesPage() {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className="w-4 h-4 rounded border-gray-600 bg-black/50"
                 />
-                <Label htmlFor="isActive" className="cursor-pointer">Active (Visible to customers)</Label>
+                <Label htmlFor="isActive" className="cursor-pointer text-gray-300">Active (Visible to customers)</Label>
               </div>
 
               <div className="flex justify-end pt-4">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                   {editingId ? "Save Changes" : "Create Service"}
                 </Button>
               </div>
@@ -226,43 +239,47 @@ export default function ServicesPage() {
         </Dialog>
       </div>
 
-      <Card className="border-border/50 shadow-sm">
+      <Card className="bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl relative z-10">
         <CardHeader>
-          <CardTitle>All Services</CardTitle>
-          <CardDescription>A list of all services you currently offer.</CardDescription>
+          <CardTitle className="text-xl text-white">All Services</CardTitle>
+          <CardDescription className="text-gray-400">A list of all services you currently offer.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="relative w-full overflow-auto rounded-xl border border-white/5 bg-black/20">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Service</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="border-b border-white/5 hover:bg-transparent">
+                  <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Service</TableHead>
+                  <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Duration</TableHead>
+                  <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Price</TableHead>
+                  <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Status</TableHead>
+                  <TableHead className="h-14 px-6 text-right align-middle font-semibold text-gray-400">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell>
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1 max-w-xs">{service.description}</div>
+                  <TableRow key={service.id} className="border-b border-white/5 transition-colors hover:bg-white/[0.04]">
+                    <TableCell className="p-5 align-middle">
+                      <div className="font-bold text-gray-200">{service.name}</div>
+                      <div className="text-sm text-gray-500 line-clamp-1 max-w-xs mt-1">{service.description}</div>
                     </TableCell>
-                    <TableCell>{service.duration} mins</TableCell>
-                    <TableCell className="font-medium text-green-600">₹{service.price}</TableCell>
-                    <TableCell>
-                      <Badge variant={service.isActive ? "default" : "secondary"}>
+                    <TableCell className="p-5 align-middle text-gray-400 font-medium">{service.duration} mins</TableCell>
+                    <TableCell className="p-5 align-middle font-bold text-green-400">₹{service.price}</TableCell>
+                    <TableCell className="p-5 align-middle">
+                      <Badge variant="outline" className={`px-3 py-1 font-semibold ${
+                        service.isActive 
+                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20" 
+                          : "bg-gray-500/10 text-gray-400 border-gray-500/20"
+                      }`}>
                         {service.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="p-5 align-middle text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="icon" onClick={() => handleOpenEdit(service)}>
+                        <Button variant="outline" size="icon" onClick={() => handleOpenEdit(service)} className="bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10">
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="icon" className="text-red-500 hover:text-red-600" onClick={() => handleDelete(service.id)}>
+                        <Button variant="outline" size="icon" className="bg-red-500/10 border-red-500/20 text-red-400 hover:text-white hover:bg-red-500/30" onClick={() => handleDelete(service.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -271,7 +288,7 @@ export default function ServicesPage() {
                 ))}
                 {services.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="p-8 text-center text-gray-500">
                       No services found. Click "Add Service" to create one.
                     </TableCell>
                   </TableRow>

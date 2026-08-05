@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import io, { Socket } from "socket.io-client";
 
 // Fix for default Leaflet marker icons in Next.js
 const icon = L.icon({
@@ -16,13 +17,33 @@ const icon = L.icon({
   shadowSize: [41, 41]
 });
 
-export default function Map({ bookings }: { bookings: any[] }) {
+export default function Map({ bookings, liveTrackingId }: { bookings: any[], liveTrackingId?: string }) {
   const [mounted, setMounted] = useState(false);
+  const [liveLocation, setLiveLocation] = useState<{lat: number, lng: number} | null>(null);
   
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (liveTrackingId) {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+      const socket = io(backendUrl, { withCredentials: true });
+      
+      socket.emit('join-booking', liveTrackingId);
+      
+      socket.on('location-updated', (data) => {
+        if (data.bookingId === liveTrackingId) {
+          setLiveLocation({ lat: data.lat, lng: data.lng });
+        }
+      });
+      
+      return () => {
+        socket.disconnect();
+      };
+    }
+  }, [liveTrackingId]);
 
   if (!mounted) return <div className="h-full w-full bg-muted/20 animate-pulse rounded-md" />;
 
@@ -44,19 +65,23 @@ export default function Map({ bookings }: { bookings: any[] }) {
 
   return (
     <div className="h-[400px] w-full rounded-md overflow-hidden border">
-      <MapContainer center={defaultCenter} zoom={11} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={liveLocation ? [liveLocation.lat, liveLocation.lng] : defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {bookings.map((booking) => {
-          const position = getCoordinates(booking.address || booking.id);
+          const isLive = booking.id === liveTrackingId && liveLocation;
+          const position = isLive ? [liveLocation.lat, liveLocation.lng] as [number, number] : getCoordinates(booking.address || booking.id);
+          
           return (
             <Marker key={booking.id} position={position} icon={icon}>
               <Popup>
                 <div className="font-semibold text-sm">{booking.service?.name}</div>
                 <div className="text-xs text-muted-foreground">{booking.address}</div>
-                <div className="text-xs mt-1 font-medium">{booking.status}</div>
+                <div className="text-xs mt-1 font-medium text-blue-500">
+                  {isLive ? "🟢 LIVE TRACKING" : booking.status}
+                </div>
               </Popup>
             </Marker>
           );

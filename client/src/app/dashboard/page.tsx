@@ -65,6 +65,8 @@ export default function UserDashboard() {
   const [reviewData, setReviewData] = useState<{
     [key: string]: { rating: number; comment: string };
   }>({});
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [walletTransactions, setWalletTransactions] = useState<any[]>([]);
   const [submittingReview, setSubmittingReview] = useState<string | null>(null);
   const [expandedBookings, setExpandedBookings] = useState<
     Record<string, boolean>
@@ -218,17 +220,22 @@ export default function UserDashboard() {
 
     const fetchData = async () => {
       try {
-        const [bookingsRes, subRes, vehiclesRes, meRes] = await Promise.all([
+        const [bookingsRes, subRes, vehiclesRes, meRes, walletRes] = await Promise.all([
           api.get("/bookings/my-bookings"),
           api
             .get("/subscriptions/my-subscription")
             .catch(() => ({ data: { data: { subscription: null } } })),
           api.get("/vehicles/my-vehicles"),
           api.get("/auth/me").catch(() => null),
+          api.get("/wallet/balance").catch(() => ({ data: { data: null } })),
         ]);
         setBookings(bookingsRes.data.data.bookings);
         setSubscription(subRes.data.data.subscription);
         setVehicles(vehiclesRes.data.data.vehicles);
+        if (walletRes.data?.data) {
+          setWalletBalance(walletRes.data.data.balance);
+          setWalletTransactions(walletRes.data.data.transactions || []);
+        }
 
         if (meRes?.data?.data?.user) {
           useAuthStore.getState().login(meRes.data.data.user);
@@ -443,6 +450,50 @@ export default function UserDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {walletBalance !== null && (
+            <Card className="border-blue-500/20 bg-gradient-to-br from-[#141414] to-blue-950/20 mt-6 rounded-[2.5rem] relative overflow-hidden group">
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/20 transition-colors duration-700" />
+              <CardHeader className="pb-4 relative z-10 border-b border-white/5 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs uppercase tracking-[0.2em] font-black text-gray-400">
+                  My Wallet
+                </CardTitle>
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                  <span className="text-blue-500 font-bold">$</span>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6 relative z-10 space-y-4">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                    Available Balance
+                  </p>
+                  <p className="text-4xl font-black text-white">
+                    ${(walletBalance / 100).toFixed(2)}
+                  </p>
+                </div>
+                {walletTransactions.length > 0 && (
+                  <div className="pt-4 border-t border-white/5">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
+                      Recent Activity
+                    </p>
+                    <div className="space-y-3">
+                      {walletTransactions.slice(0, 3).map((tx) => (
+                        <div key={tx.id} className="flex justify-between items-center text-sm">
+                          <div>
+                            <p className="font-medium text-white">{tx.type}</p>
+                            <p className="text-xs text-gray-500">{new Date(tx.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <p className={`font-bold ${tx.amount > 0 ? "text-green-500" : "text-white"}`}>
+                            {tx.amount > 0 ? "+" : ""}${(tx.amount / 100).toFixed(2)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {subscription && (
             <Card className="border-green-500/20 bg-gradient-to-br from-[#141414] to-green-950/20 mt-6 rounded-3xl relative overflow-hidden">

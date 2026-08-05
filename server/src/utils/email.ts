@@ -1,7 +1,9 @@
 import { env } from '../utils/env';
 import nodemailer from 'nodemailer';
+import { emailQueue } from '../queues/email.queue';
+import { logger } from './logger';
 
-interface EmailOptions {
+export interface EmailOptions {
   to: string;
   subject: string;
   html: string;
@@ -19,7 +21,11 @@ const createTransporter = () => {
   });
 };
 
-export const sendEmail = async (options: EmailOptions) => {
+/**
+ * Synchronous email sending function. 
+ * Used by the BullMQ worker, or directly as a fallback if the queue is unavailable.
+ */
+export const sendEmailSync = async (options: EmailOptions) => {
   try {
     const transporter = createTransporter();
     
@@ -40,8 +46,31 @@ export const sendEmail = async (options: EmailOptions) => {
 
     return true;
   } catch (error) {
-    console.error(`Failed to send email to ${options.to}:`, error);
-    // We don't throw an error here to prevent the main transaction (like payment verification) from failing just because email failed
+    console.error(`Failed to send email synchronously to ${options.to}:`, error);
+    // We don't throw an error here to prevent the main transaction from failing just because email failed
     return false;
+  }
+};
+
+/**
+ * Primary export for controllers.
+ * Attempts to queue the email in BullMQ. If it fails (e.g., Redis down),
+ * it falls back to sending the email synchronously.
+ */
+export const sendEmail = async (options: EmailOptions) => {
+  if (emailQueue) {
+    try {
+      await emailQueue.add('sendEmailJob', options);
+      logger.info(`Queued email job for ${options.to}`);
+      return true; // Successfully queued
+    } catch (error) {
+      logger.error('Failed to queue email, falling back to sync send:', error);
+      // Fallback
+      return await sendEmailSync(options);
+    }
+  } else {
+    // Redis is not configured, fall back to sync immediately
+    logger.warn('Email Queue is not available. Sending email synchronously.');
+    return await sendEmailSync(options);
   }
 };

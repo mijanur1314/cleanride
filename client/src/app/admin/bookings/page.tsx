@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AdminBookings() {
   const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = useState("action-required");
   const limit = 10;
 
   const { data, isLoading, refetch } = useQuery({
@@ -61,7 +62,7 @@ export default function AdminBookings() {
         <p className="text-muted-foreground mt-1">View all bookings and assign service partners.</p>
       </div>
 
-      <Tabs defaultValue="action-required" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="action-required" className="relative">
             Action Required
@@ -137,7 +138,7 @@ export default function AdminBookings() {
 
         <TabsContent value="all">
 
-      <Card className="border-border/50 shadow-sm">
+      <Card className="bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle>All Bookings</CardTitle>
           <CardDescription>Comprehensive list of customer bookings.</CardDescription>
@@ -182,11 +183,14 @@ export default function AdminBookings() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={
-                        booking.status === 'COMPLETED' ? 'default' :
-                        booking.status === 'CONFIRMED' ? 'secondary' :
-                        booking.status === 'CANCELLED' ? 'destructive' : 'outline'
-                      }>
+                      <Badge 
+                        variant={
+                          booking.status === 'COMPLETED' ? 'outline' :
+                          booking.status === 'CONFIRMED' ? 'secondary' :
+                          booking.status === 'CANCELLED' ? 'destructive' : 'outline'
+                        }
+                        className={booking.status === 'COMPLETED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : ''}
+                      >
                         {booking.status}
                       </Badge>
                     </TableCell>

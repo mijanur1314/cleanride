@@ -4,8 +4,8 @@ import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
 import crypto from 'crypto';
-import { sendEmail } from '../utils/email';
 import { razorpay } from '../utils/razorpay';
+import { emailQueue } from '../utils/queue';
 
 export const createOrder = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { bookingId } = req.body;
@@ -121,10 +121,10 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
   const { booking } = result;
 
   if (booking && booking.user) {
-    sendEmail({
+    emailQueue.add('paymentSuccess', {
       to: booking.user.email,
       subject: 'CleanRide - Payment Received & Booking Confirmed',
-      html: `
+      body: `
         <h2>Payment Successful!</h2>
         <p>Hi ${booking.user.name},</p>
         <p>We have successfully received your payment of <strong>$${payment.amount}</strong> for the <strong>${booking.service.name}</strong> service.</p>
@@ -132,11 +132,88 @@ export const verifyPayment = catchAsync(async (req: Request, res: Response, next
         <br/>
         <p>Thank you for choosing CleanRide!</p>
       `
-    }).catch(err => console.error('Failed to send email:', err));
+    });
   }
 
     res.status(200).json({
     success: true,
     message: 'Payment verified successfully',
+  });
+});
+
+export const walletPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { bookingId } = req.body;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { payment: true, user: true, service: true },
+  });
+
+  if (!booking) return next(new AppError('Booking not found', 404));
+  if (booking.userId !== req.user!.id) return next(new AppError('Unauthorized access to booking', 403));
+  if (booking.payment?.status === 'COMPLETED') return next(new AppError('Payment already completed', 400));
+  
+  if (booking.totalAmount === 0) {
+    return next(new AppError('Amount is zero, no payment required', 400));
+  }
+
+  // Multiply by 100 if you want to store in cents, but booking.totalAmount might already be the exact fiat amount.
+  // Wait, in `booking.controller.ts`, finalAmount is calculated. Let's assume Wallet balance is in cents, and totalAmount is in dollars/rupees.
+  const amountInCents = Math.round(booking.totalAmount * 100);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const wallet = await tx.wallet.findUnique({ where: { userId: req.user!.id } });
+    if (!wallet || wallet.balance < amountInCents) {
+      throw new AppError('Insufficient wallet balance', 400);
+    }
+
+    // Debit Wallet
+    await tx.walletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        amount: -amountInCents,
+        type: 'PURCHASE',
+        description: `Payment for booking ${booking.id}`
+      }
+    });
+
+    await tx.wallet.update({
+      where: { id: wallet.id },
+      data: { balance: { decrement: amountInCents } }
+    });
+
+    // Create or update payment record
+    let payment;
+    if (booking.payment) {
+      payment = await tx.payment.update({
+        where: { id: booking.payment.id },
+        data: { razorpayId: 'WALLET', status: 'COMPLETED' },
+      });
+    } else {
+      payment = await tx.payment.create({
+        data: {
+          bookingId: booking.id,
+          amount: booking.totalAmount,
+          razorpayId: 'WALLET',
+          status: 'COMPLETED',
+        },
+      });
+    }
+
+    const updatedBooking = await tx.booking.update({
+      where: { id: booking.id },
+      data: { status: 'CONFIRMED' }
+    });
+
+    return { payment, updatedBooking };
+  });
+
+  // Optional: We can dispatch email to emailQueue here
+  // sendEmail(...)
+
+  res.status(200).json({
+    success: true,
+    message: 'Payment completed using Wallet successfully',
+    data: result
   });
 });

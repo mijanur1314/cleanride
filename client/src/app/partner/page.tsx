@@ -9,7 +9,7 @@ import api from "@/lib/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut } from "lucide-react";
+import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut, Package, WalletCards } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -27,7 +27,7 @@ export default function PartnerDashboard() {
   const [images, setImages] = useState<{ [key: string]: { before: File | null, after: File | null, beforePreview?: string, afterPreview?: string } }>({});
   const [uploadingImages, setUploadingImages] = useState<string | null>(null);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, userName: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'jobs' | 'earnings'>('jobs');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'earnings' | 'supplies' | 'wallet'>('jobs');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -71,6 +71,51 @@ export default function PartnerDashboard() {
     );
   };
 
+  const { data: walletData } = useQuery({
+    queryKey: ['partnerWallet'],
+    queryFn: async () => {
+      const res = await api.get("/wallet/balance");
+      return res.data.data;
+    },
+    enabled: isAuthenticated && user?.role === 'PARTNER',
+  });
+
+  const { data: inventoryItems = [] } = useQuery({
+    queryKey: ['inventoryItems'],
+    queryFn: async () => {
+      const res = await api.get("/inventory/items");
+      return res.data.data.items;
+    },
+    enabled: isAuthenticated && user?.role === 'PARTNER',
+  });
+
+  const { data: supplyRequests = [] } = useQuery({
+    queryKey: ['supplyRequests'],
+    queryFn: async () => {
+      const res = await api.get("/inventory/requests/me");
+      return res.data.data.requests;
+    },
+    enabled: isAuthenticated && user?.role === 'PARTNER',
+  });
+
+  const withdrawMutation = useMutation({
+    mutationFn: async (amount: number) => {
+      const res = await api.post('/wallet/debit', {
+        amount,
+        type: 'WITHDRAWAL',
+        description: 'Withdraw to Bank Account'
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Withdrawal requested successfully!");
+      queryClient.invalidateQueries({ queryKey: ['partnerWallet'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to process withdrawal");
+    }
+  });
+
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['partnerBookings'],
     queryFn: async () => {
@@ -94,6 +139,8 @@ export default function PartnerDashboard() {
       // though our backend 'update-location' only needs the bookingId.
       socket.emit('join-booking', activeEnRoute.id);
       
+      let mockIntervalId: NodeJS.Timeout;
+      
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           socket.emit('update-location', {
@@ -104,6 +151,21 @@ export default function PartnerDashboard() {
         },
         (error) => {
           console.error("Live tracking error:", error);
+          toast.error("GPS failed or denied. Falling back to simulated tracking for demo.");
+          
+          // Fallback: Mock driving simulation
+          let mockLat = 20.5937;
+          let mockLng = 78.9629;
+          
+          mockIntervalId = setInterval(() => {
+            mockLat += 0.0001; // Move slightly north
+            mockLng += 0.0001; // Move slightly east
+            socket.emit('update-location', {
+              bookingId: activeEnRoute.id,
+              lat: mockLat,
+              lng: mockLng
+            });
+          }, 2000);
         },
         { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
       );
@@ -113,6 +175,8 @@ export default function PartnerDashboard() {
       if (watchId && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
       }
+      // @ts-ignore
+      if (typeof mockIntervalId !== 'undefined') clearInterval(mockIntervalId);
     };
   }, [activeBookings, socket]);
 
@@ -427,7 +491,7 @@ export default function PartnerDashboard() {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'jobs' ? (
+        {activeTab === 'jobs' && (
           <motion.div 
             key="jobs"
             initial={{ opacity: 0, y: 10 }}
@@ -624,7 +688,9 @@ export default function PartnerDashboard() {
               </div>
             )}
           </motion.div>
-        ) : (
+        )}
+        
+        {activeTab === 'earnings' && (
           <motion.div 
             key="earnings"
             initial={{ opacity: 0, y: 10 }}
@@ -716,6 +782,152 @@ export default function PartnerDashboard() {
             </div>
           </motion.div>
         )}
+        
+        {activeTab === 'supplies' && (
+          <motion.div 
+            key="supplies"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold tracking-tight font-heading text-white">Supply Request</h2>
+              <Badge variant="outline" className="rounded-full bg-white/5 border-white/10 text-gray-300 px-3 py-1 text-xs">{inventoryItems.length} Items</Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {inventoryItems.map((item: any) => (
+                <div key={item.id} className="p-5 bg-[#141414] rounded-2xl border border-white/5 shadow-lg flex justify-between items-center group">
+                  <div>
+                    <h3 className="font-bold text-lg font-heading text-white">{item.name}</h3>
+                    <p className="text-xs text-gray-400 mt-1">{item.description}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mt-2">
+                      In Stock: <span className={item.stockLevel > 0 ? 'text-green-400' : 'text-red-400'}>{item.stockLevel}</span>
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={async () => {
+                      if (item.stockLevel <= 0) return toast.error('Item is out of stock');
+                      try {
+                        await api.post('/inventory/requests', { itemId: item.id, quantity: 1 });
+                        toast.success(`Requested 1x ${item.name}`);
+                        queryClient.invalidateQueries({ queryKey: ['supplyRequests'] });
+                      } catch (e) {
+                        toast.error('Failed to request item');
+                      }
+                    }}
+                    disabled={item.stockLevel <= 0}
+                    size="sm"
+                    className="bg-zinc-900 hover:bg-zinc-800 text-white border border-white/10 rounded-xl h-10 px-4 text-xs font-bold uppercase tracking-widest transition-colors shadow-lg"
+                  >
+                    Request
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="text-xl font-bold tracking-tight font-heading text-white mb-4">My Requests</h3>
+            {supplyRequests.length === 0 ? (
+              <div className="text-center py-16 text-gray-500 bg-[#141414] rounded-[2rem] border border-white/5 shadow-2xl">
+                <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="font-light">You haven't requested any supplies yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {supplyRequests.map((req: any) => (
+                  <div key={req.id} className="p-5 bg-[#141414] rounded-2xl border border-white/5 shadow-lg flex justify-between items-center group hover:bg-[#1a1a1a] transition-colors">
+                    <div>
+                      <div className="font-bold text-lg font-heading text-white">{req.item?.name} <span className="text-sm text-gray-400 font-normal">x{req.quantity}</span></div>
+                      <div className="text-xs text-gray-400 mt-1 flex items-center gap-1.5 font-light">
+                        <Calendar className="w-3.5 h-3.5 text-gray-500" /> {format(new Date(req.createdAt), "MMM d, yyyy")}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="outline" className={`text-[10px] uppercase tracking-widest px-2.5 py-1 
+                        ${req.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 
+                          req.status === 'APPROVED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                          req.status === 'FULFILLED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                          'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                        {req.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeTab === 'wallet' && (
+          <motion.div 
+            key="wallet"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold tracking-tight font-heading text-white">My Wallet</h2>
+            </div>
+            
+            <div className="p-8 bg-gradient-to-br from-[#141414] to-[#0A0A0A] rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6 opacity-10">
+                <WalletCards className="w-32 h-32 text-white" />
+              </div>
+              <div className="relative z-10">
+                <p className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-2">Available Balance</p>
+                <div className="text-5xl font-black font-heading text-white mb-8">₹{((walletData?.balance || 0) / 100).toFixed(2)}</div>
+                
+                <Button 
+                  onClick={() => {
+                    const amountStr = prompt("Enter amount to withdraw (₹):");
+                    const amount = parseFloat(amountStr || "0");
+                    if (amount > 0 && amount <= (walletData?.balance || 0) / 100) {
+                      withdrawMutation.mutate(amount * 100);
+                    } else if (amount > (walletData?.balance || 0) / 100) {
+                      toast.error("Insufficient funds");
+                    }
+                  }}
+                  disabled={withdrawMutation.isPending || (walletData?.balance || 0) <= 0}
+                  className="w-full bg-white hover:bg-gray-200 text-black rounded-xl h-14 text-sm font-bold uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+                >
+                  {withdrawMutation.isPending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <WalletCards className="w-5 h-5 mr-2" />}
+                  Withdraw Funds
+                </Button>
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold tracking-tight font-heading text-white mb-4 mt-8">Recent Transactions</h3>
+            {!walletData?.transactions || walletData.transactions.length === 0 ? (
+              <div className="text-center py-16 text-gray-500 bg-[#141414] rounded-[2rem] border border-white/5 shadow-2xl">
+                <DollarSign className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="font-light">No transaction history yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {walletData.transactions.map((tx: any) => (
+                  <div key={tx.id} className="p-5 bg-[#141414] rounded-2xl border border-white/5 shadow-lg flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                        {tx.amount > 0 ? <ArrowUpDown className="w-5 h-5" /> : <ArrowUpDown className="w-5 h-5 rotate-180" />}
+                      </div>
+                      <div>
+                        <div className="font-bold text-lg font-heading text-white">{tx.description || tx.type}</div>
+                        <div className="text-xs text-gray-400 mt-1 font-light">
+                          {format(new Date(tx.createdAt), "MMM d, yyyy h:mm a")}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`font-black text-xl font-heading ${tx.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {tx.amount > 0 ? '+' : ''}₹{(tx.amount / 100).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Sticky Bottom Navigation */}
@@ -735,6 +947,22 @@ export default function PartnerDashboard() {
           >
             <DollarSign className={`w-6 h-6 mb-1.5 ${activeTab === 'earnings' ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''}`} />
             <span className="text-[10px] font-bold uppercase tracking-widest">Earnings</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('supplies')}
+            className={`flex flex-col items-center justify-center w-24 h-full transition-all ${activeTab === 'supplies' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Package className={`w-6 h-6 mb-1.5 ${activeTab === 'supplies' ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''}`} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Supplies</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('wallet')}
+            className={`flex flex-col items-center justify-center w-24 h-full transition-all ${activeTab === 'wallet' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <WalletCards className={`w-6 h-6 mb-1.5 ${activeTab === 'wallet' ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''}`} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Wallet</span>
           </button>
         </div>
       </div>

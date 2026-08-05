@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createOrder, verifyPayment } from '../controllers/payment.controller';
+import { createOrder, verifyPayment, walletPayment } from '../controllers/payment.controller';
 import { handleRazorpayWebhook } from '../controllers/webhook.controller';
 import { protect } from '../middlewares/auth.middleware';
 
@@ -12,5 +12,6 @@ router.post('/webhook', handleRazorpayWebhook);
 router.use(protect);
 router.post('/create-order', createOrder);
 router.post('/verify', verifyPayment);
+router.post('/wallet', walletPayment);
 
 export default router;

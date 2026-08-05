@@ -17,7 +17,8 @@ import {
   BadgeCent,
   Blocks,
   Menu,
-  X
+  X,
+  Box
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const sidebarLinks = [
   { name: "Add-ons", href: "/admin/addons", icon: Blocks },
   { name: "Coupons", href: "/admin/coupons", icon: Ticket },
   { name: "Subscriptions", href: "/admin/subscriptions", icon: BadgeCent },
+  { name: "Inventory", href: "/admin/inventory", icon: Box },
   { name: "Support Inbox", href: "/admin/support", icon: MessageSquare },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];

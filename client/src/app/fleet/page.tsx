@@ -131,17 +131,20 @@ export default function FleetDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-heading font-bold text-white flex items-center gap-3">
-              <Building2 className="w-8 h-8 text-blue-500" />
+              <Building2 className="w-8 h-8 text-gray-300" />
               Corporate Fleet Dashboard
             </h1>
             <p className="text-gray-400 mt-2">Manage your company vehicles and bulk wash schedules.</p>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
+            <Button onClick={() => router.push('/fleet/subscription')} variant="outline" className="border-white/10 text-white bg-transparent hover:bg-white/5 h-11 px-6 rounded-xl">
+              <WalletCards className="w-4 h-4 mr-2" /> Billing & Subscriptions
+            </Button>
             <Button onClick={() => router.push('/book')} variant="outline" className="border-white/10 text-white bg-transparent hover:bg-white/5 h-11 px-6 rounded-xl">
               Book Fleet Wash
             </Button>
-            <Button onClick={() => setIsAdding(true)} className="bg-blue-600 text-white hover:bg-blue-700 h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+            <Button onClick={() => setIsAdding(true)} className="bg-white text-black hover:bg-gray-200 h-11 px-6 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.15)] font-semibold transition-all">
               <Plus className="w-4 h-4 mr-2" /> Add Vehicle
             </Button>
           </div>
@@ -170,15 +173,15 @@ export default function FleetDashboard() {
               <Clock className="w-16 h-16" />
             </div>
             <p className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-2">Active Services</p>
-            <p className="text-4xl font-heading font-bold text-blue-400">{isLoading ? "..." : activeBookings}</p>
+            <p className="text-4xl font-heading font-bold text-white">{isLoading ? "..." : activeBookings}</p>
           </motion.div>
 
-          <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.3}} className="bg-gradient-to-br from-blue-900/40 to-[#141414] border border-blue-500/20 p-6 rounded-2xl relative overflow-hidden">
+          <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: 0.3}} className="bg-gradient-to-br from-zinc-800/40 to-[#141414] border border-white/10 p-6 rounded-2xl relative overflow-hidden shadow-xl">
             <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-              <WalletCards className="w-16 h-16 text-blue-400" />
+              <WalletCards className="w-16 h-16 text-white" />
             </div>
-            <p className="text-sm font-bold uppercase tracking-widest text-blue-300/70 mb-2">Est. B2B Savings</p>
-            <p className="text-4xl font-heading font-bold text-white">${isLoading ? "..." : estimatedSavings}</p>
+            <p className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-2">Est. B2B Savings</p>
+            <p className="text-4xl font-heading font-bold text-white">₹{isLoading ? "..." : estimatedSavings}</p>
           </motion.div>
         </div>
 
@@ -298,7 +301,7 @@ export default function FleetDashboard() {
               <select 
                 value={newVehicle.type}
                 onChange={e => setNewVehicle({...newVehicle, type: e.target.value})}
-                className="w-full h-10 px-3 rounded-md bg-black border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-10 px-3 rounded-md bg-black border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-white/20"
               >
                 <option value="Hatchback">Hatchback</option>
                 <option value="Sedan">Sedan</option>
@@ -310,7 +313,7 @@ export default function FleetDashboard() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsAdding(false)} className="hover:bg-white/5">Cancel</Button>
-            <Button onClick={handleAddVehicle} disabled={isSubmitting} className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button onClick={handleAddVehicle} disabled={isSubmitting} className="bg-white text-black hover:bg-gray-200 font-semibold">
               {isSubmitting ? "Adding..." : "Add Vehicle"}
             </Button>
           </DialogFooter>

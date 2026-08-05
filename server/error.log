@@ -70,3 +70,671 @@ Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
     at a (C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
     at C:\Users\Sk Mijanur Rahaman\OneDrive\Desktop\cleanride\server\src\middlewares\auth.middleware.ts:40:23
 
+[2026-08-05T07:36:07.733Z] PATCH /api/bookings/ade195d4-adb9-4cd0-8c54-e06ce97c3f38/cancel
+Error: Failed to process refund: Unknown error
+Stack: Error: Failed to process refund: Unknown error
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:425:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:414:3
+
+[2026-08-05T07:36:12.354Z] PATCH /api/bookings/ade195d4-adb9-4cd0-8c54-e06ce97c3f38/cancel
+Error: Failed to process refund: Unknown error
+Stack: Error: Failed to process refund: Unknown error
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:425:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:414:3
+
+[2026-08-05T08:18:10.627Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.631Z] GET /api/bookings/my-bookings
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.635Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.639Z] GET /api/subscriptions/my-subscription
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.642Z] GET /api/vehicles/my-vehicles
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.645Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.648Z] GET /api/wallet/balance
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.653Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:10.657Z] GET /api/auth/me
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.227Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.244Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.316Z] GET /api/bookings/my-bookings
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.322Z] GET /api/subscriptions/my-subscription
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.331Z] GET /api/vehicles/my-vehicles
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.340Z] GET /api/auth/me
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.360Z] GET /api/wallet/balance
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T08:18:44.370Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Can't reach database server at aws-1-ap-northeast-1.pooler.supabase.com
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
+[2026-08-05T11:16:49.511Z] GET /api/admin/stats
+Error: You are not logged in! Please log in to get access.
+Stack: Error: You are not logged in! Please log in to get access.
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:31:17
+    at C:\Users\mijan\Music\cleanride\server\src\utils\catchAsync.ts:5:5
+    at Layer.handleRequest (C:\Users\mijan\Music\cleanride\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:342:13)
+    at C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:297:9
+    at processParams (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:291:5)
+    at router.handle (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:186:3)
+    at router (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:60:12)
+    at Layer.handleRequest (C:\Users\mijan\Music\cleanride\server\node_modules\router\lib\layer.js:152:17)
+
+[2026-08-05T11:45:07.413Z] DELETE /api/inventory/items/40ac557d-9bb7-4472-8cb7-adbcfb80bba0
+Error: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:3
+
+[2026-08-05T11:45:35.193Z] DELETE /api/inventory/items/40ac557d-9bb7-4472-8cb7-adbcfb80bba0
+Error: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:3
+
+[2026-08-05T11:45:44.310Z] DELETE /api/inventory/items/40ac557d-9bb7-4472-8cb7-adbcfb80bba0
+Error: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:3
+
+[2026-08-05T11:46:02.614Z] DELETE /api/inventory/items/40ac557d-9bb7-4472-8cb7-adbcfb80bba0
+Error: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:3
+
+[2026-08-05T11:46:22.034Z] DELETE /api/inventory/items/40ac557d-9bb7-4472-8cb7-adbcfb80bba0
+Error: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.supplyItem.delete()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:33
+
+  40 });
+  41 
+  42 export const deleteItem = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+→ 43   await prisma.supplyItem.delete(
+Foreign key constraint violated on the constraint: `SupplyRequest_itemId_fkey`
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\inventory.controller.ts:43:3
+
+[2026-08-05T12:39:21.233Z] POST /api/coupons/validate
+Error: Invalid coupon code
+Stack: Error: Invalid coupon code
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\coupon.controller.ts:15:28
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-05T12:40:07.933Z] POST /api/bookings
+Error: You have already used this coupon
+Stack: Error: You have already used this coupon
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:72:21
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-05T12:53:00.877Z] PATCH /api/bookings/7ac9f395-63fd-4c9d-bc6c-b2c97e4fc13c/cancel
+Error: Failed to process refund: Unknown error
+Stack: Error: Failed to process refund: Unknown error
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:471:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:460:3
+
+[2026-08-05T12:53:08.516Z] PATCH /api/bookings/7ac9f395-63fd-4c9d-bc6c-b2c97e4fc13c/cancel
+Error: Failed to process refund: Unknown error
+Stack: Error: Failed to process refund: Unknown error
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:471:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:460:3
+
+[2026-08-05T12:53:18.537Z] PATCH /api/bookings/7ac9f395-63fd-4c9d-bc6c-b2c97e4fc13c/cancel
+Error: Failed to process refund: Unknown error
+Stack: Error: Failed to process refund: Unknown error
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:471:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:460:3
+
+[2026-08-05T12:53:29.366Z] PATCH /api/bookings/7ac9f395-63fd-4c9d-bc6c-b2c97e4fc13c/cancel
+Error: Failed to process refund: Unknown error
+Stack: Error: Failed to process refund: Unknown error
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:471:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:460:3
+
+[2026-08-05T12:56:57.528Z] PATCH /api/bookings/7ac9f395-63fd-4c9d-bc6c-b2c97e4fc13c/cancel
+Error: Failed to process refund: TM5vOvbHdncVTT is not a valid id
+Stack: Error: Failed to process refund: TM5vOvbHdncVTT is not a valid id
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:476:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:460:3
+
+[2026-08-05T12:57:09.543Z] PATCH /api/bookings/7ac9f395-63fd-4c9d-bc6c-b2c97e4fc13c/cancel
+Error: Failed to process refund: TM5vOvbHdncVTT is not a valid id
+Stack: Error: Failed to process refund: TM5vOvbHdncVTT is not a valid id
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:476:15
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at Proxy._transactionWithCallback (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:810:18)
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:460:3
+
+[2026-08-05T13:03:02.921Z] POST /api/subscriptions/create-subscription
+Error: Razorpay plan ID is not configured for this plan
+Stack: Error: Razorpay plan ID is not configured for this plan
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\subscription.controller.ts:30:17
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+

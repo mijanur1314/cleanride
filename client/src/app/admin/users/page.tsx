@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Loader2, Eye, Camera } from "lucide-react";
+import { Loader2, Eye, Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminUsers() {
@@ -61,73 +61,90 @@ export default function AdminUsers() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="relative">
+          <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
+          <Loader2 className="relative w-8 h-8 animate-spin text-blue-500" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-1000 relative">
+      {/* Background ambient light */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
+
       <div>
-        <h1 className="text-3xl font-heading font-bold">Users & Partners</h1>
-        <p className="text-muted-foreground mt-1">Manage all registered accounts on the platform.</p>
+        <h1 className="text-4xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-white via-gray-200 to-gray-500 bg-clip-text text-transparent">
+          Users & Partners
+        </h1>
+        <p className="text-gray-400 mt-2 font-medium tracking-wide text-sm">Manage all registered accounts on the platform.</p>
       </div>
 
       <Tabs defaultValue="customers" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="customers">Customers ({customers.length})</TabsTrigger>
-          <TabsTrigger value="partners">Service Partners ({partners.length})</TabsTrigger>
+        <TabsList className="mb-6 bg-black/40 border border-white/5 p-1 rounded-xl">
+          <TabsTrigger value="customers" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
+            Customers ({customers.length})
+          </TabsTrigger>
+          <TabsTrigger value="partners" className="rounded-lg data-[state=active]:bg-white/10 data-[state=active]:text-white transition-all">
+            Service Partners ({partners.length})
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="customers">
-          <Card className="border-border/50 shadow-sm">
+        <TabsContent value="customers" className="mt-0">
+          <Card className="bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl">
             <CardHeader>
-              <CardTitle>Customers</CardTitle>
+              <CardTitle className="text-xl">Customers</CardTitle>
               <CardDescription>Users who book services.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="relative w-full overflow-auto">
+              <div className="relative w-full overflow-auto rounded-xl border border-white/5 bg-black/20">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>CleanCoins</TableHead>
-                      <TableHead>Joined Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
+                    <TableRow className="border-b border-white/5 hover:bg-transparent">
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Name</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Email</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">CleanCoins</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Joined Date</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Status</TableHead>
+                      <TableHead className="h-14 px-6 text-right align-middle font-semibold text-gray-400">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {customers.map((u) => (
-                      <TableRow key={u.id}>
-                        <TableCell className="font-medium">{u.name}</TableCell>
-                        <TableCell>{u.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-primary font-bold border-primary/20 bg-primary/10">
+                      <TableRow key={u.id} className="border-b border-white/5 transition-colors hover:bg-white/[0.04]">
+                        <TableCell className="p-5 align-middle font-bold text-gray-200">{u.name}</TableCell>
+                        <TableCell className="p-5 align-middle text-gray-400">{u.email}</TableCell>
+                        <TableCell className="p-5 align-middle">
+                          <Badge variant="outline" className="text-blue-400 font-bold border-blue-500/20 bg-blue-500/10 px-3 py-1">
                             {u.loyaltyPoints} pts
                           </Badge>
                         </TableCell>
-                        <TableCell>{format(new Date(u.createdAt), "MMM d, yyyy")}</TableCell>
-                        <TableCell>
+                        <TableCell className="p-5 align-middle text-gray-400">{format(new Date(u.createdAt), "MMM d, yyyy")}</TableCell>
+                        <TableCell className="p-5 align-middle">
                           {u.isBanned ? (
-                            <Badge variant="destructive" className="bg-red-500/10 text-red-500 hover:bg-red-500/20">Banned</Badge>
+                            <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 px-3 py-1 font-semibold">Banned</Badge>
                           ) : (
-                            <Badge variant="outline" className="text-green-500 border-green-200 bg-green-50">Active</Badge>
+                            <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1 font-semibold">Active</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="p-5 align-middle text-right">
                           <Button 
                             size="sm" 
-                            variant={u.isBanned ? "outline" : "destructive"} 
+                            variant="outline"
                             onClick={() => toggleBan(u.id, !u.isBanned)}
-                            className={u.isBanned ? "text-green-500 hover:text-green-600" : "bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"}
+                            className={`border-white/10 ${u.isBanned ? "bg-white/5 text-gray-300 hover:text-white" : "bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20"}`}
                           >
                             {u.isBanned ? 'Unban' : 'Ban'}
                           </Button>
                         </TableCell>
                       </TableRow>
                     ))}
+                    {customers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="p-8 text-center text-gray-500">No customers found.</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -135,40 +152,40 @@ export default function AdminUsers() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="partners">
-          <Card className="border-border/50 shadow-sm">
+        <TabsContent value="partners" className="mt-0">
+          <Card className="bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl">
             <CardHeader>
-              <CardTitle>Service Partners</CardTitle>
+              <CardTitle className="text-xl">Service Partners</CardTitle>
               <CardDescription>Your workforce assigned to bookings.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="relative w-full overflow-auto">
+              <div className="relative w-full overflow-auto rounded-xl border border-white/5 bg-black/20">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Joined Date</TableHead>
-                      <TableHead>Verification</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
+                    <TableRow className="border-b border-white/5 hover:bg-transparent">
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Name</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Email</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Joined Date</TableHead>
+                      <TableHead className="h-14 px-6 text-left align-middle font-semibold text-gray-400">Verification</TableHead>
+                      <TableHead className="h-14 px-6 text-right align-middle font-semibold text-gray-400">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {partners.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell className="font-medium">{p.name}</TableCell>
-                        <TableCell>{p.email}</TableCell>
-                        <TableCell>{format(new Date(p.createdAt), "MMM d, yyyy")}</TableCell>
-                        <TableCell>
+                      <TableRow key={p.id} className="border-b border-white/5 transition-colors hover:bg-white/[0.04]">
+                        <TableCell className="p-5 align-middle font-bold text-gray-200">{p.name}</TableCell>
+                        <TableCell className="p-5 align-middle text-gray-400">{p.email}</TableCell>
+                        <TableCell className="p-5 align-middle text-gray-400">{format(new Date(p.createdAt), "MMM d, yyyy")}</TableCell>
+                        <TableCell className="p-5 align-middle">
                           {p.isBanned ? (
-                            <Badge variant="destructive" className="bg-red-500/10 text-red-500 hover:bg-red-500/20">Banned</Badge>
+                            <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 px-3 py-1 font-semibold">Banned</Badge>
                           ) : p.isVerified ? (
-                            <Badge variant="outline" className="text-green-500 border-green-200 bg-green-50">Verified</Badge>
+                            <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20 px-3 py-1 font-semibold">Verified</Badge>
                           ) : (
-                            <Badge variant="secondary" className="text-yellow-600 border-yellow-200 bg-yellow-50">Pending Approval</Badge>
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 px-3 py-1 font-semibold">Pending Approval</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="p-5 align-middle text-right">
                           {!p.isVerified ? (
                             <div className="flex justify-end gap-2">
                               {p.kycDocumentUrl && (
@@ -178,8 +195,9 @@ export default function AdminUsers() {
                                     variant="outline" 
                                     onClick={() => window.open(p.kycDocumentUrl, '_blank')}
                                     title="View KYC Document"
+                                    className="bg-white/5 border-white/10 hover:bg-white/10"
                                   >
-                                    <Eye className="w-4 h-4" />
+                                    <Eye className="w-4 h-4 text-blue-400" />
                                   </Button>
                                   {p.kycSelfieUrl && (
                                     <Button 
@@ -187,27 +205,33 @@ export default function AdminUsers() {
                                       variant="outline" 
                                       onClick={() => window.open(p.kycSelfieUrl, '_blank')}
                                       title="View Selfie"
+                                      className="bg-white/5 border-white/10 hover:bg-white/10"
                                     >
-                                      <Camera className="w-4 h-4" />
+                                      <Camera className="w-4 h-4 text-purple-400" />
                                     </Button>
                                   )}
                                 </div>
                               )}
-                              <Button size="sm" onClick={() => verifyPartner(p.id, true)} className="bg-green-600 hover:bg-green-700 text-white">Approve</Button>
+                              <Button size="sm" onClick={() => verifyPartner(p.id, true)} className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/20">Approve</Button>
                             </div>
                           ) : (
                             <div className="flex justify-end gap-2">
                               {p.isBanned ? (
-                                <Button size="sm" variant="outline" onClick={() => toggleBan(p.id, false)} className="text-green-500 hover:text-green-600">Unban</Button>
+                                <Button size="sm" variant="outline" onClick={() => toggleBan(p.id, false)} className="bg-white/5 border-white/10 text-gray-300 hover:text-white">Unban</Button>
                               ) : (
-                                <Button size="sm" variant="outline" onClick={() => toggleBan(p.id, true)} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white">Ban</Button>
+                                <Button size="sm" variant="outline" onClick={() => toggleBan(p.id, true)} className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/20">Ban</Button>
                               )}
-                              <Button size="sm" variant="outline" onClick={() => verifyPartner(p.id, false)} className="text-yellow-600 hover:text-yellow-700">Revoke Verification</Button>
+                              <Button size="sm" variant="outline" onClick={() => verifyPartner(p.id, false)} className="bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/20">Revoke Verification</Button>
                             </div>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
+                    {partners.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="p-8 text-center text-gray-500">No partners found.</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -217,25 +241,27 @@ export default function AdminUsers() {
       </Tabs>
       
       {pagination && pagination.pages > 1 && (
-        <div className="flex justify-between items-center bg-card border rounded-lg p-4 mt-6">
+        <div className="flex justify-between items-center bg-[#0A0A0A]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-xl p-4 mt-6">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
+            className="bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10 disabled:opacity-50"
           >
-            Previous
+            <ChevronLeft className="w-4 h-4 mr-1" /> Previous
           </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {pagination.page} of {pagination.pages}
+          <span className="text-sm font-semibold text-gray-400">
+            Page <span className="text-white">{pagination.page}</span> of <span className="text-white">{pagination.pages}</span>
           </span>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setPage(p => Math.min(pagination.pages, p + 1))}
             disabled={page === pagination.pages}
+            className="bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10 disabled:opacity-50"
           >
-            Next
+            Next <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       )}
