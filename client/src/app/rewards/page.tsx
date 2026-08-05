@@ -21,7 +21,6 @@ export default function RewardsPage() {
   const [mounted, setMounted] = useState(false);
 
   const handleInvite = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const code = (user as any)?.referralCode;
     if (!code) {
       toast.error("Referral code not found. Please contact support.");

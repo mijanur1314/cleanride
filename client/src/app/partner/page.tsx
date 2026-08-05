@@ -175,7 +175,7 @@ export default function PartnerDashboard() {
       if (watchId && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
       }
-      // @ts-ignore
+      // @ts-expect-error: mockIntervalId is assigned within the watchPosition error callback
       if (typeof mockIntervalId !== 'undefined') clearInterval(mockIntervalId);
     };
   }, [activeBookings, socket]);
