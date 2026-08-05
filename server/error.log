@@ -1139,3 +1139,43 @@ Stack: Error: No file provided for upload
     at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:53:3
     at processTicksAndRejections (node:internal/process/task_queues:104:5)
 
+[2026-08-05T13:30:40.458Z] GET /api/notifications
+Error: canceling statement due to statement timeout
+Stack: DriverAdapterError: canceling statement due to statement timeout
+    at PrismaPgAdapter.onError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\adapter-pg\dist\index.js:678:11)
+    at PrismaPgAdapter.performIO (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\adapter-pg\dist\index.js:673:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at PrismaPgAdapter.queryRaw (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\adapter-pg\dist\index.js:604:30)
+    at e.interpretNode (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:186:26)
+    at e.interpretNode (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:213:41)
+    at e.interpretNode (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:272:41)
+    at e.run (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:94:23)
+    at execute (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\core\engines\client\LocalExecutor.ts:81:12)
+    at jt.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\core\engines\client\ClientEngine.ts:504:22)
+
+[2026-08-05T13:30:54.220Z] GET /api/notifications
+Error: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Server has closed the connection.
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation in
+C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:41
+
+  37 
+  38 const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+  39 
+→ 40 const currentUser = await prisma.user.findUnique(
+Server has closed the connection.
+    at zr.handleRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:237:13)
+    at zr.handleAndLogRequestError (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:183:12)
+    at zr.request (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:152:12)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
+    at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
+
