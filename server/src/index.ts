@@ -19,8 +19,11 @@ server.listen(PORT, async () => {
   logger.info(`Server is running on port ${PORT}`);
   
   // Schedule Daily Payout Cron Job (runs at 11:59 PM every day)
-  await payoutQueue.add('dailyPayout', {}, {
-    repeat: { pattern: '59 23 * * *' }
+  await payoutQueue.upsertJobScheduler('daily-payout-scheduler', {
+    pattern: '59 23 * * *'
+  }, {
+    name: 'dailyPayout',
+    data: {}
   });
   logger.info('Daily Payout Cron Job scheduled.');
 });
