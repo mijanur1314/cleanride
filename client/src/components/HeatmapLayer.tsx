@@ -16,8 +16,7 @@ export default function HeatmapLayer({ points }: HeatmapLayerProps) {
     let heat: any = null;
 
     if (points.length > 0) {
-      // @ts-expect-error leaflet.heat adds heatLayer to L
-      heat = L.heatLayer(points, {
+      heat = (L as any).heatLayer(points, {
         radius: 25,
         blur: 15,
         maxZoom: 17,

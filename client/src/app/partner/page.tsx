@@ -154,7 +154,7 @@ export default function PartnerDashboard() {
       // though our backend 'update-location' only needs the bookingId.
       socket.emit('join-booking', activeEnRoute.id);
       
-      let mockIntervalId: NodeJS.Timeout;
+      let mockIntervalId: NodeJS.Timeout | undefined;
       
       watchId = navigator.geolocation.watchPosition(
         (position) => {
@@ -190,8 +190,7 @@ export default function PartnerDashboard() {
       if (watchId && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
       }
-      // @ts-expect-error: mockIntervalId is assigned within the watchPosition error callback
-      if (typeof mockIntervalId !== 'undefined') clearInterval(mockIntervalId);
+      if (mockIntervalId) clearInterval(mockIntervalId);
     };
   }, [activeBookings, socket]);
 
