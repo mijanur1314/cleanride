@@ -46,7 +46,8 @@ The platform serves **three distinct user roles**:
 | ⚡ **Redis Caching** | High-traffic endpoints like services, subscription plans, and stores are cached via `ioredis` for lightning-fast sub-10ms responses. |
 | 📱 **Offline-First PWA** | Installable directly to mobile home screens with native Web Push Notifications and robust IndexedDB offline syncing for underground operations. |
 | 🛡️ **Secure Webhooks** | Automated server-to-server Razorpay webhooks guarantee payments are captured and subscriptions renewed securely in the background. |
-| 📧 **Asynchronous Emails** | Non-blocking `Nodemailer` integration instantly emails customers and partners without slowing down HTTP responses. |
+| 🔄 **BullMQ Background Jobs** | Robust Redis-backed message queues process asynchronous tasks like smart auto-dispatching, automated daily partner payouts, and email notifications without blocking the main event loop. |
+| 📧 **Asynchronous Emails** | Non-blocking `Nodemailer` integration instantly emails customers and partners. |
 | ☁️ **Cloud Storage** | Securely handle multipart/form-data for image uploads without local disk bloat. |
 | 📍 **Smart Geolocation** | One-click GPS coordinate extraction and reverse geocoding via OpenStreetMap Nominatim API for automatic address resolution. |
 | ⛈️ **Weather-Aware Scheduling** | Automatically checks real-time weather forecasts (Open-Meteo) during booking, warning users about severe rain or storms. |
@@ -70,6 +71,7 @@ The platform serves **three distinct user roles**:
 | 🔄 **Live Status Updates** | Update live booking statuses (`EN_ROUTE`, `WASH_IN_PROGRESS`, `COMPLETED`). |
 | 📷 **Visual Proof & AI Verification** | Auto-upload Before & After images to cloud storage. The Gemini AI actively inspects after-wash photos to ensure quality standards are met. |
 | 📶 **Offline Mode (IndexedDB)** | Work seamlessly in underground garages with zero signal. Actions and photos queue locally and auto-sync when cellular connection is restored. |
+| 💰 **Automated Daily Payouts** | Earnings (70% cut) are automatically calculated and processed via cron-scheduled BullMQ background workers every night at 11:59 PM. |
 
 ### 🛡️ Admins
 | Feature | Description |
@@ -77,7 +79,7 @@ The platform serves **three distinct user roles**:
 | 🏪 **Location Management** | Manage physical washing store branches, enabling users to book in-store rather than at their doorstep. |
 | 🎁 **Coupon & Promotion Engine** | Create, manage, and expire custom discount codes with minimum order values and total usage limits. |
 | 🛍️ **Up-sell Management** | Build and manage Service Add-ons and Premium Subscription Plans directly synced to Razorpay. |
-| 👥 **Manual Dispatching & Scalability** | Assign bookings to partners through a highly-scalable, paginated dashboard designed to handle tens of thousands of records smoothly. |
+| 👥 **Smart Auto-Dispatching** | Bookings are automatically matched and dispatched to the best available partner via BullMQ workers, with manual overrides available in the dashboard. |
 | 📈 **Advanced Analytics** | High-level dashboard showing total revenue, active users, service distribution graphs, and dynamic 7-day/30-day/1-year/All-Time revenue trends. |
 
 ---
@@ -93,6 +95,7 @@ The platform serves **three distinct user roles**:
 | **State Management** | Zustand (Persistent Storage) + React Query |
 | **Database** | PostgreSQL |
 | **Cache & Real-Time** | Redis + Socket.io |
+| **Message Queue** | BullMQ (Redis-backed Job Queues) |
 | **Artificial Intelligence** | @ai-sdk/google (Gemini 2.5 Flash) |
 | **ORM** | Prisma |
 | **Payments** | Razorpay SDK + Server-to-Server Webhooks |
