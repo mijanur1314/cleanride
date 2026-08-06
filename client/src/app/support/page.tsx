@@ -172,15 +172,19 @@ export default function SupportPage() {
                 <CardContent className="flex-1 overflow-y-auto p-6 space-y-6 bg-muted/10">
                   {ticketDetails.messages.map((msg: any) => {
                     const isMe = msg.senderId === user?.id;
+                    const isAI = msg.content.startsWith('[AI Agent] ');
+                    const displayContent = isAI ? msg.content.replace('[AI Agent] ', '') : msg.content;
+                    
                     return (
                       <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-medium">{isMe ? 'You' : msg.sender.name}</span>
-                          {!isMe && <Badge variant="secondary" className="text-[9px] h-4 px-1">{msg.sender.role}</Badge>}
+                          <span className="text-xs font-medium">{isMe ? 'You' : isAI ? 'CleanRide AI' : msg.sender.name}</span>
+                          {!isMe && !isAI && <Badge variant="secondary" className="text-[9px] h-4 px-1">{msg.sender.role}</Badge>}
+                          {isAI && <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[9px] h-4 px-1 uppercase tracking-widest font-bold">Autonomous Agent</Badge>}
                           <span className="text-[10px] text-muted-foreground">{format(new Date(msg.createdAt), 'h:mm a')}</span>
                         </div>
-                        <div className={`p-3 rounded-2xl max-w-[80%] text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-background border rounded-tl-sm shadow-sm'}`}>
-                          {msg.content}
+                        <div className={`p-3 rounded-2xl max-w-[80%] text-sm ${isMe ? 'bg-primary text-primary-foreground rounded-tr-sm' : isAI ? 'bg-blue-500/10 border border-blue-500/20 rounded-tl-sm shadow-[0_0_15px_rgba(59,130,246,0.1)] text-blue-50 font-medium' : 'bg-background border rounded-tl-sm shadow-sm'}`}>
+                          {displayContent}
                         </div>
                       </div>
                     )

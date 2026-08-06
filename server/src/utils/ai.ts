@@ -93,3 +93,91 @@ export const verifyKYCDocument = async (imageUrl: string) => {
     return { isValid: false, confidence: 0, extractedName: null, reason: 'Verification process failed' };
   }
 };
+
+export const verifyWashQuality = async (beforeImageUrl: string | null, afterImageUrl: string) => {
+  const ai = await initAI();
+  if (!ai) {
+    console.warn('GEMINI_API_KEY not configured. Skipping Wash Quality verification.');
+    return { isClean: true, reason: 'AI disabled, auto-approved' }; // Fail-safe
+  }
+
+  try {
+    // Determine mime type from URL or default to jpeg
+    let mimeType = 'image/jpeg';
+    if (afterImageUrl.toLowerCase().endsWith('.png')) mimeType = 'image/png';
+    else if (afterImageUrl.toLowerCase().endsWith('.webp')) mimeType = 'image/webp';
+
+    // Download the after image
+    const response = await fetch(afterImageUrl);
+    if (!response.ok) throw new Error(`Failed to fetch after image: ${response.statusText}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const base64Image = Buffer.from(arrayBuffer).toString('base64');
+
+    const parts: any[] = [
+      { text: "You are a strict QA inspector for a premium car washing service. Analyze the provided image of a freshly washed car. Is the car completely clean, shiny, and free of dirt, mud, and water spots? If the photo is blurry, too dark, or does not clearly show a car, you must fail it." },
+      {
+        inlineData: {
+          data: base64Image,
+          mimeType: mimeType
+        }
+      }
+    ];
+
+    // Optionally include before image for context if it exists
+    if (beforeImageUrl) {
+      try {
+        let beforeMime = 'image/jpeg';
+        if (beforeImageUrl.toLowerCase().endsWith('.png')) beforeMime = 'image/png';
+        const bRes = await fetch(beforeImageUrl);
+        if (bRes.ok) {
+          const bBuffer = await bRes.arrayBuffer();
+          parts.push({ text: "Here is the 'Before' photo for context:" });
+          parts.push({
+            inlineData: {
+              data: Buffer.from(bBuffer).toString('base64'),
+              mimeType: beforeMime
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to fetch before image for AI context, proceeding with only after image.");
+      }
+    }
+
+    const responseSchema = {
+      type: aiType.OBJECT,
+      properties: {
+        isClean: {
+          type: aiType.BOOLEAN,
+          description: "True if the car appears perfectly clean and the photo is clear. False if there is visible dirt, mud, or the photo is too blurry/dark to tell."
+        },
+        reason: {
+          type: aiType.STRING,
+          description: "A short, direct sentence explaining why it passed or failed (e.g., 'The front bumper still has visible mud' or 'The car is spotless and shiny')."
+        }
+      },
+      required: ["isClean", "reason"]
+    };
+
+    const result = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts }],
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema,
+        temperature: 0.1,
+      }
+    });
+
+    const text = result.text;
+    if (!text) throw new Error('Empty response from Gemini');
+    
+    return JSON.parse(text) as { isClean: boolean, reason: string };
+  } catch (error) {
+    console.error('AI Quality Verification Error:', error);
+    // In case of an API error (e.g. rate limit), we allow the partner to complete the wash
+    // so they aren't stuck on the job site.
+    return { isClean: true, reason: 'AI service unavailable, auto-approved' };
+  }
+};
+

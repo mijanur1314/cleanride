@@ -18,35 +18,84 @@ export const getDashboardStats = catchAsync(async (req: Request, res: Response, 
   });
   const totalRevenue = completedPayments.reduce((sum: number, payment: { amount: number }) => sum + payment.amount, 0);
 
-  // 7-day revenue trend
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  sevenDaysAgo.setHours(0, 0, 0, 0);
+  const period = (req.query.period as string) || '7d';
+  const startDate = new Date();
+  let daysToFetch = 7;
+  let groupByMonth = false;
+  let fetchAll = false;
+
+  if (period === '30d') {
+    daysToFetch = 30;
+    startDate.setDate(startDate.getDate() - 30);
+  } else if (period === '1y') {
+    daysToFetch = 365;
+    startDate.setFullYear(startDate.getFullYear() - 1);
+    groupByMonth = true;
+  } else if (period === 'all') {
+    fetchAll = true;
+    groupByMonth = true;
+  } else {
+    startDate.setDate(startDate.getDate() - 7);
+  }
+  startDate.setHours(0, 0, 0, 0);
 
   const recentCompletedPayments = await prisma.payment.findMany({
     where: { 
-      createdAt: { gte: sevenDaysAgo },
+      ...(fetchAll ? {} : { createdAt: { gte: startDate } }),
       status: 'COMPLETED'
     },
-    select: { createdAt: true, amount: true }
+    select: { createdAt: true, amount: true },
+    orderBy: { createdAt: 'asc' }
   });
 
   const revenueByDayMap = new Map();
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    revenueByDayMap.set(dateStr, { date: dateStr, revenue: 0, bookings: 0 });
-  }
+  
+  if (groupByMonth) {
+    let startMonth = new Date();
+    startMonth.setMonth(startMonth.getMonth() - 11); // Default to 12 months for 1y
+    
+    if (fetchAll && recentCompletedPayments.length > 0) {
+      startMonth = new Date(recentCompletedPayments[0].createdAt);
+    }
+    
+    // Initialize months from startMonth to now
+    const now = new Date();
+    const tempDate = new Date(startMonth);
+    tempDate.setDate(1); // Set to first of month
+    
+    while (tempDate <= now || (tempDate.getMonth() === now.getMonth() && tempDate.getFullYear() === now.getFullYear())) {
+      const monthStr = tempDate.toISOString().slice(0, 7); // YYYY-MM
+      revenueByDayMap.set(monthStr, { date: monthStr + '-01', revenue: 0, bookings: 0 }); // Append -01 for easy parsing
+      tempDate.setMonth(tempDate.getMonth() + 1);
+    }
+    
+    for (const p of recentCompletedPayments) {
+      const monthStr = new Date(p.createdAt).toISOString().slice(0, 7);
+      if (revenueByDayMap.has(monthStr)) {
+        const entry = revenueByDayMap.get(monthStr);
+        entry.revenue += p.amount;
+        entry.bookings += 1;
+      }
+    }
+  } else {
+    // Initialize days
+    for (let i = daysToFetch - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      revenueByDayMap.set(dateStr, { date: dateStr, revenue: 0, bookings: 0 });
+    }
 
-  for (const p of recentCompletedPayments) {
-    const dateStr = new Date(p.createdAt).toISOString().split('T')[0];
-    if (revenueByDayMap.has(dateStr)) {
-      const entry = revenueByDayMap.get(dateStr);
-      entry.revenue += p.amount;
-      entry.bookings += 1;
+    for (const p of recentCompletedPayments) {
+      const dateStr = new Date(p.createdAt).toISOString().split('T')[0];
+      if (revenueByDayMap.has(dateStr)) {
+        const entry = revenueByDayMap.get(dateStr);
+        entry.revenue += p.amount;
+        entry.bookings += 1;
+      }
     }
   }
+  
   const revenueByDay = Array.from(revenueByDayMap.values());
 
   // Top Partners

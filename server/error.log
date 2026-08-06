@@ -1205,3 +1205,27 @@ Server has closed the connection.
     at a (C:\Users\mijan\Music\cleanride\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:963:24)
     at C:\Users\mijan\Music\cleanride\server\src\middlewares\auth.middleware.ts:40:23
 
+[2026-08-06T05:59:20.182Z] POST /api/bookings
+Error: You have already used this coupon
+Stack: Error: You have already used this coupon
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:73:21
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T06:03:54.577Z] PATCH /api/bookings/06fa651e-7698-4761-90e9-7328afe64436/status
+Error: You must upload an after photo before completing the wash
+Stack: Error: You must upload an after photo before completing the wash
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:315:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T06:04:09.120Z] PATCH /api/bookings/06fa651e-7698-4761-90e9-7328afe64436/status
+Error: You must upload an after photo before completing the wash
+Stack: Error: You must upload an after photo before completing the wash
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:315:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T06:04:13.525Z] PATCH /api/bookings/06fa651e-7698-4761-90e9-7328afe64436/status
+Error: You must upload an after photo before completing the wash
+Stack: Error: You must upload an after photo before completing the wash
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:315:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+

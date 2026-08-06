@@ -9,7 +9,7 @@ import api from "@/lib/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut, Package, WalletCards } from "lucide-react";
+import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut, Package, WalletCards, WifiOff } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import { ChatBox } from "@/components/ChatBox";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { addOfflineAction, getOfflineActions, removeOfflineAction, fileToBase64, base64ToFile } from "@/lib/offlineSync";
 
 const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
@@ -31,6 +32,20 @@ export default function PartnerDashboard() {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Initialize Socket.io
   useEffect(() => {
@@ -212,13 +227,96 @@ export default function PartnerDashboard() {
     }
   }, [isAuthenticated, user?.isVerified, login]);
 
-  const updateStatus = async (id: string, status: string) => {
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
+  const syncPendingActions = async () => {
+    if (!isOnline || isSyncing) return;
+    setIsSyncing(true);
     try {
-      await api.patch(`/bookings/${id}/status`, { status });
-      toast.success("Status updated successfully");
+      const actions = await getOfflineActions();
+      if (actions.length === 0) return;
+      
+      toast.info(`Syncing ${actions.length} offline actions to server...`);
+      
+      for (const action of actions) {
+        if (action.type === 'UPDATE_STATUS') {
+          await api.patch(`/bookings/${action.payload.bookingId}/status`, { status: action.payload.status });
+        } else if (action.type === 'UPLOAD_IMAGES') {
+          const { bookingId, beforeImageBase64, afterImageBase64 } = action.payload;
+          let beforeImageUrl, afterImageUrl;
+          
+          if (beforeImageBase64) {
+            const formData = new FormData();
+            formData.append('file', base64ToFile(beforeImageBase64, 'before.jpg'));
+            const res = await api.post("/upload", formData);
+            beforeImageUrl = res.data.data.url;
+          }
+          if (afterImageBase64) {
+            const formData = new FormData();
+            formData.append('file', base64ToFile(afterImageBase64, 'after.jpg'));
+            const res = await api.post("/upload", formData);
+            afterImageUrl = res.data.data.url;
+          }
+          await api.patch(`/bookings/${bookingId}/images`, { beforeImageUrl, afterImageUrl });
+        }
+        await removeOfflineAction(action.id!);
+      }
+      
+      toast.success("All offline actions synced successfully!");
       queryClient.invalidateQueries({ queryKey: ['partnerBookings'] });
     } catch (error) {
-      toast.error("Failed to update status");
+      console.error("Failed to sync offline actions", error);
+      toast.error("Some offline actions failed to sync.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOnline) {
+      syncPendingActions();
+    }
+  }, [isOnline]);
+
+  const updateStatus = async (id: string, status: string) => {
+    setUpdatingStatusId(id);
+    
+    // Auto-upload images if completing job and images are pending
+    if (status === 'COMPLETED' && images[id] && (images[id].before || images[id].after)) {
+      const success = await submitImages(id);
+      if (!success) {
+        setUpdatingStatusId(null);
+        return;
+      }
+    }
+    
+    try {
+      if (!isOnline) {
+        await addOfflineAction({
+          type: 'UPDATE_STATUS',
+          payload: { bookingId: id, status }
+        });
+        toast.success("Offline: Status update saved locally and will sync when online.");
+        // Optimistically update React Query cache so UI changes immediately
+        queryClient.setQueryData(['partnerBookings'], (old: any) => {
+          if (!old?.data?.bookings) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              bookings: old.data.bookings.map((b: any) => b.id === id ? { ...b, status } : b)
+            }
+          };
+        });
+      } else {
+        await api.patch(`/bookings/${id}/status`, { status });
+        toast.success("Status updated successfully");
+        queryClient.invalidateQueries({ queryKey: ['partnerBookings'] });
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update status");
+    } finally {
+      setUpdatingStatusId(null);
     }
   };
 
@@ -236,38 +334,52 @@ export default function PartnerDashboard() {
     }
   };
 
-  const submitImages = async (id: string) => {
+  const submitImages = async (id: string): Promise<boolean> => {
     const files = images[id];
     if (!files || (!files.before && !files.after)) {
       toast.error("Please select at least one image to upload");
-      return;
+      return false;
     }
     
     setUploadingImages(id);
     try {
-      let beforeImageUrl;
-      let afterImageUrl;
+      if (!isOnline) {
+        let beforeImageBase64 = null;
+        let afterImageBase64 = null;
 
-      if (files.before) {
-        const formDataBefore = new FormData();
-        formDataBefore.append('file', files.before);
-        const resBefore = await api.post("/upload", formDataBefore);
-        beforeImageUrl = resBefore.data.data.url;
+        if (files.before) beforeImageBase64 = await fileToBase64(files.before);
+        if (files.after) afterImageBase64 = await fileToBase64(files.after);
+
+        await addOfflineAction({
+          type: 'UPLOAD_IMAGES',
+          payload: { bookingId: id, beforeImageBase64, afterImageBase64 }
+        });
+        toast.success("Offline: Images saved locally and will sync when online.");
+      } else {
+        let beforeImageUrl;
+        let afterImageUrl;
+
+        if (files.before) {
+          const formDataBefore = new FormData();
+          formDataBefore.append('file', files.before);
+          const resBefore = await api.post("/upload", formDataBefore);
+          beforeImageUrl = resBefore.data.data.url;
+        }
+        
+        if (files.after) {
+          const formDataAfter = new FormData();
+          formDataAfter.append('file', files.after);
+          const resAfter = await api.post("/upload", formDataAfter);
+          afterImageUrl = resAfter.data.data.url;
+        }
+
+        await api.patch(`/bookings/${id}/images`, {
+          beforeImageUrl,
+          afterImageUrl
+        });
+        toast.success("Images uploaded successfully");
       }
       
-      if (files.after) {
-        const formDataAfter = new FormData();
-        formDataAfter.append('file', files.after);
-        const resAfter = await api.post("/upload", formDataAfter);
-        afterImageUrl = resAfter.data.data.url;
-      }
-
-      await api.patch(`/bookings/${id}/images`, {
-        beforeImageUrl,
-        afterImageUrl
-      });
-      
-      toast.success("Images uploaded successfully");
       setImages(prev => {
         const next = { ...prev };
         if (next[id]?.beforePreview) URL.revokeObjectURL(next[id].beforePreview!);
@@ -276,8 +388,10 @@ export default function PartnerDashboard() {
         return next;
       });
       queryClient.invalidateQueries({ queryKey: ['partnerBookings'] });
+      return true;
     } catch (error) {
       toast.error("Failed to upload images");
+      return false;
     } finally {
       setUploadingImages(null);
     }
@@ -442,6 +556,20 @@ export default function PartnerDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 pb-28 pt-20 px-4 md:px-8 selection:bg-white/20">
+      {/* Offline Banner */}
+      {!isOnline && (
+        <div className="bg-yellow-500/20 border border-yellow-500/50 text-yellow-500 px-4 py-3 rounded-lg flex items-center justify-between mb-4 shadow-lg backdrop-blur-sm z-50">
+          <div className="flex items-center gap-3">
+            <WifiOff className="w-5 h-5 animate-pulse" />
+            <div>
+              <p className="font-bold text-sm">Offline Mode Active</p>
+              <p className="text-xs opacity-80">You can still update status and upload photos. Changes will sync when connection is restored.</p>
+            </div>
+          </div>
+          {isSyncing && <Loader2 className="w-5 h-5 animate-spin" />}
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8 mt-4 relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -663,10 +791,11 @@ export default function PartnerDashboard() {
                                 </div>
 
                                 <Button 
-                                  className="w-full rounded-xl h-14 text-sm tracking-widest font-bold uppercase bg-green-500 hover:bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.2)]" 
+                                  className="w-full rounded-xl h-14 text-sm tracking-widest font-bold uppercase bg-green-500 hover:bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.2)] disabled:opacity-50" 
                                   onClick={() => updateStatus(booking.id, 'COMPLETED')}
+                                  disabled={updatingStatusId === booking.id}
                                 >
-                                  Complete Job
+                                  {updatingStatusId === booking.id ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Verifying Quality...</> : 'Complete Job'}
                                 </Button>
                               </div>
                             )}

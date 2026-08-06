@@ -17,10 +17,11 @@ export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<string>("7d");
 
   const fetchStats = async () => {
     try {
-      const res = await api.get("/admin/stats");
+      const res = await api.get(`/admin/stats?period=${period}`);
       setData(res.data.data);
     } catch (error) {
       toast.error("Failed to fetch admin stats");
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
     // Poll every 30 seconds for live operations queue updates
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [period]);
 
   const handleAssignPartner = async (bookingId: string, partnerId: string) => {
     if (!partnerId) return;
@@ -138,11 +139,22 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Revenue Chart */}
         <Card className="col-span-1 lg:col-span-2 bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
               <TrendingUp className="w-5 h-5 text-blue-400" />
-              7-Day Revenue Trend
+              {period === '7d' ? '7-Day' : period === '30d' ? '30-Day' : period === '1y' ? '1-Year' : 'All-Time'} Revenue Trend
             </CardTitle>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-32 h-8 bg-white/5 border-white/10 text-xs text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#111] border-white/10 text-white shadow-2xl">
+                <SelectItem value="7d" className="focus:bg-white/10 cursor-pointer">7 Days</SelectItem>
+                <SelectItem value="30d" className="focus:bg-white/10 cursor-pointer">30 Days</SelectItem>
+                <SelectItem value="1y" className="focus:bg-white/10 cursor-pointer">1 Year</SelectItem>
+                <SelectItem value="all" className="focus:bg-white/10 cursor-pointer">All Time</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             <div className="h-[320px] w-full mt-4">
@@ -157,7 +169,7 @@ export default function AdminDashboard() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                   <XAxis 
                     dataKey="date" 
-                    tickFormatter={(val) => format(new Date(val), 'MMM d')}
+                    tickFormatter={(val) => format(new Date(val), period === '1y' || period === 'all' ? 'MMM yyyy' : 'MMM d')}
                     axisLine={false}
                     tickLine={false}
                     fontSize={12}
@@ -174,7 +186,7 @@ export default function AdminDashboard() {
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'rgba(10, 10, 10, 0.8)', backdropFilter: 'blur(12px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)' }}
                     formatter={(value) => [`₹${value}`, 'Revenue']}
-                    labelFormatter={(label) => format(new Date(label), 'MMMM d, yyyy')}
+                    labelFormatter={(label) => format(new Date(label), period === '1y' || period === 'all' ? 'MMMM yyyy' : 'MMMM d, yyyy')}
                     itemStyle={{ color: '#38bdf8', fontWeight: 'bold' }}
                   />
                   <Area 

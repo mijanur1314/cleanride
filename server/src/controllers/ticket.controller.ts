@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
 import prisma from '../utils/prisma';
+import { processTicketWithAI } from '../utils/aiSupport';
 
 export const createTicket = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { subject, message } = req.body;
@@ -29,6 +30,9 @@ export const createTicket = catchAsync(async (req: Request, res: Response, next:
     success: true,
     data: { ticket }
   });
+
+  // Trigger AI processing in the background
+  processTicketWithAI(ticket.id).catch(console.error);
 });
 
 export const getMyTickets = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
@@ -133,6 +137,11 @@ export const replyToTicket = catchAsync(async (req: Request, res: Response, next
     success: true,
     data: { message }
   });
+
+  // Trigger AI processing in the background if the user replied
+  if (req.user!.role === 'USER') {
+    processTicketWithAI(ticket.id).catch(console.error);
+  }
 });
 
 export const updateTicketStatus = catchAsync(async (req: Request, res: Response, next: NextFunction) => {

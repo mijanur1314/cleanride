@@ -9,6 +9,7 @@ import { sendPushNotification } from '../utils/push';
 import { razorpay } from '../utils/razorpay';
 import { emailQueue } from '../utils/queue';
 import { dispatchQueue } from '../queues/dispatch.queue';
+import { verifyWashQuality } from '../utils/ai';
 
 const bookingSchema = z.object({
   serviceId: z.string().uuid(),
@@ -310,6 +311,16 @@ export const updateBookingStatus = catchAsync(async (req: Request, res: Response
   if (status === 'WASH_IN_PROGRESS') {
     updateData.arrivalTime = new Date();
   } else if (status === 'COMPLETED') {
+    if (!booking.afterImageUrl) {
+      return next(new AppError('You must upload an after photo before completing the wash', 400));
+    }
+    
+    // AI Quality Check
+    const aiResult = await verifyWashQuality(booking.beforeImageUrl, booking.afterImageUrl);
+    if (!aiResult.isClean) {
+      return next(new AppError(`Quality Check Failed: ${aiResult.reason}. Please fix it and upload a new photo.`, 400));
+    }
+
     updateData.dischargeTime = new Date();
   }
 

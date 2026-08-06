@@ -41,9 +41,10 @@ The platform serves **three distinct user roles**:
 | Feature | Description |
 |---|---|
 | 📡 **Real-Time WebSockets** | Powered by `Socket.io`, users receive instant UI updates when a partner is assigned or a booking status changes. |
-| 🤖 **AI Support Assistant** | Integrated Google Gemini Generative AI provides intelligent, context-aware 24/7 customer support via streaming chat. |
+| 🤖 **Autonomous AI Agents** | Integrated Google Gemini Generative AI provides intelligent, context-aware 24/7 customer support via streaming chat and can autonomously issue wallet refunds. |
+| 👁️ **AI Vision Quality Control** | Uses Gemini Vision to automatically inspect Partner's after-wash photos, preventing job completion if the vehicle is still dirty. |
 | ⚡ **Redis Caching** | High-traffic endpoints like services, subscription plans, and stores are cached via `ioredis` for lightning-fast sub-10ms responses. |
-| 📱 **PWA + Web Push** | Installable directly to mobile home screens with native Web Push Notifications via standard VAPID protocols. |
+| 📱 **Offline-First PWA** | Installable directly to mobile home screens with native Web Push Notifications and robust IndexedDB offline syncing for underground operations. |
 | 🛡️ **Secure Webhooks** | Automated server-to-server Razorpay webhooks guarantee payments are captured and subscriptions renewed securely in the background. |
 | 📧 **Asynchronous Emails** | Non-blocking `Nodemailer` integration instantly emails customers and partners without slowing down HTTP responses. |
 | ☁️ **Cloud Storage** | Securely handle multipart/form-data for image uploads without local disk bloat. |
@@ -59,7 +60,7 @@ The platform serves **three distinct user roles**:
 | 🪙 **CleanCoins (Loyalty System)** | Automatically earn loyalty points for every completed booking and redeem them for discounts at checkout. |
 | 🎟️ **Promotional Coupons** | Apply percentage or flat-rate discount codes directly at checkout. |
 | ➕ **Service Add-ons** | Dynamically attach optional extras (e.g., "Engine Bay Cleaning", "Odor Removal") to a primary booking. |
-| 💬 **AI Customer Support** | Chat with a smart AI assistant to answer questions about packages, pricing, or locations. |
+| 💬 **Autonomous AI Support** | Chat with a smart AI assistant or submit support tickets. The AI agent can autonomously resolve disputes and instantly issue refunds to the user's wallet. |
 | 🏢 **B2B Fleet Dashboard** | A dedicated workspace for corporate users to manage a roster of multiple fleet vehicles in one place. |
 
 ### 🧽 Washing Partners
@@ -67,7 +68,8 @@ The platform serves **three distinct user roles**:
 |---|---|
 | 📋 **Assignment Dashboard** | View a dedicated feed of all bookings assigned by the Admin. |
 | 🔄 **Live Status Updates** | Update live booking statuses (`EN_ROUTE`, `WASH_IN_PROGRESS`, `COMPLETED`). |
-| 📷 **Visual Proof Uploads** | Directly upload Before & After images to verify wash completion via cloud storage. |
+| 📷 **Visual Proof & AI Verification** | Auto-upload Before & After images to cloud storage. The Gemini AI actively inspects after-wash photos to ensure quality standards are met. |
+| 📶 **Offline Mode (IndexedDB)** | Work seamlessly in underground garages with zero signal. Actions and photos queue locally and auto-sync when cellular connection is restored. |
 
 ### 🛡️ Admins
 | Feature | Description |
@@ -76,7 +78,7 @@ The platform serves **three distinct user roles**:
 | 🎁 **Coupon & Promotion Engine** | Create, manage, and expire custom discount codes with minimum order values and total usage limits. |
 | 🛍️ **Up-sell Management** | Build and manage Service Add-ons and Premium Subscription Plans directly synced to Razorpay. |
 | 👥 **Manual Dispatching & Scalability** | Assign bookings to partners through a highly-scalable, paginated dashboard designed to handle tens of thousands of records smoothly. |
-| 📈 **Platform Analytics** | High-level dashboard showing total revenue, active users, and service distribution graphs. |
+| 📈 **Advanced Analytics** | High-level dashboard showing total revenue, active users, service distribution graphs, and dynamic 7-day/30-day/1-year/All-Time revenue trends. |
 
 ---
 
