@@ -114,6 +114,7 @@ graph TD
     NextJS[App Router]
     SocketClient[Socket.io Client]
     ServiceWorker[Web Push SW]
+    IndexedDB[(IndexedDB Local Sync)]
     end
 
     subgraph "Backend API (Express.js)"
@@ -121,21 +122,28 @@ graph TD
     Webhooks[Razorpay Webhook Handlers]
     SocketServer[Socket.io Server]
     RedisCache[Redis Middleware]
+    BullMQWorker[BullMQ Background Workers]
     end
 
     subgraph "Infrastructure"
     PostgreSQL[(PostgreSQL DB)]
     Redis[(Redis Cluster)]
     External[Razorpay APIs]
+    GeminiAPI[Google Gemini 2.5 AI]
     end
 
     UserClient <-->|REST API| NextJS
+    UserClient <-->|Offline Data| IndexedDB
     NextJS <-->|Axios| Controllers
     NextJS <-->|WebSockets| SocketServer
     
     Controllers <--> RedisCache
     RedisCache <--> Redis
     Controllers <--> PostgreSQL
+    
+    Controllers <-->|AI Support & Vision| GeminiAPI
+    Controllers <-->|Enqueue Jobs| BullMQWorker
+    BullMQWorker <-->|Process Jobs| Redis
     
     Webhooks <--> External
 ```
