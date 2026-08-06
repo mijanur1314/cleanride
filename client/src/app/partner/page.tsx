@@ -145,6 +145,7 @@ export default function PartnerDashboard() {
   // Live Map Tracking: Broadcast Location when EN_ROUTE
   useEffect(() => {
     let watchId: number;
+    let mockIntervalId: NodeJS.Timeout | undefined;
     const activeEnRoute = activeBookings.find((b: any) => b.status === 'EN_ROUTE');
     
     if (activeEnRoute && socket && navigator.geolocation) {
@@ -153,8 +154,6 @@ export default function PartnerDashboard() {
       // We must explicitly join the booking room to emit to it properly if backend expects it
       // though our backend 'update-location' only needs the bookingId.
       socket.emit('join-booking', activeEnRoute.id);
-      
-      let mockIntervalId: NodeJS.Timeout | undefined;
       
       watchId = navigator.geolocation.watchPosition(
         (position) => {
