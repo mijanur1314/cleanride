@@ -733,11 +733,14 @@ export default function PartnerDashboard() {
                                   <div className="grid grid-cols-2 gap-4">
                                     {/* Before Image */}
                                     <div className="relative">
-                                      {booking.beforeImageUrl ? (
-                                        <div className="aspect-square rounded-xl bg-green-500/10 flex flex-col items-center justify-center border border-green-500/20 backdrop-blur-sm">
-                                          <CheckCircle2 className="w-6 h-6 text-green-400 mb-2" />
-                                          <span className="text-[10px] font-bold text-green-400 tracking-widest uppercase">Uploaded</span>
-                                        </div>
+                                      {booking.beforeImageUrl && !images[booking.id]?.beforePreview ? (
+                                        <label className="aspect-square rounded-xl bg-green-500/10 flex flex-col items-center justify-center border border-green-500/20 backdrop-blur-sm cursor-pointer hover:bg-green-500/20 transition-colors group">
+                                          <CheckCircle2 className="w-6 h-6 text-green-400 mb-2 group-hover:hidden" />
+                                          <Camera className="w-6 h-6 text-green-400 mb-2 hidden group-hover:block" />
+                                          <span className="text-[10px] font-bold text-green-400 tracking-widest uppercase group-hover:hidden">Uploaded</span>
+                                          <span className="text-[10px] font-bold text-green-400 tracking-widest uppercase hidden group-hover:block">Replace</span>
+                                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileChange(booking.id, 'before', e.target.files?.[0])} />
+                                        </label>
                                       ) : images[booking.id]?.beforePreview ? (
                                         <div className="aspect-square rounded-xl overflow-hidden relative border border-white/10 group">
                                           <img src={images[booking.id].beforePreview} alt="Before" className="w-full h-full object-cover" />
@@ -755,11 +758,14 @@ export default function PartnerDashboard() {
                                     </div>
                                     {/* After Image */}
                                     <div className="relative">
-                                      {booking.afterImageUrl ? (
-                                        <div className="aspect-square rounded-xl bg-green-500/10 flex flex-col items-center justify-center border border-green-500/20 backdrop-blur-sm">
-                                          <CheckCircle2 className="w-6 h-6 text-green-400 mb-2" />
-                                          <span className="text-[10px] font-bold text-green-400 tracking-widest uppercase">Uploaded</span>
-                                        </div>
+                                      {booking.afterImageUrl && !images[booking.id]?.afterPreview ? (
+                                        <label className="aspect-square rounded-xl bg-green-500/10 flex flex-col items-center justify-center border border-green-500/20 backdrop-blur-sm cursor-pointer hover:bg-green-500/20 transition-colors group">
+                                          <CheckCircle2 className="w-6 h-6 text-green-400 mb-2 group-hover:hidden" />
+                                          <Camera className="w-6 h-6 text-green-400 mb-2 hidden group-hover:block" />
+                                          <span className="text-[10px] font-bold text-green-400 tracking-widest uppercase group-hover:hidden">Uploaded</span>
+                                          <span className="text-[10px] font-bold text-green-400 tracking-widest uppercase hidden group-hover:block">Replace</span>
+                                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileChange(booking.id, 'after', e.target.files?.[0])} />
+                                        </label>
                                       ) : images[booking.id]?.afterPreview ? (
                                         <div className="aspect-square rounded-xl overflow-hidden relative border border-white/10 group">
                                           <img src={images[booking.id].afterPreview} alt="After" className="w-full h-full object-cover" />
@@ -777,7 +783,7 @@ export default function PartnerDashboard() {
                                     </div>
                                   </div>
                                   
-                                  {(!booking.beforeImageUrl || !booking.afterImageUrl) && (
+                                  {(!booking.beforeImageUrl || !booking.afterImageUrl || images[booking.id]?.beforePreview || images[booking.id]?.afterPreview) && (
                                     <Button 
                                       size="sm" 
                                       className="w-full mt-4 rounded-xl h-12 bg-white/10 hover:bg-white/20 text-white border border-white/10 tracking-widest uppercase text-xs font-bold"

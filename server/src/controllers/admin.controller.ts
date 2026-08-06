@@ -337,3 +337,55 @@ export const verifyPartner = catchAsync(async (req: Request, res: Response, next
 
   res.status(200).json({ success: true, data: { user: updatedUser } });
 });
+
+export const getHeatmapData = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const period = (req.query.period as string) || '30d';
+  const startDate = new Date();
+  
+  if (period === '30d') {
+    startDate.setDate(startDate.getDate() - 30);
+  } else if (period === 'all') {
+    startDate.setFullYear(2000); // effectively all time
+  }
+  
+  const bookings = await prisma.booking.findMany({
+    where: {
+      createdAt: { gte: startDate }
+    },
+    select: {
+      id: true,
+      address: true,
+      latitude: true,
+      longitude: true
+    }
+  });
+
+  // Helper to generate mock coordinates based on string hash for deterministic demo data
+  const getCoordinates = (str: string): [number, number] => {
+    if (!str) return [37.7749, -122.4194];
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const lat = 37.7749 + (hash % 100) / 1000;
+    const lng = -122.4194 + ((hash >> 5) % 100) / 1000;
+    return [lat, lng];
+  };
+
+  // Format data for leaflet.heat: [lat, lng, intensity]
+  const heatmapData = bookings.map(b => {
+    if (b.latitude && b.longitude) {
+      return [b.latitude, b.longitude, 1];
+    } else {
+      const [lat, lng] = getCoordinates(b.address || b.id);
+      return [lat, lng, 1];
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      heatmap: heatmapData
+    }
+  });
+});

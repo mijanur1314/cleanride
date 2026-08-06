@@ -194,6 +194,8 @@ export const createBooking = catchAsync(async (req: Request, res: Response, next
 });
 
 export const getSurgeStatus = catchAsync(async (req: Request, res: Response, _next: NextFunction) => {
+  const { lat, lng } = req.query;
+
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const activeBookingsCount = await prisma.booking.count({
     where: {
@@ -202,7 +204,32 @@ export const getSurgeStatus = catchAsync(async (req: Request, res: Response, _ne
     }
   });
 
-  const surgeMultiplier = activeBookingsCount >= 5 ? 1.25 : 1.0;
+  let surgeMultiplier = 1.0;
+  let surgeReason = '';
+
+  if (activeBookingsCount >= 5) {
+    surgeMultiplier = 1.25;
+    surgeReason = 'Prices are slightly higher right now due to increased demand in your area.';
+  }
+
+  if (lat && lng) {
+    try {
+      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`);
+      if (weatherRes.ok) {
+        const weatherData = await weatherRes.json();
+        const code = weatherData.current_weather?.weathercode || 0;
+        
+        // WMO Weather Codes: >=51 means rain, drizzle, snow, showers, or thunderstorms
+        if (code >= 51) {
+          surgeMultiplier = Math.max(surgeMultiplier, 1.5); // 1.5x surge for bad weather
+          surgeReason = 'Prices are higher due to adverse weather conditions (Rain/Snow) making washing more difficult.';
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch weather data for surge pricing:', err);
+    }
+  }
+
   const isSurgeActive = surgeMultiplier > 1.0;
 
   res.status(200).json({ 
@@ -210,6 +237,7 @@ export const getSurgeStatus = catchAsync(async (req: Request, res: Response, _ne
     data: { 
       isSurgeActive, 
       surgeMultiplier,
+      surgeReason,
       activeBookingsCount
     } 
   });

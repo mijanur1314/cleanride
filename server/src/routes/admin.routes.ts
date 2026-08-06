@@ -4,7 +4,8 @@ import {
   getAllUsers, 
   getAllBookings, 
   assignPartnerToBooking,
-  verifyPartner
+  verifyPartner,
+  getHeatmapData
 } from '../controllers/admin.controller';
 import { protect, restrictTo } from '../middlewares/auth.middleware';
 
@@ -19,5 +20,6 @@ router.get('/users', getAllUsers);
 router.patch('/users/:userId/verify', verifyPartner);
 router.get('/bookings', getAllBookings);
 router.patch('/bookings/:bookingId/assign', assignPartnerToBooking);
+router.get('/heatmap', getHeatmapData);
 
 export default router;

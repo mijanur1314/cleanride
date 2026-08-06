@@ -106,7 +106,7 @@ export default function BookingPage() {
   const [stores, setStores] = useState<any[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>("");
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>("");
-  const [surgeStatus, setSurgeStatus] = useState<{ isSurgeActive: boolean, surgeMultiplier: number } | null>(null);
+  const [surgeStatus, setSurgeStatus] = useState<{ isSurgeActive: boolean, surgeMultiplier: number, surgeReason?: string } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
 
   // Voice Booking State
@@ -415,7 +415,15 @@ export default function BookingPage() {
       }
     };
     fetchData();
-  }, [user, router]);
+  }, [user, router, _hasHydrated]);
+
+  useEffect(() => {
+    if (userLocation) {
+      api.get(`/bookings/surge-status?lat=${userLocation.lat}&lng=${userLocation.lng}`)
+        .then(res => setSurgeStatus(res.data.data))
+        .catch(() => console.error("Failed to fetch weather surge status"));
+    }
+  }, [userLocation]);
 
   if (isLoading) {
     return (
@@ -1192,7 +1200,7 @@ function PaymentStep({
   selectedStoreId: string;
   selectedPartnerId: string;
   walletBalance: number | null;
-  surgeStatus: { isSurgeActive: boolean, surgeMultiplier: number } | null;
+  surgeStatus: { isSurgeActive: boolean, surgeMultiplier: number, surgeReason?: string } | null;
   userLocation: { lat: number, lng: number } | null;
 }) {
   const { user } = useAuthStore();
@@ -1481,9 +1489,10 @@ function PaymentStep({
               {surgeStatus?.isSurgeActive && (
                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-200 text-sm max-w-sm animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] backdrop-blur-md">
                   <p className="font-bold mb-1 flex items-center gap-2">
-                    <span className="text-xl animate-pulse">🔥</span> High Demand
+                    <span className="text-xl animate-pulse">{surgeStatus.surgeReason?.includes('weather') || surgeStatus.surgeReason?.includes('Rain') ? '⛈️' : '🔥'}</span> 
+                    {surgeStatus.surgeReason?.includes('weather') || surgeStatus.surgeReason?.includes('Rain') ? 'Weather Surge' : 'High Demand'}
                   </p>
-                  <p className="leading-relaxed opacity-90 text-red-300/80">Prices are slightly higher right now due to increased demand in your area. ({surgeStatus.surgeMultiplier}x multiplier applied)</p>
+                  <p className="leading-relaxed opacity-90 text-red-300/80">{surgeStatus.surgeReason || `Prices are slightly higher right now due to increased demand in your area.`} ({surgeStatus.surgeMultiplier}x multiplier applied)</p>
                 </div>
               )}
               

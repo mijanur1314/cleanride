@@ -21,13 +21,14 @@ import path from 'path';
 const storage = multer.memoryStorage();
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp'];
+  const allowedExtensions = ['.png', '.jpg', '.jpeg', '.webp', '.avif', '.jfif', '.heic', '.heif'];
   const ext = path.extname(file.originalname).toLowerCase();
   
   if (file.mimetype.startsWith('image/') && allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new AppError('Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).', 400) as unknown as null, false);
+    console.error(`Upload rejected by fileFilter. Original name: ${file.originalname}, Ext: ${ext}, MimeType: ${file.mimetype}`);
+    cb(new AppError(`Invalid file type! Original: ${file.originalname}, Mime: ${file.mimetype}. Please upload only image files (.png, .jpg, .jpeg, .webp).`, 400) as unknown as null, false);
   }
 };
 
@@ -38,8 +39,10 @@ export const uploadMiddleware = multer({
 });
 
 export const uploadFile = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  console.log('Upload request received. Body:', req.body, 'File:', req.file ? 'Present' : 'Missing');
+  
   if (!req.file) {
-    return next(new AppError('No file provided for upload', 400));
+    return next(new AppError('No file provided for upload. Ensure formData field is named "file".', 400));
   }
 
   if (!supabase) {

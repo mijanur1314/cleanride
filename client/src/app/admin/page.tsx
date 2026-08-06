@@ -12,17 +12,27 @@ import { Car, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIReviewSummary } from "@/components/AIReviewSummary";
+import dynamic from "next/dynamic";
+import { MapPin } from "lucide-react";
+
+const AdminHeatmap = dynamic(() => import("@/components/AdminHeatmap"), { ssr: false });
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null);
+  const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [assigningId, setAssigningId] = useState<string | null>(null);
   const [period, setPeriod] = useState<string>("7d");
+  const [heatmapPeriod, setHeatmapPeriod] = useState<string>("30d");
 
   const fetchStats = async () => {
     try {
-      const res = await api.get(`/admin/stats?period=${period}`);
-      setData(res.data.data);
+      const [statsRes, heatmapRes] = await Promise.all([
+        api.get(`/admin/stats?period=${period}`),
+        api.get(`/admin/heatmap?period=${heatmapPeriod}`)
+      ]);
+      setData(statsRes.data.data);
+      setHeatmapData(heatmapRes.data.data.heatmap);
     } catch (error) {
       toast.error("Failed to fetch admin stats");
     } finally {
@@ -35,7 +45,7 @@ export default function AdminDashboard() {
     // Poll every 30 seconds for live operations queue updates
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
-  }, [period]);
+  }, [period, heatmapPeriod]);
 
   const handleAssignPartner = async (bookingId: string, partnerId: string) => {
     if (!partnerId) return;
@@ -204,7 +214,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Top Partners Leaderboard */}
-        <Card className="bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl relative overflow-hidden">
+        <Card className="col-span-1 bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-[50px] pointer-events-none" />
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg relative z-10">
@@ -241,9 +251,37 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Heatmap Card */}
+        <Card className="col-span-1 lg:col-span-3 bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl relative overflow-hidden mt-6">
+          <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-red-500/10 blur-[80px] pointer-events-none" />
+          <CardHeader className="flex flex-row items-center justify-between relative z-10">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MapPin className="w-5 h-5 text-red-400" />
+                Demand Heatmap
+              </CardTitle>
+              <CardDescription>Identify high-demand areas to optimize marketing and partner placement</CardDescription>
+            </div>
+            <Select value={heatmapPeriod} onValueChange={setHeatmapPeriod}>
+              <SelectTrigger className="w-32 h-8 bg-white/5 border-white/10 text-xs text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#111] border-white/10 text-white shadow-2xl">
+                <SelectItem value="30d" className="focus:bg-white/10 cursor-pointer">Last 30 Days</SelectItem>
+                <SelectItem value="all" className="focus:bg-white/10 cursor-pointer">All Time</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="relative z-10">
+            <div className="h-[400px] w-full mt-2 rounded-xl overflow-hidden border border-white/10">
+              <AdminHeatmap heatmapData={heatmapData} />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Vehicle Distribution Chart */}
         <Card className="bg-[#0A0A0A]/80 backdrop-blur-xl border-white/5 shadow-2xl relative overflow-hidden">
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-purple-500/10 blur-[60px] pointer-events-none" />

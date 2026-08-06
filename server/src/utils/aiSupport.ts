@@ -60,11 +60,11 @@ Conversation:\n`;
               name: 'issueRefund',
               description: 'Issues a refund to the user\'s wallet for a specific booking and amount.',
               parameters: {
-                type: 'OBJECT',
+                type: 'OBJECT' as any,
                 properties: {
-                  bookingId: { type: 'STRING', description: 'The ID of the booking to refund' },
-                  amount: { type: 'NUMBER', description: 'The amount to refund in rupees (e.g., 500 for ₹500)' },
-                  reason: { type: 'STRING', description: 'Reason for the refund' }
+                  bookingId: { type: 'STRING' as any, description: 'The ID of the booking to refund' },
+                  amount: { type: 'NUMBER' as any, description: 'The amount to refund in rupees (e.g., 500 for ₹500)' },
+                  reason: { type: 'STRING' as any, description: 'Reason for the refund' }
                 },
                 required: ['bookingId', 'amount', 'reason']
               }
@@ -79,7 +79,7 @@ Conversation:\n`;
     let refundIssued = false;
 
     if (toolCall && toolCall.name === 'issueRefund') {
-      const args = toolCall.args;
+      const args = toolCall.args as Record<string, any> || {};
       const amount = Number(args.amount as string || 0); // Handle any string/number discrepancies
       const bookingId = args.bookingId as string;
       
@@ -100,7 +100,7 @@ Conversation:\n`;
               walletId: wallet.id,
               amount: amount, // Positive amount to credit wallet
               type: 'REFUND',
-              description: `Refund for booking ${bookingId}: ${args.reason}`
+              description: `Refund for booking ${bookingId}: ${args?.reason || 'AI autonomous refund'}`
             }
           });
 

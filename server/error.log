@@ -1229,3 +1229,117 @@ Stack: Error: You must upload an after photo before completing the wash
     at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:315:19
     at processTicksAndRejections (node:internal/process/task_queues:104:5)
 
+[2026-08-06T12:48:19.183Z] GET /api/v1/bookings/surge-status?lat=52.52&lng=13.41
+Error: Can't find /api/v1/bookings/surge-status?lat=52.52&lng=13.41 on this server!
+Stack: Error: Can't find /api/v1/bookings/surge-status?lat=52.52&lng=13.41 on this server!
+    at C:\Users\mijan\Music\cleanride\server\src\app.ts:204:8
+    at Layer.handleRequest (C:\Users\mijan\Music\cleanride\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:342:13)
+    at C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:297:9
+    at processParams (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:291:5)
+    at csrfProtection (C:\Users\mijan\Music\cleanride\server\src\middlewares\csrf.middleware.ts:28:12)
+    at C:\Users\mijan\Music\cleanride\server\src\app.ts:169:17
+    at Layer.handleRequest (C:\Users\mijan\Music\cleanride\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:342:13)
+
+[2026-08-06T12:53:28.264Z] PATCH /api/bookings/1e74896c-fb24-4512-afbf-334a38d0fb3f/status
+Error: Quality Check Failed: The image provided is of a motorcycle, not a car, and therefore cannot be assessed by a car washing service QA.. Please fix it and upload a new photo.
+Stack: Error: Quality Check Failed: The image provided is of a motorcycle, not a car, and therefore cannot be assessed by a car washing service QA.. Please fix it and upload a new photo.
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:349:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T12:53:48.498Z] PATCH /api/bookings/1e74896c-fb24-4512-afbf-334a38d0fb3f/status
+Error: Quality Check Failed: The provided image is of a motorcycle, not a car, and therefore cannot be assessed as a freshly washed car.. Please fix it and upload a new photo.
+Stack: Error: Quality Check Failed: The provided image is of a motorcycle, not a car, and therefore cannot be assessed as a freshly washed car.. Please fix it and upload a new photo.
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:349:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T12:53:59.842Z] PATCH /api/bookings/1e74896c-fb24-4512-afbf-334a38d0fb3f/status
+Error: Quality Check Failed: The provided image is of a motorcycle, not a car, and therefore cannot be assessed by a car washing service QA inspector.. Please fix it and upload a new photo.
+Stack: Error: Quality Check Failed: The provided image is of a motorcycle, not a car, and therefore cannot be assessed by a car washing service QA inspector.. Please fix it and upload a new photo.
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:349:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T12:55:13.468Z] PATCH /api/bookings/1e74896c-fb24-4512-afbf-334a38d0fb3f/status
+Error: Quality Check Failed: The image provided is of a motorcycle, not a car, and therefore cannot be evaluated by a car washing service QA inspector.. Please fix it and upload a new photo.
+Stack: Error: Quality Check Failed: The image provided is of a motorcycle, not a car, and therefore cannot be evaluated by a car washing service QA inspector.. Please fix it and upload a new photo.
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:349:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T12:55:39.752Z] PATCH /api/bookings/1e74896c-fb24-4512-afbf-334a38d0fb3f/status
+Error: Quality Check Failed: The provided image does not clearly show a car; it depicts a motorcycle.. Please fix it and upload a new photo.
+Stack: Error: Quality Check Failed: The provided image does not clearly show a car; it depicts a motorcycle.. Please fix it and upload a new photo.
+    at C:\Users\mijan\Music\cleanride\server\src\controllers\booking.controller.ts:349:19
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+[2026-08-06T13:03:03.631Z] POST /api/upload
+Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+Stack: Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+    at fileFilter (C:\Users\mijan\Music\cleanride\server\src\controllers\upload.controller.ts:30:8)
+    at wrappedFileFilter (C:\Users\mijan\Music\cleanride\server\node_modules\multer\index.js:45:7)
+    at Multipart.<anonymous> (C:\Users\mijan\Music\cleanride\server\node_modules\multer\lib\make-middleware.js:193:7)
+    at Multipart.emit (node:events:509:28)
+    at HeaderParser.cb (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:567:19)
+
+[2026-08-06T13:03:11.539Z] POST /api/upload
+Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+Stack: Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+    at fileFilter (C:\Users\mijan\Music\cleanride\server\src\controllers\upload.controller.ts:30:8)
+    at wrappedFileFilter (C:\Users\mijan\Music\cleanride\server\node_modules\multer\index.js:45:7)
+    at Multipart.<anonymous> (C:\Users\mijan\Music\cleanride\server\node_modules\multer\lib\make-middleware.js:193:7)
+    at Multipart.emit (node:events:509:28)
+    at HeaderParser.cb (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:567:19)
+
+[2026-08-06T13:03:29.281Z] POST /api/upload
+Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+Stack: Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+    at fileFilter (C:\Users\mijan\Music\cleanride\server\src\controllers\upload.controller.ts:30:8)
+    at wrappedFileFilter (C:\Users\mijan\Music\cleanride\server\node_modules\multer\index.js:45:7)
+    at Multipart.<anonymous> (C:\Users\mijan\Music\cleanride\server\node_modules\multer\lib\make-middleware.js:193:7)
+    at Multipart.emit (node:events:509:28)
+    at HeaderParser.cb (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:567:19)
+
+[2026-08-06T13:03:31.218Z] GET /api/upload
+Error: Can't find /api/upload on this server!
+Stack: Error: Can't find /api/upload on this server!
+    at C:\Users\mijan\Music\cleanride\server\src\app.ts:204:8
+    at Layer.handleRequest (C:\Users\mijan\Music\cleanride\server\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:342:13)
+    at C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:297:9
+    at processParams (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:582:12)
+    at next (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:291:5)
+    at C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:688:15
+    at next (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:276:14)
+    at router.handle (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:186:3)
+    at router (C:\Users\mijan\Music\cleanride\server\node_modules\router\index.js:60:12)
+
+[2026-08-06T13:03:39.481Z] POST /api/upload
+Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+Stack: Error: Invalid file type! Please upload only image files (.png, .jpg, .jpeg, .webp).
+    at fileFilter (C:\Users\mijan\Music\cleanride\server\src\controllers\upload.controller.ts:30:8)
+    at wrappedFileFilter (C:\Users\mijan\Music\cleanride\server\node_modules\multer\index.js:45:7)
+    at Multipart.<anonymous> (C:\Users\mijan\Music\cleanride\server\node_modules\multer\lib\make-middleware.js:193:7)
+    at Multipart.emit (node:events:509:28)
+    at HeaderParser.cb (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:358:14)
+    at HeaderParser.push (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:162:20)
+    at SBMH.ssCb [as _cb] (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:394:37)
+    at feed (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:219:14)
+    at SBMH.push (C:\Users\mijan\Music\cleanride\server\node_modules\streamsearch\lib\sbmh.js:104:16)
+    at Multipart._write (C:\Users\mijan\Music\cleanride\server\node_modules\busboy\lib\types\multipart.js:567:19)
+

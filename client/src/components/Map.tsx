@@ -19,13 +19,10 @@ const icon = L.icon({
 
 export default function Map({ bookings, liveTrackingId }: { bookings: any[], liveTrackingId?: string }) {
   const [mounted, setMounted] = useState(false);
-  const [mapKey, setMapKey] = useState(0);
   const [liveLocation, setLiveLocation] = useState<{lat: number, lng: number} | null>(null);
   
   useEffect(() => {
-    setMapKey(Date.now());
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -67,7 +64,7 @@ export default function Map({ bookings, liveTrackingId }: { bookings: any[], liv
 
   return (
     <div className="h-[400px] w-full rounded-md overflow-hidden border">
-      <MapContainer key={mapKey} center={liveLocation ? [liveLocation.lat, liveLocation.lng] : defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={liveLocation ? [liveLocation.lat, liveLocation.lng] : defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
