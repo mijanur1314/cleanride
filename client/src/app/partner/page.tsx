@@ -9,7 +9,7 @@ import api from "@/lib/axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut, Package, WalletCards, WifiOff } from "lucide-react";
+import { Loader2, MapPin, Calendar, CheckCircle2, Camera, Navigation, Briefcase, DollarSign, X, MessageCircle, ArrowUpDown, ChevronLeft, User, LogOut, Package, WalletCards, WifiOff, Clock } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,12 +28,13 @@ export default function PartnerDashboard() {
   const [images, setImages] = useState<{ [key: string]: { before: File | null, after: File | null, beforePreview?: string, afterPreview?: string } }>({});
   const [uploadingImages, setUploadingImages] = useState<string | null>(null);
   const [activeChat, setActiveChat] = useState<{ bookingId: string, userName: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'jobs' | 'earnings' | 'supplies' | 'wallet'>('jobs');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'earnings' | 'supplies' | 'wallet' | 'schedule'>('jobs');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [localSchedule, setLocalSchedule] = useState<any[]>([]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -128,6 +129,45 @@ export default function PartnerDashboard() {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to process withdrawal");
+    }
+  });
+
+  const { data: scheduleData, isLoading: isLoadingSchedule } = useQuery({
+    queryKey: ['partnerSchedule'],
+    queryFn: async () => {
+      const res = await api.get("/schedule/my-schedule");
+      return res.data.data;
+    },
+    enabled: isAuthenticated && user?.role === 'PARTNER',
+  });
+
+  useEffect(() => {
+    if (scheduleData) {
+      if (scheduleData.length > 0) {
+        setLocalSchedule(scheduleData);
+      } else {
+        const defaultSchedule = Array.from({ length: 7 }).map((_, i) => ({
+          dayOfWeek: i,
+          isActive: i >= 1 && i <= 5, // Default Mon-Fri active
+          startTime: "09:00",
+          endTime: "17:00"
+        }));
+        setLocalSchedule(defaultSchedule);
+      }
+    }
+  }, [scheduleData]);
+
+  const updateScheduleMutation = useMutation({
+    mutationFn: async (schedules: any[]) => {
+      const res = await api.put("/schedule/my-schedule", { schedules });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Schedule updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ['partnerSchedule'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update schedule");
     }
   });
 
@@ -1061,6 +1101,83 @@ export default function PartnerDashboard() {
             )}
           </motion.div>
         )}
+        
+        {activeTab === 'schedule' && (
+          <motion.div 
+            key="schedule"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold tracking-tight font-heading text-white">My Schedule</h2>
+              {updateScheduleMutation.isPending && <Loader2 className="w-5 h-5 animate-spin text-white" />}
+            </div>
+
+            <div className="bg-[#141414] rounded-2xl border border-white/5 shadow-lg overflow-hidden">
+              <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+                <p className="text-sm text-gray-400">Set your weekly availability. Customers can only book you during these hours.</p>
+              </div>
+              <div className="divide-y divide-white/5">
+                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, idx) => {
+                  const scheduleObj = localSchedule.find(s => s.dayOfWeek === idx) || { dayOfWeek: idx, isActive: false, startTime: '09:00', endTime: '17:00' };
+                  
+                  return (
+                    <div key={day} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${scheduleObj.isActive ? 'bg-white/[0.02]' : 'opacity-50'}`}>
+                      <div className="flex items-center justify-between sm:justify-start gap-4 sm:w-1/3">
+                        <span className="font-bold text-white w-24">{day}</span>
+                        <Button
+                          variant={scheduleObj.isActive ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setLocalSchedule(prev => prev.map(s => s.dayOfWeek === idx ? { ...s, isActive: !s.isActive } : s));
+                          }}
+                          className={`w-16 h-8 text-xs ${scheduleObj.isActive ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-transparent border-white/20 text-gray-400'}`}
+                        >
+                          {scheduleObj.isActive ? 'ON' : 'OFF'}
+                        </Button>
+                      </div>
+
+                      {scheduleObj.isActive && (
+                        <div className="flex items-center gap-2 sm:gap-4 flex-1">
+                          <div className="flex items-center gap-2 flex-1">
+                            <Clock className="w-4 h-4 text-gray-500 hidden sm:block" />
+                            <input 
+                              type="time" 
+                              value={scheduleObj.startTime}
+                              onChange={(e) => setLocalSchedule(prev => prev.map(s => s.dayOfWeek === idx ? { ...s, startTime: e.target.value } : s))}
+                              className="bg-[#0A0A0A] border border-white/10 rounded-lg px-2 py-1.5 text-white text-sm w-full outline-none focus:border-blue-500 transition-colors"
+                            />
+                          </div>
+                          <span className="text-gray-500 font-bold">to</span>
+                          <div className="flex items-center gap-2 flex-1">
+                            <input 
+                              type="time" 
+                              value={scheduleObj.endTime}
+                              onChange={(e) => setLocalSchedule(prev => prev.map(s => s.dayOfWeek === idx ? { ...s, endTime: e.target.value } : s))}
+                              className="bg-[#0A0A0A] border border-white/10 rounded-lg px-2 py-1.5 text-white text-sm w-full outline-none focus:border-blue-500 transition-colors"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button 
+              onClick={() => updateScheduleMutation.mutate(localSchedule)}
+              disabled={updateScheduleMutation.isPending}
+              className="w-full bg-white hover:bg-gray-200 text-black rounded-xl h-14 text-sm font-bold uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] sticky bottom-24"
+            >
+              {updateScheduleMutation.isPending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Calendar className="w-5 h-5 mr-2" />}
+              Save Schedule
+            </Button>
+
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Sticky Bottom Navigation */}
@@ -1092,10 +1209,18 @@ export default function PartnerDashboard() {
           
           <button 
             onClick={() => setActiveTab('wallet')}
-            className={`flex flex-col items-center justify-center w-24 h-full transition-all ${activeTab === 'wallet' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`flex flex-col items-center justify-center w-20 h-full transition-all ${activeTab === 'wallet' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
           >
             <WalletCards className={`w-6 h-6 mb-1.5 ${activeTab === 'wallet' ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''}`} />
             <span className="text-[10px] font-bold uppercase tracking-widest">Wallet</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('schedule')}
+            className={`flex flex-col items-center justify-center w-20 h-full transition-all ${activeTab === 'schedule' ? 'text-white scale-110' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            <Calendar className={`w-6 h-6 mb-1.5 ${activeTab === 'schedule' ? 'drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : ''}`} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Schedule</span>
           </button>
         </div>
       </div>

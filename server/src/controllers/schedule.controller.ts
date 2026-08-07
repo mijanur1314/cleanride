@@ -93,3 +93,61 @@ export const getAvailableSlots = catchAsync(async (req: Request, res: Response, 
 
   res.status(200).json({ success: true, data: availableSlots });
 });
+
+export const getMySchedule = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const partnerId = req.user?.id;
+  if (!partnerId) {
+    return next(new AppError('Not authorized', 401));
+  }
+
+  const schedules = await prisma.partnerSchedule.findMany({
+    where: { partnerId },
+    orderBy: { dayOfWeek: 'asc' }
+  });
+
+  res.status(200).json({ success: true, data: schedules });
+});
+
+export const updateMySchedule = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const partnerId = req.user?.id;
+  if (!partnerId) {
+    return next(new AppError('Not authorized', 401));
+  }
+
+  const { schedules } = req.body; // Expecting array of { dayOfWeek, startTime, endTime, isActive }
+
+  if (!Array.isArray(schedules)) {
+    return next(new AppError('Schedules must be an array', 400));
+  }
+
+  // Use a transaction to update the schedule
+  await prisma.$transaction(async (tx) => {
+    for (const schedule of schedules) {
+      const { dayOfWeek, startTime, endTime, isActive } = schedule;
+      
+      // Upsert each day schedule
+      await tx.partnerSchedule.upsert({
+        where: {
+          partnerId_dayOfWeek: {
+            partnerId,
+            dayOfWeek
+          }
+        },
+        update: {
+          startTime,
+          endTime,
+          isActive
+        },
+        create: {
+          partnerId,
+          dayOfWeek,
+          startTime,
+          endTime,
+          isActive
+        }
+      });
+    }
+  });
+
+  res.status(200).json({ success: true, message: 'Schedule updated successfully' });
+});
