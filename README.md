@@ -72,6 +72,7 @@ The platform serves **three distinct user roles**:
 | Feature                               | Description                                                                                                                                   |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | 📋 **Assignment Dashboard**           | View a dedicated feed of all bookings assigned by the Admin.                                                                                  |
+| 🗓️ **Autonomous Scheduling**          | Set custom weekly working hours using a responsive 7-day calendar UI. The system automatically adjusts customer booking slots in real-time.   |
 | 🔄 **Live Status Updates**            | Update live booking statuses (`EN_ROUTE`, `WASH_IN_PROGRESS`, `COMPLETED`).                                                                   |
 | 📷 **Visual Proof & AI Verification** | Auto-upload Before & After images to cloud storage. The Gemini AI actively inspects after-wash photos to ensure quality standards are met.    |
 | 📶 **Offline Mode (IndexedDB)**       | Work seamlessly in underground garages with zero signal. Actions and photos queue locally and auto-sync when cellular connection is restored. |
@@ -82,6 +83,7 @@ The platform serves **three distinct user roles**:
 | Feature                          | Description                                                                                                                                           |
 | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🏪 **Location Management**       | Manage physical washing store branches, enabling users to book in-store rather than at their doorstep.                                                |
+| 📦 **Inventory Management**      | Master dashboard for tracking consumable stock levels (shampoos, towels) and fulfilling incoming supply requests raised by partners on the field.     |
 | 🎁 **Coupon & Promotion Engine** | Create, manage, and expire custom discount codes with minimum order values and total usage limits.                                                    |
 | 🛍️ **Up-sell Management**        | Build and manage Service Add-ons and Premium Subscription Plans directly synced to Razorpay.                                                          |
 | 👥 **Smart Auto-Dispatching**    | Bookings are automatically matched and dispatched to the best available partner via BullMQ workers, with manual overrides available in the dashboard. |
